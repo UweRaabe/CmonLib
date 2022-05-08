@@ -1,0 +1,46 @@
+package CmonLib;
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS OFF}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO OFF}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE RELEASE}
+{$ENDIF IMPLICITBUILDING}
+{$DESCRIPTION 'CmonLib - Common Library'}
+{$LIBSUFFIX AUTO}
+{$RUNONLY}
+{$IMPLICITBUILD OFF}
+
+requires
+  rtl;
+
+contains
+  Cmon.DataStorage.Inifile in '..\..\source\Cmon.DataStorage.Inifile.pas',
+  Cmon.DataStorage in '..\..\source\Cmon.DataStorage.pas',
+  Cmon.Dialogs in '..\..\source\Cmon.Dialogs.pas',
+  Cmon.Logging in '..\..\source\Cmon.Logging.pas',
+  Cmon.Messaging.Dialogs in '..\..\source\Cmon.Messaging.Dialogs.pas',
+  Cmon.Messaging in '..\..\source\Cmon.Messaging.pas',
+  Cmon.Observers in '..\..\source\Cmon.Observers.pas',
+  Cmon.Utilities in '..\..\source\Cmon.Utilities.pas';
+
+end.
