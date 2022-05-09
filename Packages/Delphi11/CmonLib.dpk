@@ -41,6 +41,8 @@ contains
   Cmon.Messaging.Dialogs in '..\..\source\Cmon.Messaging.Dialogs.pas',
   Cmon.Messaging in '..\..\source\Cmon.Messaging.pas',
   Cmon.Observers in '..\..\source\Cmon.Observers.pas',
-  Cmon.Utilities in '..\..\source\Cmon.Utilities.pas';
+  Cmon.Utilities in '..\..\source\Cmon.Utilities.pas',
+  Cmon.CmdLineHandler in '..\..\source\Cmon.CmdLineHandler.pas',
+  Cmon.CmdLineFileHandler in '..\..\source\Cmon.CmdLineFileHandler.pas';
 
 end.
