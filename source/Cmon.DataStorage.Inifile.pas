@@ -62,6 +62,10 @@ begin
   result := TIniStorageTarget.Create;
 end;
 
+{$IFNDEF DontRegisterHandler}
 initialization
   TDataStorage.StorageTargetFactory := CreateStorageTarget;
+finalization
+  TDataStorage.StorageTargetFactory := nil;
+{$ENDIF}
 end.
