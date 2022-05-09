@@ -6,9 +6,9 @@ uses
   System.Rtti, System.Classes, System.SysUtils, System.Generics.Collections;
 
 type
-  { Das bordeigene DefaultAttribute aus System.Classes arbeitet intern mit einem Variant und castet den Typ Boolean in
-    einen Integer. Damit geht die eigentliche Typ-Information leider verloren, die wir allerdings hier benötigen. Daher
-    deklarieren wir unser eigenes Attribut für genau die Typen, die wir brauchen.
+  { DefaultAttribute from System.Classes uses a Variant internally and casts the type Boolean to Integer. Thus the original
+    type information gets lost, while we do rely on it here. Therefore we declare our own DefaultAttribute based on TValue
+    and provide constructors for all types we need. Other types can be added in special derived classes if necessary.
   }
   DefaultAttribute = class(TCustomAttribute)
   private
