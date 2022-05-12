@@ -50,11 +50,11 @@ type
   class var
     FAppName: string;
   public
-    class function GetExeName: string; static;
+    class function GetExeName: string; static; inline;
     class procedure Postpone(AProc: TThreadMethod; ADelayMS: Cardinal = 0); overload; static;
     class procedure Postpone(AProc: TThreadProcedure; ADelayMS: Cardinal = 0); overload; static;
-    class function UserAppDataPath: string; static;
-    class function UserDocumentsPath: string; static;
+    class function UserAppDataPath: string; static; inline;
+    class function UserDocumentsPath: string; static; inline;
     class property AppName: string read FAppName write FAppName;
   end;
 
@@ -62,6 +62,8 @@ implementation
 
 uses
   System.Threading, System.IOUtils;
+
+{ TRttiHelper }
 
 class function TRttiHelper.FindAttribute<T>(Source: TClass): T;
 var
@@ -94,6 +96,8 @@ begin
     end;
   end;
 end;
+
+{ TUtilities }
 
 class function TUtilities.GetExeName: string;
 begin
@@ -142,6 +146,8 @@ class function TUtilities.UserDocumentsPath: string;
 begin
   Result := TPath.Combine(TPath.GetDocumentsPath, AppName);
 end;
+
+{ TEnumWrapper<T> }
 
 constructor TEnumWrapper<T>.Create(ACount: Integer; AGetItem: TGetItemFunc);
 begin
