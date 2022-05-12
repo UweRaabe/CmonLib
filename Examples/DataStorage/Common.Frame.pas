@@ -15,10 +15,10 @@ type
     procedure InternalPrepareStorage(DataStorage: TDataStorage); virtual;
     procedure InternalSaveToStorage(DataStorage: TDataStorage); virtual;
   public
-    procedure InitDefaults(DataStorage: TDataStorage);
-    procedure LoadFromStorage(DataStorage: TDataStorage);
-    procedure PrepareStorage(DataStorage: TDataStorage);
-    procedure SaveToStorage(DataStorage: TDataStorage);
+    procedure InitDefaults(DataStorage: TDataStorage); virtual;
+    procedure LoadFromStorage(DataStorage: TDataStorage); virtual;
+    procedure PrepareStorage(DataStorage: TDataStorage); virtual;
+    procedure SaveToStorage(DataStorage: TDataStorage); virtual;
   end;
 
 implementation
@@ -36,11 +36,8 @@ end;
 procedure TCommonFrame.InitDefaults(DataStorage: TDataStorage);
 begin
   DataStorage.InitDefaults(Self);
-  ForAllComponentsOf<TCommonFrame>(
-    procedure(Arg: TCommonFrame)
-    begin
-      Arg.InitDefaults(DataStorage);
-    end);
+  for var frame in ComponentsOf<TCommonFrame> do
+    frame.InitDefaults(DataStorage);
   InternalInitDefaults(DataStorage);
 end;
 
@@ -66,11 +63,8 @@ begin
   try
     PrepareStorage(DataStorage);
     DataStorage.LoadFromStorage(Self);
-    ForAllComponentsOf<TCommonFrame>(
-      procedure(Arg: TCommonFrame)
-      begin
-        Arg.LoadFromStorage(DataStorage);
-      end);
+    for var frame in ComponentsOf<TCommonFrame> do
+      frame.LoadFromStorage(DataStorage);
     InternalLoadFromStorage(DataStorage);
   finally
     DataStorage.PopStorageKey;
@@ -89,11 +83,8 @@ begin
   try
     PrepareStorage(DataStorage);
     DataStorage.SaveToStorage(Self);
-    ForAllComponentsOf<TCommonFrame>(
-      procedure(Arg: TCommonFrame)
-      begin
-        Arg.SaveToStorage(DataStorage);
-      end);
+    for var frame in ComponentsOf<TCommonFrame> do
+      frame.SaveToStorage(DataStorage);
     InternalSaveToStorage(DataStorage);
   finally
     DataStorage.PopStorageKey;

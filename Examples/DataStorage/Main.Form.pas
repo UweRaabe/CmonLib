@@ -28,7 +28,11 @@ type
     TitleLabel: TLabel;
     SomeEnumSelector: TRadioGroup;
     SomeBooleanCheck: TCheckBox;
+    SaveToJSONButton: TButton;
+    LoadFromJSONButton: TButton;
     procedure FormCreate(Sender: TObject);
+    procedure LoadFromJSONButtonClick(Sender: TObject);
+    procedure SaveToJSONButtonClick(Sender: TObject);
   private
     function GetSomeBoolean: Boolean;
     function GetSomeEnum: TMyEnum;
@@ -38,6 +42,9 @@ type
     procedure SetSomeEnum(const Value: TMyEnum);
     procedure SetSomeIndex(const Value: Integer);
     procedure SetSomeText(const Value: string);
+  protected
+    procedure LoadSettings;
+    procedure SaveSettings;
   public
     procedure UpdateTitle;
     [Stored, Default(True)]
@@ -54,6 +61,11 @@ var
   DemoMainForm: TDemoMainForm;
 
 implementation
+
+uses
+  System.SysUtils, System.IOUtils,
+  Vcl.Dialogs,
+  Cmon.DataStorage.Target, Cmon.DataStorage.Inifile, Cmon.DataStorage.JSON, Cmon.Messaging, Cmon.Utilities;
 
 {$R *.dfm}
 
@@ -125,6 +137,34 @@ begin
   Result := SomeTextEdit.Text;
 end;
 
+procedure TDemoMainForm.LoadSettings;
+begin
+  var filter := TDataStorage.MakeStorageTargetFileFilter;
+  var fileName := TPath.ChangeExtension(TUtilities.GetExeName, TJSONStorageTarget.FileExtension);
+  if PromptForFileName(fileName, filter, '', 'Load settings', '', False) then
+    LoadFromStorage(TDataStorage.CreateStorageTarget(Self, fileName));
+end;
+
+procedure TDemoMainForm.LoadFromJSONButtonClick(Sender: TObject);
+begin
+  inherited;
+  LoadSettings;
+end;
+
+procedure TDemoMainForm.SaveSettings;
+begin
+  var filter := TDataStorage.MakeStorageTargetFileFilter;
+  var fileName := TPath.ChangeExtension(TUtilities.GetExeName, TJSONStorageTarget.FileExtension);
+  if PromptForFileName(fileName, filter, '', 'Save settings', '', True) then
+    SaveToStorage(TDataStorage.CreateStorageTarget(Self, fileName));
+end;
+
+procedure TDemoMainForm.SaveToJSONButtonClick(Sender: TObject);
+begin
+  inherited;
+  SaveSettings;
+end;
+
 procedure TDemoMainForm.SetSomeBoolean(const Value: Boolean);
 begin
   SomeBooleanCheck.Checked := Value;
@@ -155,4 +195,19 @@ begin
   inherited Create(TValue.From(AValue));
 end;
 
+var
+  SaveInitProc: Pointer = nil;
+
+{ will be called in Application.Initialize after all initialization sections have been executed }
+procedure InitApplication;
+begin
+  { this is a good place to set some global variables used in InitApplication procedures from other units }
+//  AutoRegisterHandler := False;
+  if SaveInitProc <> nil then TProcedure(SaveInitProc);
+  TCustomStorageTarget.DefaultFileExtension := TIniStorageTarget.FileExtension;
+end;
+
+initialization
+  SaveInitProc := InitProc;
+  InitProc := @InitApplication;
 end.

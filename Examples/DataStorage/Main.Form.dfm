@@ -1,5 +1,5 @@
 inherited DemoMainForm: TDemoMainForm
-  Caption = 'DemoMainForm'
+  Caption = 'DataStorage Demo'
   ClientHeight = 411
   ClientWidth = 852
   ExplicitWidth = 868
@@ -52,12 +52,14 @@ inherited DemoMainForm: TDemoMainForm
       ExplicitHeight = 13
     end
     inherited SomeTextEdit: TLabeledEdit
+      Height = 21
       EditLabel.Width = 51
       EditLabel.Height = 13
       EditLabel.ExplicitLeft = 32
       EditLabel.ExplicitTop = 48
       EditLabel.ExplicitWidth = 51
       EditLabel.ExplicitHeight = 13
+      ExplicitHeight = 21
     end
   end
   inline DemoFrame2: TDemoFrame
@@ -75,12 +77,14 @@ inherited DemoMainForm: TDemoMainForm
       ExplicitHeight = 13
     end
     inherited SomeTextEdit: TLabeledEdit
+      Height = 21
       EditLabel.Width = 51
       EditLabel.Height = 13
       EditLabel.ExplicitLeft = 32
       EditLabel.ExplicitTop = 48
       EditLabel.ExplicitWidth = 51
       EditLabel.ExplicitHeight = 13
+      ExplicitHeight = 21
     end
   end
   object SomeEnumSelector: TRadioGroup
@@ -98,5 +102,25 @@ inherited DemoMainForm: TDemoMainForm
     Height = 17
     Caption = 'Some Boolean'
     TabOrder = 5
+  end
+  object SaveToJSONButton: TButton
+    Left = 456
+    Top = 256
+    Width = 175
+    Height = 41
+    Caption = 'Save to JSON'
+    Style = bsCommandLink
+    TabOrder = 6
+    OnClick = SaveToJSONButtonClick
+  end
+  object LoadFromJSONButton: TButton
+    Left = 456
+    Top = 320
+    Width = 175
+    Height = 41
+    Caption = 'Load from JSON'
+    Style = bsCommandLink
+    TabOrder = 7
+    OnClick = LoadFromJSONButtonClick
   end
 end

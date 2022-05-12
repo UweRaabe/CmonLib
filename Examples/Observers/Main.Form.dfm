@@ -1,7 +1,7 @@
-object Form702: TForm702
+object DemoMainForm: TDemoMainForm
   Left = 0
   Top = 0
-  Caption = 'tmemo'
+  Caption = 'Observer Demo'
   ClientHeight = 441
   ClientWidth = 624
   Color = clBtnFace

@@ -8,7 +8,7 @@ uses
   DataTypes;
 
 type
-  TForm702 = class(TForm)
+  TDemoMainForm = class(TForm)
     LogMemo: TMemo;
     MyStringEdit: TEdit;
     MyLinesMemo: TMemo;
@@ -25,7 +25,7 @@ type
   end;
 
 var
-  Form702: TForm702;
+  DemoMainForm: TDemoMainForm;
 
 implementation
 
@@ -36,7 +36,7 @@ uses
   Vcl.Dialogs,
   Cmon.Observers.Vcl, Cmon.Logging;
 
-constructor TForm702.Create(AOwner: TComponent);
+constructor TDemoMainForm.Create(AOwner: TComponent);
 begin
   inherited;
 
@@ -63,14 +63,14 @@ begin
   MyListItemListBox.AddObserver(procedure(AValue: Integer) begin Data.MyListItemIndex := AValue end);
 end;
 
-destructor TForm702.Destroy;
+destructor TDemoMainForm.Destroy;
 begin
   TLog.Unsubscribe(FLogHandlerId);
   FData.Free;
   inherited Destroy;
 end;
 
-procedure TForm702.DoLogMessage(const AMessage: string);
+procedure TDemoMainForm.DoLogMessage(const AMessage: string);
 begin
   LogMemo.Lines.Add(AMessage);
 end;
