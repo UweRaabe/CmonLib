@@ -3,7 +3,8 @@ unit Cmon.DataStorage;
 interface
 
 uses
-  System.Rtti, System.Classes, System.SysUtils, System.Generics.Collections;
+  System.Rtti, System.Classes, System.SysUtils, System.Generics.Collections,
+  Cmon.Messaging;
 
 type
   { DefaultAttribute from System.Classes uses a Variant internally and casts the type Boolean to Integer. Thus the original
@@ -39,6 +40,25 @@ type
     procedure WriteString(const Key, Ident, Value: string);
   end;
   TStorageTargetFactory = TFunc<IStorageTarget>;
+
+  TStorageTargetMessage = class(TCommonMessage<string>)
+  private
+    FStorageTarget: IStorageTarget;
+    function GetFileName: string;
+  public
+    class function Execute(Sender: TObject; const AFileName: string): IStorageTarget;
+    property FileName: string read GetFileName;
+    property StorageTarget: IStorageTarget read FStorageTarget write FStorageTarget;
+  end;
+
+  TStorageTargetDescriptor = record
+    Description: string;
+    FileExtension: string;
+  public
+    constructor Create(const ADescription, AFileExtension: string);
+  end;
+  TStorageTargetDescriptorList = TList<TStorageTargetDescriptor>;
+  TStorageTargetListMessage = class(TCommonMessage<TStorageTargetDescriptorList>);
 
 type
   TDataStorage = class
@@ -76,11 +96,14 @@ type
   public
     constructor Create;
     destructor Destroy; override;
-    class function CreateStorageTarget: IStorageTarget;
+    function CreateStorageTarget(const AFileName: string = ''): IStorageTarget; overload;
+    class function CreateStorageTarget(Sender: TObject; const AFileName: string = ''): IStorageTarget; overload;
     class procedure InitDefaults(Instance: TObject); overload; static;
+    class procedure ListStorageTargets(Target: TStorageTargetDescriptorList);
     procedure LoadFromStorage(Instance: TObject); overload;
     procedure LoadFromStorage<T: StoredAttribute>(Instance: TObject); overload;
     function MakeStorageSubKey(const ASubKey: string): string;
+    class function MakeStorageTargetFileFilter: string;
     procedure PopStorageKey;
     procedure PushStorageKey; overload;
     procedure PushStorageKey(const NewKey: string); overload;
@@ -228,24 +251,26 @@ begin
   inherited;
 end;
 
-class function TDataStorage.CreateStorageTarget: IStorageTarget;
-begin
-  if FStorageTargetFactory = nil then begin
-    raise EProgrammerNotFound.Create('no StorageTargetFactory registered');
-  end;
-  Result := FStorageTargetFactory();
-end;
-
 class destructor TDataStorage.Destruct;
 begin
   FDefaultInstance.Free;
+end;
+
+class function TDataStorage.CreateStorageTarget(Sender: TObject; const AFileName: string = ''): IStorageTarget;
+begin
+  Result := TStorageTargetMessage.Execute(Sender, AFileName);
+end;
+
+function TDataStorage.CreateStorageTarget(const AFileName: string = ''): IStorageTarget;
+begin
+  Result := CreateStorageTarget(Self, AFileName);
 end;
 
 class function TDataStorage.GetDefaultInstance: TDataStorage;
 begin
   if FDefaultInstance = nil then begin
     FDefaultInstance := TDataStorage.Create;
-    FDefaultInstance.StorageTarget := CreateStorageTarget;
+    FDefaultInstance.StorageTarget := FDefaultInstance.CreateStorageTarget();
   end;
   Result := FDefaultInstance;
 end;
@@ -264,13 +289,13 @@ begin
     myType := context.GetType(Instance.ClassType);
     if myType <> nil then begin
       fields := myType.GetFields;
-      { alle Felder mit Default-Attribute setzen }
+      { initialize all fields having a Default attribute }
       for field in fields do begin
         InitDefaults(Instance, field);
       end;
 
       props := myType.GetProperties;
-      { alle Properties mit Default-Attribute setzen }
+      { initialize all properties having a Default attribute }
       for prop in props do begin
         InitDefaults(Instance, prop);
       end;
@@ -309,6 +334,11 @@ procedure TDataStorage.InternalWriteString(const Ident, Value: string);
 begin
   if Assigned(FStorageTarget) then
     FStorageTarget.WriteString(StorageKey, Ident, Value);
+end;
+
+class procedure TDataStorage.ListStorageTargets(Target: TStorageTargetDescriptorList);
+begin
+  TStorageTargetListMessage.SendMessage(nil, Target);
 end;
 
 procedure TDataStorage.LoadFromStorage(Instance: TObject);
@@ -395,6 +425,29 @@ begin
   Result := StorageKey + cKeySeparator + ASubKey;
 end;
 
+class function TDataStorage.MakeStorageTargetFileFilter: string;
+var
+  lst: TStringList;
+  targets: TStorageTargetDescriptorList;
+begin
+  targets := TStorageTargetDescriptorList.Create;
+  try
+    ListStorageTargets(targets);
+    lst := TStringList.Create;
+    try
+      for var target in Targets do begin
+        lst.Add(Format('%s (*%s)', [target.Description, target.FileExtension]));
+        lst.Add(Format('*%s', [target.FileExtension]));
+      end;
+      Result := string.Join('|', lst.ToStringArray);
+    finally
+      lst.Free;
+    end;
+  finally
+    targets.Free;
+  end;
+end;
+
 procedure TDataStorage.PopStorageKey;
 begin
   StorageKey := FStorageKeyStack.Pop;
@@ -464,14 +517,11 @@ begin
 
   case Default.Kind of
     tkEnumeration: begin
-//      if Default.TypeInfo = TypeInfo(Boolean) then
-//        Result := (StrToIntDef(S, cBool[Default.AsBoolean]) = cBool[True])
-//      else
-        Result := TValue.FromOrdinal(Default.TypeInfo, GetEnumValue(Default.TypeInfo, S));
+      Result := TValue.FromOrdinal(Default.TypeInfo, GetEnumValue(Default.TypeInfo, S));
     end;
-    tkFloat: begin { unabhängig von FormatSettings! }
+    tkFloat: begin { independent from current FormatSettings! }
       case Default.TypeData.FloatType of
-        ftDouble: begin { spezielle Double-Fälle abfangen }
+        ftDouble: begin { handle special Double cases }
           if Default.TypeInfo = TypeInfo(TDate) then
             Result := TValue.From<TDate>(StrToDateDef(S, Default.AsType<TDate>, TFormatSettings.Invariant))
           else if Default.TypeInfo = TypeInfo(TTime) then
@@ -490,14 +540,14 @@ begin
     tkInteger: Result := StrToIntDef(S, Default.AsInteger);
     tkInt64: Result := StrToInt64Def(S, Default.AsInt64);
     tkWChar,
-    tkChar: Result := TValue.From<Char>(S.Chars[0]); // S = '' wurde schon mit Default abgehandelt!
+    tkChar: Result := TValue.From<Char>(S.Chars[0]); { an empty string S has already be handled at the start of this method }
     tkString,
     tkLString,
     tkWString,
     tkUString: Result := S;
   else
     { tkSet, tkClass, tkMethod, tkVariant, tkArray, tkRecord, tkInterface, tkDynArray, tkClassRef, tkPointer, tkProcedure }
-    raise ENotImplemented.CreateFmt('Stored Typ "%s" nicht unterstützt!', [GetTypeName(Default.TypeInfo)]);
+    raise ENotImplemented.CreateFmt('Stored type "%s" not supported!', [GetTypeName(Default.TypeInfo)]);
   end;
 end;
 
@@ -616,16 +666,11 @@ procedure TDataStorage.WriteValue(const Ident: string; const Value: TValue);
 var
   S: string;
 begin
-  S := Value.ToString; { ToString behandelt die meisten Fälle schon korrekt }
+  S := Value.ToString; { ToString already handle most of the cases correct }
   case Value.Kind of
-    tkEnumeration: begin
-//      if Value.TypeInfo = TypeInfo(Boolean) then begin
-//        S := cBool[Value.AsBoolean].ToString;
-//      end;
-    end;
-    tkFloat: begin { unabhängig von FormatSettings! }
+    tkFloat: begin { independent from current FormatSettings! }
       case Value.TypeData.FloatType of
-        ftDouble: begin { spezielle Double-Fälle abfangen }
+        ftDouble: begin { handle special Double cases }
           if Value.TypeInfo = TypeInfo(TDate) then
             S := DateToStr(Value.AsType<TDate>, TFormatSettings.Invariant)
           else if Value.TypeInfo = TypeInfo(TTime) then
@@ -643,6 +688,7 @@ begin
         ftCurr: S := CurrToStr(Value.AsCurrency, TFormatSettings.Invariant);
       end;
     end;
+    tkEnumeration,
     tkInteger,
     tkInt64,
     tkChar,
@@ -650,10 +696,10 @@ begin
     tkString,
     tkLString,
     tkWString,
-    tkUString: ; { Value.ToString hat bereits das richtige Ergebnis }
+    tkUString: ; { Value.ToString already did the job }
   else
     { tkSet, tkClass, tkMethod, tkVariant, tkArray, tkRecord, tkInterface, tkDynArray, tkClassRef, tkPointer, tkProcedure }
-    raise ENotImplemented.CreateFmt('Stored Typ "%s" nicht unterstützt!', [GetTypeName(Value.TypeInfo)]);
+    raise ENotImplemented.CreateFmt('Stored type "%s" not supported!', [GetTypeName(Value.TypeInfo)]);
   end;
   WriteString(Ident, S);
 end;
@@ -670,7 +716,7 @@ function TStoredAttributeHelper.StoredName(AField: TRttiField): string;
 begin
   Result := Name;
   if Result = '' then begin
-    { Bei Feldern lassen wir das führende F weg }
+    { Skip the leading F for fields }
     Result := AField.Name.Substring(1);
   end;
 end;
@@ -759,9 +805,10 @@ function TStoredWrapper.InternalGetStorageKey: string;
 var
   intf: IStorageKey;
 begin
+  { do we have a StorageKey attribute? }
   Result := GetStorageKeyFromAttribute(Target);
   if Result.IsEmpty then begin
-    { then we look for IStorageKey support }
+    { no, then we look for IStorageKey support }
     if Supports(Target, IStorageKey, intf) then
       Result := intf.GetStorageKey(DataStorage);
   end;
@@ -806,6 +853,30 @@ constructor StorageKeyAttribute.Create(const AKey: string);
 begin
   inherited Create;
   FKey := AKey;
+end;
+
+class function TStorageTargetMessage.Execute(Sender: TObject; const AFileName: string): IStorageTarget;
+var
+  instance: TStorageTargetMessage;
+begin
+  instance := Self.Create(AFileName);
+  try
+    Manager.SendMessage(Sender, instance, False);
+    Result := instance.StorageTarget;
+  finally
+    instance.Free;
+  end;
+end;
+
+function TStorageTargetMessage.GetFileName: string;
+begin
+  Result := Value;
+end;
+
+constructor TStorageTargetDescriptor.Create(const ADescription, AFileExtension: string);
+begin
+  Description := ADescription;
+  FileExtension := AFileExtension;
 end;
 
 end.

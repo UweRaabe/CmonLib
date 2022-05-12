@@ -9,10 +9,32 @@ type
   EValidationError = class(Exception);
 
 type
+  TEnumWrapper<T: class> = record
+  type
+    TGetItemFunc = TFunc<Integer, TObject>;
+    TEnumerator = record
+    private
+      FIndex: Integer;
+      FCount: Integer;
+      FCurrent: T;
+      FGetItem: TGetItemFunc;
+    public
+      function MoveNext: Boolean; inline;
+      property Current: T read FCurrent;
+    end;
+  private
+    FCount: Integer;
+    FGetItem: TGetItemFunc;
+  public
+    constructor Create(ACount: Integer; AGetItem: TGetItemFunc);
+    function GetEnumerator: TEnumerator; inline;
+  end;
+
+type
   TComponentHelper = class helper for TComponent
   public
-    function FindComponentOf<T: class>(const AName: string): T;
-    procedure ForAllComponentsOf<T: class>(DoProc: TProc<T>);
+    function ComponentsOf<T: TComponent>: TEnumWrapper<T>; inline;
+    function FindComponentOf<T: TComponent>(const AName: string): T; inline;
   end;
 
 type
@@ -40,20 +62,6 @@ implementation
 
 uses
   System.Threading, System.IOUtils;
-
-function TComponentHelper.FindComponentOf<T>(const AName: string): T;
-begin
-  result := FindComponent(AName) as T;
-end;
-
-procedure TComponentHelper.ForAllComponentsOf<T>(DoProc: TProc<T>);
-var
-  cmp: TComponent;
-begin
-  for cmp in Self do
-    if cmp is T then
-      DoProc(T(cmp));
-end;
 
 class function TRttiHelper.FindAttribute<T>(Source: TClass): T;
 var
@@ -133,6 +141,55 @@ end;
 class function TUtilities.UserDocumentsPath: string;
 begin
   Result := TPath.Combine(TPath.GetDocumentsPath, AppName);
+end;
+
+constructor TEnumWrapper<T>.Create(ACount: Integer; AGetItem: TGetItemFunc);
+begin
+  FCount := ACount;
+  FGetItem := AGetItem;
+end;
+
+function TEnumWrapper<T>.GetEnumerator: TEnumerator;
+begin
+  Result.FCount := FCount;
+  Result.FGetItem := FGetItem;
+  Result.FIndex := -1;
+end;
+
+function TEnumWrapper<T>.TEnumerator.MoveNext: Boolean;
+var
+  cmp: TObject;
+begin
+  repeat
+    Inc(FIndex);
+    if FIndex < FCount then
+    begin
+      cmp := FGetItem(FIndex);
+      if cmp.InheritsFrom(T) then
+      begin
+        FCurrent := T(cmp);
+        Exit(True);
+      end;
+      Continue;
+    end;
+  until True;
+  Result := False;
+end;
+
+{ TComponentHelper }
+
+function TComponentHelper.ComponentsOf<T>: TEnumWrapper<T>;
+begin
+  Result := TEnumWrapper<T>.Create(ComponentCount,
+    function(Index: Integer): TObject
+    begin
+      Result := Components[Index];
+    end);
+end;
+
+function TComponentHelper.FindComponentOf<T>(const AName: string): T;
+begin
+  result := FindComponent(AName) as T;
 end;
 
 end.

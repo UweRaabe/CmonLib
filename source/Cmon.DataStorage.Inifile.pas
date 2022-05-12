@@ -3,45 +3,40 @@ unit Cmon.DataStorage.Inifile;
 interface
 
 uses
-  System.IniFiles,
-  Cmon.DataStorage;
+  System.IniFiles, System.Messaging,
+  Cmon.DataStorage, Cmon.DataStorage.Target;
 
 type
-  TIniStorageTarget = class(TInterfacedObject, IStorageTarget)
+  TIniStorageTarget = class(TCustomStorageTarget)
   private
-    FFileName: string;
     FIniFile: TMemIniFile;
-  class var
-    FDefaultFileName: string;
-    FDefaultFilePath: string;
-    class function GetDefaultFileName: string; static;
+    procedure SetIniFile(const Value: TMemIniFile);
   strict protected
-    property IniFile: TMemIniFile read FIniFile implements IStorageTarget;
+    function ReadString(const Key: string; const Ident: string; const Default: string): string; override;
+    procedure WriteString(const Key: string; const Ident: string; const Value: string); override;
+    property IniFile: TMemIniFile read FIniFile write SetIniFile;
   public
-    constructor Create(const AFileName: string = '');
     destructor Destroy; override;
-    class property DefaultFileName: string read GetDefaultFileName write FDefaultFileName;
-    class property DefaultFilePath: string read FDefaultFilePath write FDefaultFilePath;
-    property FileName: string read FFileName;
+    class function Description: string; override;
+    class function FileExtension: string; override;
+    procedure LoadFromFile(const AFileName: string); override;
   end;
+
+type
+  TIniStorageTargetHandler = class(TStorageTargetHandler<TIniStorageTarget>);
 
 implementation
 
 uses
   System.IOUtils, System.SysUtils,
-  Cmon.Utilities;
+  Cmon.Utilities, Cmon.Messaging;
 
-constructor TIniStorageTarget.Create(const AFileName: string);
+resourcestring
+  SINIFiles = 'INI files';
+
+class function TIniStorageTarget.Description: string;
 begin
-  inherited Create;
-  FFileName := AFileName;
-  if FFileName.IsEmpty then begin
-    FFileName := DefaultFileName;
-    if not DefaultFilePath.IsEmpty then
-      FFileName := TPath.Combine(DefaultFilePath, TPath.GetFileName(FFileName));
-  end;
-  FIniFile := TMemIniFile.Create(FFileName);
-  FIniFile.AutoSave := True;
+  Result := SINIFiles;
 end;
 
 destructor TIniStorageTarget.Destroy;
@@ -50,22 +45,52 @@ begin
   inherited Destroy;
 end;
 
-class function TIniStorageTarget.GetDefaultFileName: string;
+class function TIniStorageTarget.FileExtension: string;
 begin
-  Result := FDefaultFileName;
-  if Result.IsEmpty then
-    Result := TPath.ChangeExtension(TUtilities.GetExeName, '.ini');
+  Result := '.ini';
 end;
 
-function CreateStorageTarget: IStorageTarget;
+procedure TIniStorageTarget.LoadFromFile(const AFileName: string);
 begin
-  result := TIniStorageTarget.Create;
+  IniFile := TMemIniFile.Create(AFileName);
 end;
 
-{$IFNDEF DontRegisterHandler}
+function TIniStorageTarget.ReadString(const Key: string; const Ident: string; const Default: string): string;
+begin
+  Result := IniFile.ReadString(Key, Ident, Default);
+end;
+
+procedure TIniStorageTarget.SetIniFile(const Value: TMemIniFile);
+begin
+  if FIniFile <> Value then
+  begin
+    FIniFile.Free;
+    FIniFile := Value;
+    if FIniFile <> nil then
+      FIniFile.AutoSave := True;
+  end;
+end;
+
+procedure TIniStorageTarget.WriteString(const Key: string; const Ident: string; const Value: string);
+begin
+  IniFile.WriteString(Key, Ident, Value);
+end;
+
+var
+  SaveInitProc: Pointer = nil;
+  Instance: TIniStorageTargetHandler = nil;
+
+{ will be called in Application.Initialize after all other initialization code has been executed }
+procedure InitApplication;
+begin
+  if SaveInitProc <> nil then TProcedure(SaveInitProc);
+  if AutoRegisterHandler then
+    Instance := TIniStorageTargetHandler.Create;
+end;
+
 initialization
-  TDataStorage.StorageTargetFactory := CreateStorageTarget;
+  SaveInitProc := InitProc;
+  InitProc := @InitApplication;
 finalization
-  TDataStorage.StorageTargetFactory := nil;
-{$ENDIF}
+  Instance.Free;
 end.

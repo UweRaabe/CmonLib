@@ -1,0 +1,182 @@
+unit Cmon.DataStorage.JSON;
+
+interface
+
+uses
+  System.JSON,
+  Cmon.DataStorage, Cmon.DataStorage.Target;
+
+type
+  TJSONStorageTarget = class(TCustomStorageTarget)
+  private
+    FJson: TJSONObject;
+    procedure SetJson(const Value: TJSONObject);
+  strict protected
+    function ReadString(const Key: string; const Ident: string; const Default: string): string; override;
+    procedure WriteString(const Key: string; const Ident: string; const Value: string); override;
+  protected
+  public
+    destructor Destroy; override;
+    class function Description: string; override;
+    class function FileExtension: string; override;
+    procedure LoadFromFile(const AFileName: string); override;
+    procedure SaveToFile(const AFileName: string); override;
+    property Json: TJSONObject read FJson write SetJson;
+  end;
+
+type
+  TJSONStorageTargetHandler = class(TStorageTargetHandler<TJSONStorageTarget>);
+
+implementation
+
+uses
+  System.SysUtils, System.IOUtils, System.Generics.Collections,
+  Cmon.Utilities, Cmon.Messaging;
+
+resourcestring
+  SJSONFiles = 'JSON files';
+
+type
+  TJsonObjectHelper = class helper for TJSONObject
+  public
+    function FindIdent(const AIdent: string): TJSONString;
+    procedure WriteIdent(const AIdent, AValue: string);
+    function FindKey(const AKey: string): TJSONObject;
+    function FindOrCreateKey(const AKey: string): TJSONObject;
+    function FindPair<T: class>(const AName: string): TJSONPair;
+  end;
+
+destructor TJSONStorageTarget.Destroy;
+begin
+  FJson.Free;
+  FJson := nil;
+  inherited Destroy;
+end;
+
+class function TJSONStorageTarget.Description: string;
+begin
+  Result := SJSONFiles;
+end;
+
+class function TJSONStorageTarget.FileExtension: string;
+begin
+  Result := '.json';
+end;
+
+procedure TJSONStorageTarget.LoadFromFile(const AFileName: string);
+begin
+  if TFile.Exists(AFileName) then
+    Json := TJSONValue.ParseJSONValue(TFile.ReadAllText(AFileName)) as TJSONObject
+  else
+    Json := TJSONObject.Create;
+end;
+
+function TJSONStorageTarget.ReadString(const Key, Ident, Default: string): string;
+var
+  keys: TArray<string>;
+  node: TJSONObject;
+  temp: TJSONString;
+begin
+  Result := Default;
+  node := Json;
+  keys := TDataStorage.SplitStorageKey(Key);
+  for var subKey in keys do begin
+    node := node.FindKey(subKey);
+    if node = nil then Exit;
+  end;
+  if node <> nil then begin
+    temp := node.FindIdent(Ident);
+    if temp <> nil then
+      Result := temp.Value;
+  end;
+end;
+
+procedure TJSONStorageTarget.SaveToFile(const AFileName: string);
+begin
+  if Json <> nil then
+    TFile.WriteAllText(AFileName, Json.Format(4), TEncoding.UTF8);
+end;
+
+procedure TJSONStorageTarget.SetJson(const Value: TJSONObject);
+begin
+  if FJson <> Value then begin
+    FJson.Free;
+    FJson := Value;
+  end;
+end;
+
+procedure TJSONStorageTarget.WriteString(const Key, Ident, Value: string);
+var
+  keys: TArray<string>;
+  node: TJSONObject;
+begin
+  node := Json;
+  keys := TDataStorage.SplitStorageKey(Key);
+  for var subKey in keys do
+    node := node.FindOrCreateKey(subKey);
+  node.WriteIdent(Ident, Value);
+  SaveToFile(FileName);
+end;
+
+function TJsonObjectHelper.FindIdent(const AIdent: string): TJSONString;
+begin
+  Result := nil;
+  var pair := FindPair<TJSONString>(AIdent);
+  if pair <> nil then
+    Result := pair.JsonValue as TJSONString;
+end;
+
+procedure TJsonObjectHelper.WriteIdent(const AIdent, AValue: string);
+begin
+  var pair := FindPair<TJSONString>(AIdent);
+  if pair = nil then
+    AddPair(AIdent, AValue)
+  else
+    pair.JsonValue := TJSONString.Create(AValue);
+end;
+
+function TJsonObjectHelper.FindKey(const AKey: string): TJSONObject;
+begin
+  Result := nil;
+  var pair := FindPair<TJSONObject>(AKey);
+  if pair <> nil then
+    Result := pair.JsonValue as TJSONObject;
+end;
+
+function TJsonObjectHelper.FindOrCreateKey(const AKey: string): TJSONObject;
+begin
+  Result := FindKey(AKey);
+  if Result = nil then begin
+    Result := TJSONObject.Create;
+    AddPair(AKey, Result);
+  end;
+end;
+
+function TJsonObjectHelper.FindPair<T>(const AName: string): TJSONPair;
+begin
+  Result := nil;
+  for var I := 0 to Count - 1 do begin
+    var pair := Pairs[I];
+    if pair.JsonString.Equals(AName) and (pair.JsonValue is T) then
+      Exit(pair);
+  end;
+end;
+
+var
+  SaveInitProc: Pointer = nil;
+  Instance: TJSONStorageTargetHandler = nil;
+
+{ will be called in Application.Initialize after all other initialization code has been executed }
+procedure InitApplication;
+begin
+  if SaveInitProc <> nil then TProcedure(SaveInitProc);
+  if AutoRegisterHandler then
+    Instance := TJSONStorageTargetHandler.Create;
+end;
+
+initialization
+  SaveInitProc := InitProc;
+  InitProc := @InitApplication;
+finalization
+  Instance.Free;
+end.

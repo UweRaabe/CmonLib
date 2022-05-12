@@ -47,6 +47,9 @@ type
     property Title: string read FTitle write FTitle;
   end;
 
+var
+  AutoRegisterHandler: Boolean = True;
+
 implementation
 
 class function TCommonMessage<T>.Manager: TMessageManager;

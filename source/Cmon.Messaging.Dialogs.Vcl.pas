@@ -28,13 +28,21 @@ begin
     msg.Answer := TaskMessageDlg(msg.Title, msg.MessageText, msg.MsgDlgType, msg.Buttons, msg.HelpContext);
 end;
 
-{$IFNDEF DontRegisterHandler}
 var
+  SaveInitProc: Pointer = nil;
   Instance: TDlgMessageHandlerVcl = nil;
 
+{ will be called in Application.Initialize after all other initialization code has been executed }
+procedure InitApplication;
+begin
+  if SaveInitProc <> nil then TProcedure(SaveInitProc);
+  if AutoRegisterHandler then
+    Instance := TDlgMessageHandlerVcl.Create;
+end;
+
 initialization
-  Instance := TDlgMessageHandlerVcl.Create;
+  SaveInitProc := InitProc;
+  InitProc := @InitApplication;
 finalization
   Instance.Free;
-{$ENDIF}
 end.

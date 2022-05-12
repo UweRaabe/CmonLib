@@ -26,7 +26,7 @@ package CmonLib;
 {$DEFINE RELEASE}
 {$ENDIF IMPLICITBUILDING}
 {$DESCRIPTION 'CmonLib - Common Library'}
-{$LIBSUFFIX AUTO}
+{$LIBSUFFIX '280'}
 {$RUNONLY}
 {$IMPLICITBUILD OFF}
 
@@ -43,6 +43,8 @@ contains
   Cmon.Observers in '..\..\source\Cmon.Observers.pas',
   Cmon.Utilities in '..\..\source\Cmon.Utilities.pas',
   Cmon.CmdLineHandler in '..\..\source\Cmon.CmdLineHandler.pas',
-  Cmon.CmdLineFileHandler in '..\..\source\Cmon.CmdLineFileHandler.pas';
+  Cmon.CmdLineFileHandler in '..\..\source\Cmon.CmdLineFileHandler.pas',
+  Cmon.DataStorage.JSON in '..\..\source\Cmon.DataStorage.JSON.pas',
+  Cmon.DataStorage.Target in '..\..\source\Cmon.DataStorage.Target.pas';
 
 end.
