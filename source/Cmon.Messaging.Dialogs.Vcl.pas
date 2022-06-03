@@ -8,8 +8,13 @@ uses
 
 type
   TDlgMessageHandlerVcl = class(TDlgMessageHandler)
+  strict private
+  class var
+    FAutoRegisterHandler: Boolean;
   strict protected
     procedure DlgMessage(const Sender: TObject; const M: TMessage); override;
+  public
+    class property AutoRegisterHandler: Boolean read FAutoRegisterHandler write FAutoRegisterHandler;
   end;
 
 implementation
@@ -17,7 +22,7 @@ implementation
 uses
   System.UITypes, System.SysUtils,
   Vcl.Dialogs,
-  Cmon.Messaging;
+  Cmon.Messaging, Cmon.Initializing;
 
 procedure TDlgMessageHandlerVcl.DlgMessage(const Sender: TObject; const M: TMessage);
 begin
@@ -29,20 +34,18 @@ begin
 end;
 
 var
-  SaveInitProc: Pointer = nil;
   Instance: TDlgMessageHandlerVcl = nil;
 
 { will be called in Application.Initialize after all other initialization code has been executed }
-procedure InitApplication;
+procedure InitHandler;
 begin
-  if SaveInitProc <> nil then TProcedure(SaveInitProc);
-  if AutoRegisterHandler then
+  if TDlgMessage.AutoRegisterHandler and TDlgMessageHandlerVcl.AutoRegisterHandler then
     Instance := TDlgMessageHandlerVcl.Create;
 end;
 
 initialization
-  SaveInitProc := InitProc;
-  InitProc := @InitApplication;
+  TDlgMessageHandlerVcl.AutoRegisterHandler := True;
+  TInitialize.AddInitProc(InitHandler);
 finalization
   Instance.Free;
 end.

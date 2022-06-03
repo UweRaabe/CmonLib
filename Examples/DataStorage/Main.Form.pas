@@ -28,11 +28,14 @@ type
     TitleLabel: TLabel;
     SomeEnumSelector: TRadioGroup;
     SomeBooleanCheck: TCheckBox;
-    SaveToJSONButton: TButton;
-    LoadFromJSONButton: TButton;
+    SaveSettingsButton: TButton;
+    LoadSettingsButton: TButton;
     procedure FormCreate(Sender: TObject);
-    procedure LoadFromJSONButtonClick(Sender: TObject);
-    procedure SaveToJSONButtonClick(Sender: TObject);
+    procedure LoadSettingsButtonClick(Sender: TObject);
+    procedure SaveSettingsButtonClick(Sender: TObject);
+  strict private
+  class var
+    FSettingsFileExtension: string;
   private
     function GetSomeBoolean: Boolean;
     function GetSomeEnum: TMyEnum;
@@ -47,6 +50,7 @@ type
     procedure SaveSettings;
   public
     procedure UpdateTitle;
+    class property SettingsFileExtension: string read FSettingsFileExtension write FSettingsFileExtension;
     [Stored, Default(True)]
     property SomeBoolean: Boolean read GetSomeBoolean write SetSomeBoolean;
     [Stored, DefaultMyEnum(TMyEnum.None)]
@@ -65,7 +69,7 @@ implementation
 uses
   System.SysUtils, System.IOUtils,
   Vcl.Dialogs,
-  Cmon.DataStorage.Target, Cmon.DataStorage.Inifile, Cmon.DataStorage.JSON, Cmon.Messaging, Cmon.Utilities;
+  Cmon.Utilities;
 
 {$R *.dfm}
 
@@ -108,6 +112,11 @@ begin
   Result := TRttiEnumerationType.GetName(Self);
 end;
 
+constructor DefaultMyEnumAttribute.Create(AValue: TMyEnum);
+begin
+  inherited Create(TValue.From(AValue));
+end;
+
 procedure TDemoMainForm.FormCreate(Sender: TObject);
 begin
   TMyEnum.ListNames(SomeEnumSelector.Items);
@@ -140,12 +149,12 @@ end;
 procedure TDemoMainForm.LoadSettings;
 begin
   var filter := TDataStorage.MakeStorageTargetFileFilter;
-  var fileName := TPath.ChangeExtension(TUtilities.GetExeName, TJSONStorageTarget.FileExtension);
+  var fileName := TPath.ChangeExtension(TUtilities.GetExeName, SettingsFileExtension);
   if PromptForFileName(fileName, filter, '', 'Load settings', '', False) then
     LoadFromStorage(TDataStorage.CreateStorageTarget(Self, fileName));
 end;
 
-procedure TDemoMainForm.LoadFromJSONButtonClick(Sender: TObject);
+procedure TDemoMainForm.LoadSettingsButtonClick(Sender: TObject);
 begin
   inherited;
   LoadSettings;
@@ -154,12 +163,12 @@ end;
 procedure TDemoMainForm.SaveSettings;
 begin
   var filter := TDataStorage.MakeStorageTargetFileFilter;
-  var fileName := TPath.ChangeExtension(TUtilities.GetExeName, TJSONStorageTarget.FileExtension);
+  var fileName := TPath.ChangeExtension(TUtilities.GetExeName, SettingsFileExtension);
   if PromptForFileName(fileName, filter, '', 'Save settings', '', True) then
     SaveToStorage(TDataStorage.CreateStorageTarget(Self, fileName));
 end;
 
-procedure TDemoMainForm.SaveToJSONButtonClick(Sender: TObject);
+procedure TDemoMainForm.SaveSettingsButtonClick(Sender: TObject);
 begin
   inherited;
   SaveSettings;
@@ -190,24 +199,4 @@ begin
   TitleLabel.Caption := Name;
 end;
 
-constructor DefaultMyEnumAttribute.Create(AValue: TMyEnum);
-begin
-  inherited Create(TValue.From(AValue));
-end;
-
-var
-  SaveInitProc: Pointer = nil;
-
-{ will be called in Application.Initialize after all initialization sections have been executed }
-procedure InitApplication;
-begin
-  { this is a good place to set some global variables used in InitApplication procedures from other units }
-//  AutoRegisterHandler := False;
-  if SaveInitProc <> nil then TProcedure(SaveInitProc);
-  TCustomStorageTarget.DefaultFileExtension := TIniStorageTarget.FileExtension;
-end;
-
-initialization
-  SaveInitProc := InitProc;
-  InitProc := @InitApplication;
 end.

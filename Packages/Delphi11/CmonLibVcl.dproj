@@ -85,7 +85,6 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="rtl.dcp"/>
         <DCCReference Include="CmonLib.dcp"/>
         <DCCReference Include="vcl.dcp"/>
         <DCCReference Include="..\..\source\Cmon.Messaging.Dialogs.Vcl.pas"/>

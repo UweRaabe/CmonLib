@@ -20,15 +20,22 @@ type
 
 type
   TLogMessage = class(TCommonMessage<string>)
+  strict private
+  class var
+    FAutoRegisterHandler: Boolean;
   private
     function GetMessageText: string;
   public
     class procedure SendMessage(Sender: TObject; const AMessageText: string);
+    class property AutoRegisterHandler: Boolean read FAutoRegisterHandler write FAutoRegisterHandler;
     property MessageText: string read GetMessageText;
   end;
 
 type
   TDlgMessage = class(TCommonMessage<string>)
+  strict private
+  class var
+    FAutoRegisterHandler: Boolean;
   private
     FAnswer: TModalResult;
     FButtons: TMsgDlgButtons;
@@ -40,15 +47,13 @@ type
     class function Execute(Sender: TObject; const ATitle, AMessageText: string; AMsgDlgType: TMsgDlgType; AButtons: TMsgDlgButtons;
         ADefault: TModalResult; AHelpContext: Integer): TModalResult;
     property Answer: TModalResult read FAnswer write FAnswer;
+    class property AutoRegisterHandler: Boolean read FAutoRegisterHandler write FAutoRegisterHandler;
     property Buttons: TMsgDlgButtons read FButtons write FButtons;
     property HelpContext: Integer read FHelpContext write FHelpContext;
     property MessageText: string read GetMessageText;
     property MsgDlgType: TMsgDlgType read FMsgDlgType write FMsgDlgType;
     property Title: string read FTitle write FTitle;
   end;
-
-var
-  AutoRegisterHandler: Boolean = True;
 
 implementation
 
@@ -121,4 +126,7 @@ begin
   Result := Value;
 end;
 
+initialization
+  TDlgMessage.AutoRegisterHandler := True;
+  TLogMessage.AutoRegisterHandler := True;
 end.

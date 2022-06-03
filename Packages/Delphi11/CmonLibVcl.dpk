@@ -31,7 +31,6 @@ package CmonLibVcl;
 {$IMPLICITBUILD OFF}
 
 requires
-  rtl,
   CmonLib,
   vcl;
 

@@ -85,6 +85,7 @@
         <DCCReference Include="DataTypes.pas"/>
         <DCCReference Include="Main.Form.pas">
             <Form>DemoMainForm</Form>
+            <FormType>dfm</FormType>
         </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

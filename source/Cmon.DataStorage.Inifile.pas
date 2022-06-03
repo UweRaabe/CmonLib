@@ -23,13 +23,19 @@ type
   end;
 
 type
-  TIniStorageTargetHandler = class(TStorageTargetHandler<TIniStorageTarget>);
+  TIniStorageTargetHandler = class(TStorageTargetHandler<TIniStorageTarget>)
+  strict private
+  class var
+    FAutoRegisterHandler: Boolean;
+  public
+    class property AutoRegisterHandler: Boolean read FAutoRegisterHandler write FAutoRegisterHandler;
+  end;
 
 implementation
 
 uses
   System.IOUtils, System.SysUtils,
-  Cmon.Utilities, Cmon.Messaging;
+  Cmon.Utilities, Cmon.Messaging, Cmon.Initializing;
 
 resourcestring
   SINIFiles = 'INI files';
@@ -77,20 +83,18 @@ begin
 end;
 
 var
-  SaveInitProc: Pointer = nil;
   Instance: TIniStorageTargetHandler = nil;
 
 { will be called in Application.Initialize after all other initialization code has been executed }
-procedure InitApplication;
+procedure InitHandler;
 begin
-  if SaveInitProc <> nil then TProcedure(SaveInitProc);
-  if AutoRegisterHandler then
+  if TDataStorage.AutoRegisterHandler and TIniStorageTargetHandler.AutoRegisterHandler then
     Instance := TIniStorageTargetHandler.Create;
 end;
 
 initialization
-  SaveInitProc := InitProc;
-  InitProc := @InitApplication;
+  TIniStorageTargetHandler.AutoRegisterHandler := True;
+  TInitialize.AddInitProc(InitHandler);
 finalization
   Instance.Free;
 end.

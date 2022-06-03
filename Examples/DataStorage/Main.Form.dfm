@@ -103,24 +103,24 @@ inherited DemoMainForm: TDemoMainForm
     Caption = 'Some Boolean'
     TabOrder = 5
   end
-  object SaveToJSONButton: TButton
+  object SaveSettingsButton: TButton
     Left = 456
     Top = 256
     Width = 175
     Height = 41
-    Caption = 'Save to JSON'
+    Caption = 'Save Settings'
     Style = bsCommandLink
     TabOrder = 6
-    OnClick = SaveToJSONButtonClick
+    OnClick = SaveSettingsButtonClick
   end
-  object LoadFromJSONButton: TButton
+  object LoadSettingsButton: TButton
     Left = 456
     Top = 320
     Width = 175
     Height = 41
-    Caption = 'Load from JSON'
+    Caption = 'Load Settings'
     Style = bsCommandLink
     TabOrder = 7
-    OnClick = LoadFromJSONButtonClick
+    OnClick = LoadSettingsButtonClick
   end
 end

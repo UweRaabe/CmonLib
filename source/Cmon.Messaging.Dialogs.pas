@@ -3,7 +3,7 @@ unit Cmon.Messaging.Dialogs;
 interface
 
 uses
-  System.Messaging, System.Classes;
+  System.Messaging;
 
 type
   TDlgMessageHandler = class

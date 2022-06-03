@@ -3,7 +3,7 @@ unit Cmon.Utilities;
 interface
 
 uses
-  System.Classes, System.SysUtils, System.Rtti;
+  System.Classes, System.SysUtils, System.IOUtils;
 
 type
   EValidationError = class(Exception);
@@ -38,10 +38,9 @@ type
   end;
 
 type
-  TRttiHelper = record
+  TCollectionHelper = class helper for TCollection
   public
-    class function FindAttribute<T: TCustomAttribute>(Source: TClass): T; overload; static;
-    class function FindAttribute<T: TCustomAttribute>(Source: TRttiObject): T; overload; static;
+    function ItemsOf<T: TCollectionItem>: TEnumWrapper<T>; inline;
   end;
 
 type
@@ -61,41 +60,7 @@ type
 implementation
 
 uses
-  System.Threading, System.IOUtils;
-
-{ TRttiHelper }
-
-class function TRttiHelper.FindAttribute<T>(Source: TClass): T;
-var
-  context: TRttiContext;
-  myType: TRttiType;
-begin
-  Result := nil;
-  context := TRttiContext.Create;
-  try
-    myType := context.GetType(Source);
-    if myType <> nil then begin
-      Result := FindAttribute<T>(myType);
-    end;
-  finally
-    context.Free;
-  end;
-end;
-
-class function TRttiHelper.FindAttribute<T>(Source: TRttiObject): T;
-var
-  attr: TCustomAttribute;
-  attributes: TArray<TCustomAttribute>;
-begin
-  Result := nil;
-  attributes := Source.GetAttributes;
-  for attr in attributes do begin
-    if attr is T then begin
-      Result := T(attr);
-      Break;
-    end;
-  end;
-end;
+  System.Threading;
 
 { TUtilities }
 
@@ -196,6 +161,17 @@ end;
 function TComponentHelper.FindComponentOf<T>(const AName: string): T;
 begin
   result := FindComponent(AName) as T;
+end;
+
+{ TCollectionHelper }
+
+function TCollectionHelper.ItemsOf<T>: TEnumWrapper<T>;
+begin
+  Result := TEnumWrapper<T>.Create(Count,
+    function(Index: Integer): TObject
+    begin
+      Result := Items[Index];
+    end);
 end;
 
 end.

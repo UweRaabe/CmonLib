@@ -98,6 +98,9 @@
         <DCCReference Include="..\..\source\Cmon.CmdLineFileHandler.pas"/>
         <DCCReference Include="..\..\source\Cmon.DataStorage.JSON.pas"/>
         <DCCReference Include="..\..\source\Cmon.DataStorage.Target.pas"/>
+        <DCCReference Include="..\..\source\Cmon.Messaging.Logging.pas"/>
+        <DCCReference Include="..\..\source\Cmon.Messaging.Logging.TextFile.pas"/>
+        <DCCReference Include="..\..\source\Cmon.Initializing.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

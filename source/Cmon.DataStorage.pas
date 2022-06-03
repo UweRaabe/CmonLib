@@ -67,6 +67,7 @@ type
     cKeySeparator: string = '\';
     cBool: array[Boolean] of Integer = (0, 1);
   class var
+    FAutoRegisterHandler: Boolean;
     FDefaultInstance: TDataStorage;
     FStorageTargetFactory: TStorageTargetFactory;
     class destructor Destruct;
@@ -122,6 +123,7 @@ type
     procedure WriteString(const Ident: string; const Value: string);
     procedure WriteStrings(const Ident: string; Source: TStrings);
     procedure WriteValue(const Ident: string; const Value: TValue);
+    class property AutoRegisterHandler: Boolean read FAutoRegisterHandler write FAutoRegisterHandler;
     class property DefaultInstance: TDataStorage read GetDefaultInstance;
     class property StorageTargetFactory: TStorageTargetFactory read FStorageTargetFactory write FStorageTargetFactory;
     property StorageKey: string read FStorageKey write FStorageKey;
@@ -144,7 +146,6 @@ type
 
 type
   TCustomStoredClass = class
-  private
   strict protected
     function GetDataStorage: TDataStorage; virtual;
   protected
@@ -491,7 +492,7 @@ var
 begin
   S := ReadString(Ident, '');
   if (S.Length > 2) and (S.StartsWith('0x',true)) then begin
-    S := '$' + S.Substring( 2);
+    S := '$' + S.Substring(2);
   end;
   Result := StrToIntDef(S, Default);
 end;
@@ -879,4 +880,6 @@ begin
   FileExtension := AFileExtension;
 end;
 
+initialization
+  TDataStorage.AutoRegisterHandler := True;
 end.

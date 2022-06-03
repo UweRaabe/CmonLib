@@ -45,6 +45,9 @@ contains
   Cmon.CmdLineHandler in '..\..\source\Cmon.CmdLineHandler.pas',
   Cmon.CmdLineFileHandler in '..\..\source\Cmon.CmdLineFileHandler.pas',
   Cmon.DataStorage.JSON in '..\..\source\Cmon.DataStorage.JSON.pas',
-  Cmon.DataStorage.Target in '..\..\source\Cmon.DataStorage.Target.pas';
+  Cmon.DataStorage.Target in '..\..\source\Cmon.DataStorage.Target.pas',
+  Cmon.Messaging.Logging in '..\..\source\Cmon.Messaging.Logging.pas',
+  Cmon.Messaging.Logging.TextFile in '..\..\source\Cmon.Messaging.Logging.TextFile.pas',
+  Cmon.Initializing in '..\..\source\Cmon.Initializing.pas';
 
 end.

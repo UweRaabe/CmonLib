@@ -25,13 +25,19 @@ type
   end;
 
 type
-  TJSONStorageTargetHandler = class(TStorageTargetHandler<TJSONStorageTarget>);
+  TJSONStorageTargetHandler = class(TStorageTargetHandler<TJSONStorageTarget>)
+  strict private
+  class var
+    FAutoRegisterHandler: Boolean;
+  public
+    class property AutoRegisterHandler: Boolean read FAutoRegisterHandler write FAutoRegisterHandler;
+  end;
 
 implementation
 
 uses
   System.SysUtils, System.IOUtils, System.Generics.Collections,
-  Cmon.Utilities, Cmon.Messaging;
+  Cmon.Utilities, Cmon.Messaging, Cmon.Initializing;
 
 resourcestring
   SJSONFiles = 'JSON files';
@@ -163,20 +169,18 @@ begin
 end;
 
 var
-  SaveInitProc: Pointer = nil;
   Instance: TJSONStorageTargetHandler = nil;
 
 { will be called in Application.Initialize after all other initialization code has been executed }
-procedure InitApplication;
+procedure InitHandler;
 begin
-  if SaveInitProc <> nil then TProcedure(SaveInitProc);
-  if AutoRegisterHandler then
+  if TDataStorage.AutoRegisterHandler and TJSONStorageTargetHandler.AutoRegisterHandler then
     Instance := TJSONStorageTargetHandler.Create;
 end;
 
 initialization
-  SaveInitProc := InitProc;
-  InitProc := @InitApplication;
+  TJSONStorageTargetHandler.AutoRegisterHandler := True;
+  TInitialize.AddInitProc(InitHandler);
 finalization
   Instance.Free;
 end.
