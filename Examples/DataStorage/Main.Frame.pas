@@ -3,9 +3,8 @@ unit Main.Frame;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages,
-  System.SysUtils, System.Variants, System.Classes,
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Mask,
+  System.Classes,
+  Vcl.Forms, Vcl.Controls, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Mask,
   Cmon.DataStorage,
   Common.Frame;
 
@@ -26,9 +25,6 @@ type
     [Stored]
     property SomeText: string read GetSomeText write SetSomeText;
   end;
-
-var
-  DemoFrame: TDemoFrame;
 
 implementation
 
