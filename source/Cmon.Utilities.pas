@@ -131,7 +131,7 @@ function TEnumWrapper<T>.TEnumerator.MoveNext: Boolean;
 var
   cmp: TObject;
 begin
-  repeat
+  while True do begin
     Inc(FIndex);
     if FIndex < FCount then
     begin
@@ -141,10 +141,10 @@ begin
         FCurrent := T(cmp);
         Exit(True);
       end;
-      Continue;
-    end;
-  until True;
-  Result := False;
+    end
+    else
+      Exit(False);
+  End;
 end;
 
 { TComponentHelper }
