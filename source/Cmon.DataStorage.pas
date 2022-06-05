@@ -84,22 +84,21 @@ type
     class procedure InitDefaults(Instance: TObject; AProp: TRttiProperty); overload;
     function InternalReadString(const Ident, Default: string): string; virtual;
     procedure InternalWriteString(const Ident, Value: string); virtual;
-    procedure LoadFromStorage(Instance: TObject; AField: TRttiField; Attr: StoredAttribute); overload;
-    procedure LoadFromStorage(Instance: TObject; AProp: TRttiProperty; Attr: StoredAttribute); overload;
     procedure LoadFromStorage<T: StoredAttribute>(Instance: TObject; AField: TRttiField); overload;
     procedure LoadFromStorage<T: StoredAttribute>(Instance: TObject; AProp: TRttiProperty); overload;
-    procedure ReadInstance(const Ident: string; Instance: TObject);
-    procedure SaveToStorage(Instance: TObject; AField: TRttiField; Attr: StoredAttribute); overload;
-    procedure SaveToStorage(Instance: TObject; AProp: TRttiProperty; Attr: StoredAttribute); overload;
+    procedure ReadInstance<T: StoredAttribute>(const Ident: string; Instance: TObject);
     procedure SaveToStorage<T: StoredAttribute>(Instance: TObject; AField: TRttiField); overload;
     procedure SaveToStorage<T: StoredAttribute>(Instance: TObject; AProp: TRttiProperty); overload;
-    procedure WriteInstance(const Ident: string; Instance: TObject);
+    procedure WriteInstance<T: StoredAttribute>(const Ident: string; Instance: TObject);
+  protected
+    function GetStoredName(const Value, Default: string): string;
   public
     constructor Create;
     destructor Destroy; override;
     function CreateStorageTarget(const AFileName: string = ''): IStorageTarget; overload;
     class function CreateStorageTarget(Sender: TObject; const AFileName: string = ''): IStorageTarget; overload;
     class procedure InitDefaults(Instance: TObject); overload; static;
+    class function IsSupportedTargetExtension(const AExtension: string): Boolean;
     class procedure ListStorageTargets(Target: TStorageTargetDescriptorList);
     procedure LoadFromStorage(Instance: TObject); overload;
     procedure LoadFromStorage<T: StoredAttribute>(Instance: TObject); overload;
@@ -194,21 +193,13 @@ begin
     var myType := context.GetType(AInstance.ClassType);
     if myType <> nil then begin
       var attr := myType.GetAttribute<StorageKeyAttribute>;
-      if attr <> nil then begin
-        Exit(attr.Key);
-      end;
+      if attr <> nil then
+        Result := attr.Key;
     end;
   finally
     context.Free;
   end;
 end;
-
-type
-  TStoredAttributeHelper = class helper for StoredAttribute
-  public
-    function StoredName(AProp: TRttiProperty): string; overload;
-    function StoredName(AField: TRttiField): string; overload;
-  end;
 
 constructor DefaultAttribute.Create(AValue: Boolean);
 begin
@@ -276,30 +267,30 @@ begin
   Result := FDefaultInstance;
 end;
 
+function TDataStorage.GetStoredName(const Value, Default: string): string;
+begin
+  Result := Value;
+  if Result.IsEmpty then
+    Result := Default;
+end;
+
 class procedure TDataStorage.InitDefaults(Instance: TObject);
 var
   context: TRttiContext;
-  field: TRttiField;
-  fields: TArray<TRttiField>;
-  myType: TRttiType;
-  prop: TRttiProperty;
-  props: TArray<TRttiProperty>;
 begin
+  if Instance = nil then Exit;
+
   context := TRttiContext.Create;
   try
-    myType := context.GetType(Instance.ClassType);
+    var myType := context.GetType(Instance.ClassType);
     if myType <> nil then begin
-      fields := myType.GetFields;
       { initialize all fields having a Default attribute }
-      for field in fields do begin
+      for var field in myType.GetFields do
         InitDefaults(Instance, field);
-      end;
 
-      props := myType.GetProperties;
       { initialize all properties having a Default attribute }
-      for prop in props do begin
+      for var prop in myType.GetProperties do
         InitDefaults(Instance, prop);
-      end;
     end;
   finally
     context.Free;
@@ -307,19 +298,21 @@ begin
 end;
 
 class procedure TDataStorage.InitDefaults(Instance: TObject; AField: TRttiField);
-var
-  attr: DefaultAttribute;
 begin
-  attr := AField.GetAttribute<DefaultAttribute>;
-  if (attr = nil) or attr.Value.IsEmpty then Exit;
-  AField.SetValue(Instance, attr.value);
+  var attr := AField.GetAttribute<DefaultAttribute>;
+  if (attr = nil) then Exit;
+  if AField.FieldType.IsInstance then begin
+    InitDefaults(AField.GetValue(Instance).AsObject);
+  end
+  else begin
+    if attr.Value.IsEmpty then Exit;
+    AField.SetValue(Instance, attr.value);
+  end;
 end;
 
 class procedure TDataStorage.InitDefaults(Instance: TObject; AProp: TRttiProperty);
-var
-  attr: DefaultAttribute;
 begin
-  attr := AProp.GetAttribute<DefaultAttribute>;
+  var attr := AProp.GetAttribute<DefaultAttribute>;
   if (attr = nil) or attr.Value.IsEmpty then Exit;
   AProp.SetValue(Instance, attr.value);
 end;
@@ -337,6 +330,22 @@ begin
     FStorageTarget.WriteString(StorageKey, Ident, Value);
 end;
 
+class function TDataStorage.IsSupportedTargetExtension(const AExtension: string): Boolean;
+var
+  targets: TStorageTargetDescriptorList;
+begin
+  targets := TStorageTargetDescriptorList.Create;
+  try
+    ListStorageTargets(targets);
+    for var target in targets do
+      if SameText(AExtension, target.FileExtension) then
+        Exit(True);
+    Result := False;
+  finally
+    targets.Free;
+  end;
+end;
+
 class procedure TDataStorage.ListStorageTargets(Target: TStorageTargetDescriptorList);
 begin
   TStorageTargetListMessage.SendMessage(nil, Target);
@@ -347,78 +356,61 @@ begin
   LoadFromStorage<StoredAttribute>(Instance);
 end;
 
-procedure TDataStorage.LoadFromStorage(Instance: TObject; AField: TRttiField; Attr: StoredAttribute);
-var
-  attrName: string;
-  value: TValue;
-begin
-  if (attr = nil) or not attr.Flag then Exit;
-  attrName := attr.StoredName(AField);
-  if AField.FieldType.IsInstance then begin
-    ReadInstance(attrName, AField.GetValue(Instance).AsObject);
-  end
-  else begin
-    value := ReadValue(attrName, AField.GetValue(Instance));
-    if not value.IsEmpty then begin
-      AField.SetValue(Instance, value);
-    end;
-  end;
-end;
-
-procedure TDataStorage.LoadFromStorage(Instance: TObject; AProp: TRttiProperty; Attr: StoredAttribute);
-var
-  attrName: string;
-  value: TValue;
-begin
-  if (attr = nil) or not attr.Flag then Exit;
-  attrName := attr.StoredName(AProp);
-  if AProp.PropertyType.IsInstance then begin
-    ReadInstance(attrName, AProp.GetValue(Instance).AsObject);
-  end
-  else begin
-    value := ReadValue(attrName, AProp.GetValue(Instance));
-    if not value.IsEmpty then begin
-      AProp.SetValue(Instance, value);
-    end;
-  end;
-end;
-
 procedure TDataStorage.LoadFromStorage<T>(Instance: TObject);
 var
   context: TRttiContext;
-  field: TRttiField;
-  myType: TRttiType;
-  prop: TRttiProperty;
-  fields: TArray<TRttiField>;
-  props: TArray<TRttiProperty>;
 begin
-  context := TRttiContext.Create;
+  var newKey := StorageKey;
+  if newKey.IsEmpty then
+    newKey := GetStorageKeyFromAttribute(Instance, Instance.ClassName);
+  PushStorageKey(newKey);
   try
-    myType := context.GetType(Instance.ClassType);
-    if myType <> nil then begin
-      fields := myType.GetFields;
-      for field in fields do begin
-        LoadFromStorage<T>(Instance, field);
-      end;
+    context := TRttiContext.Create;
+    try
+      var myType := context.GetType(Instance.ClassType);
+      if myType <> nil then begin
+        for var field in myType.GetFields do
+          LoadFromStorage<T>(Instance, field);
 
-      props := myType.GetProperties;
-      for prop in props do begin
-        LoadFromStorage<T>(Instance, prop);
+        for var prop in myType.GetProperties do
+          LoadFromStorage<T>(Instance, prop);
       end;
+    finally
+      context.Free;
     end;
   finally
-    context.Free;
+    PopStorageKey;
   end;
 end;
 
 procedure TDataStorage.LoadFromStorage<T>(Instance: TObject; AField: TRttiField);
 begin
-  LoadFromStorage(Instance, AField, AField.GetAttribute<T>);
+  var attr := AField.GetAttribute<T>;
+  if (attr = nil) or not attr.Flag then Exit;
+  var storedName := GetStoredName(attr.Name, AField.Name.Substring(1));
+  if AField.FieldType.IsInstance then begin
+    ReadInstance<T>(storedName, AField.GetValue(Instance).AsObject);
+  end
+  else begin
+    var value := ReadValue(storedName, AField.GetValue(Instance));
+    if not value.IsEmpty then
+      AField.SetValue(Instance, value);
+  end;
 end;
 
 procedure TDataStorage.LoadFromStorage<T>(Instance: TObject; AProp: TRttiProperty);
 begin
-  LoadFromStorage(Instance, AProp, AProp.GetAttribute<T>);
+  var attr := AProp.GetAttribute<T>;
+  if (attr = nil) or not attr.Flag then Exit;
+  var storedName := GetStoredName(attr.Name, AProp.Name);
+  if AProp.PropertyType.IsInstance then begin
+    ReadInstance<T>(storedName, AProp.GetValue(Instance).AsObject);
+  end
+  else begin
+    var value := ReadValue(storedName, AProp.GetValue(Instance));
+    if not value.IsEmpty then
+      AProp.SetValue(Instance, value);
+  end;
 end;
 
 function TDataStorage.MakeStorageSubKey(const ASubKey: string): string;
@@ -481,9 +473,14 @@ begin
   end;
 end;
 
-procedure TDataStorage.ReadInstance(const Ident: string; Instance: TObject);
+procedure TDataStorage.ReadInstance<T>(const Ident: string; Instance: TObject);
 begin
-  raise ENotImplemented.CreateFmt('Stored type "%s" not supported!', [Instance.ClassName]);
+  PushStorageKey(MakeStorageSubKey(Ident));
+  try
+    LoadFromStorage<T>(Instance);
+  finally
+    PopStorageKey;
+  end;
 end;
 
 function TDataStorage.ReadInteger(const Ident: string; const Default: Integer): Integer;
@@ -557,70 +554,53 @@ begin
   SaveToStorage<StoredAttribute>(Instance);
 end;
 
-procedure TDataStorage.SaveToStorage(Instance: TObject; AField: TRttiField; Attr: StoredAttribute);
-var
-  attrName: string;
-begin
-  if (attr = nil) or not attr.Flag then Exit;
-  attrName := attr.StoredName(AField);
-  if AField.FieldType.IsInstance then begin
-    WriteInstance(attrName, AField.GetValue(Instance).AsObject);
-  end
-  else begin
-    WriteValue(attrName, AField.GetValue(Instance));
-  end;
-end;
-
-procedure TDataStorage.SaveToStorage(Instance: TObject; AProp: TRttiProperty; Attr: StoredAttribute);
-var
-  attrName: string;
-begin
-  if (attr = nil) or not attr.Flag then Exit;
-  attrName := attr.StoredName(AProp);
-  if AProp.PropertyType.IsInstance then begin
-    WriteInstance(attrName, AProp.GetValue(Instance).AsObject);
-  end
-  else begin
-    WriteValue(attrName, AProp.GetValue(Instance));
-  end;
-end;
-
 procedure TDataStorage.SaveToStorage<T>(Instance: TObject);
 var
   context: TRttiContext;
-  field: TRttiField;
-  myType: TRttiType;
-  prop: TRttiProperty;
-  fields: TArray<TRttiField>;
-  props: TArray<TRttiProperty>;
 begin
-  context := TRttiContext.Create;
+  var newKey := StorageKey;
+  if newKey.IsEmpty then
+    newKey := GetStorageKeyFromAttribute(Instance, Instance.ClassName);
+  PushStorageKey(newKey);
   try
-    myType := context.GetType(Instance.ClassType);
-    if myType <> nil then begin
-      fields := myType.GetFields;
-      for field in fields do begin
-        SaveToStorage<T>(Instance, field);
-      end;
+    context := TRttiContext.Create;
+    try
+      var myType := context.GetType(Instance.ClassType);
+      if myType <> nil then begin
+        for var field in myType.GetFields do
+          SaveToStorage<T>(Instance, field);
 
-      props := myType.GetProperties;
-      for prop in props do begin
-        SaveToStorage<T>(Instance, prop);
+        for var prop in myType.GetProperties do
+          SaveToStorage<T>(Instance, prop);
       end;
+    finally
+      context.Free;
     end;
   finally
-    context.Free;
+    PopStorageKey;
   end;
 end;
 
 procedure TDataStorage.SaveToStorage<T>(Instance: TObject; AField: TRttiField);
 begin
-  SaveToStorage(Instance, AField, AField.GetAttribute<T>);
+  var attr := AField.GetAttribute<T>;
+  if (attr = nil) or not attr.Flag then Exit;
+  var storedName := GetStoredName(attr.name, AField.Name.Substring(1));
+  if AField.FieldType.IsInstance then
+    WriteInstance<T>(storedName, AField.GetValue(Instance).AsObject)
+  else
+    WriteValue(storedName, AField.GetValue(Instance));
 end;
 
 procedure TDataStorage.SaveToStorage<T>(Instance: TObject; AProp: TRttiProperty);
 begin
-  SaveToStorage(Instance, AProp, AProp.GetAttribute<T>);
+  var attr := AProp.GetAttribute<T>;
+  if (attr = nil) or not attr.Flag then Exit;
+  var storedName := GetStoredName(attr.name, AProp.Name);
+  if AProp.PropertyType.IsInstance then
+    WriteInstance<T>(storedName, AProp.GetValue(Instance).AsObject)
+  else
+    WriteValue(storedName, AProp.GetValue(Instance));
 end;
 
 procedure TDataStorage.SetStorageTarget(const Value: IStorageTarget);
@@ -643,9 +623,14 @@ begin
   WriteString(Ident, DateTimeToStr(Value, TFormatSettings.Invariant));
 end;
 
-procedure TDataStorage.WriteInstance(const Ident: string; Instance: TObject);
+procedure TDataStorage.WriteInstance<T>(const Ident: string; Instance: TObject);
 begin
-  raise ENotImplemented.CreateFmt('Stored type "%s" not supported!', [Instance.ClassName]);
+  PushStorageKey(MakeStorageSubKey(Ident));
+  try
+    SaveToStorage<T>(Instance);
+  finally
+    PopStorageKey;
+  end;
 end;
 
 procedure TDataStorage.WriteInteger(const Ident: string; const Value: Integer);
@@ -664,10 +649,8 @@ begin
 end;
 
 procedure TDataStorage.WriteValue(const Ident: string; const Value: TValue);
-var
-  S: string;
 begin
-  S := Value.ToString; { ToString already handle most of the cases correct }
+  var S := Value.ToString; { ToString already handle most of the cases correct }
   case Value.Kind of
     tkFloat: begin { independent from current FormatSettings! }
       case Value.TypeData.FloatType of
@@ -703,23 +686,6 @@ begin
     raise ENotImplemented.CreateFmt('Stored type "%s" not supported!', [GetTypeName(Value.TypeInfo)]);
   end;
   WriteString(Ident, S);
-end;
-
-function TStoredAttributeHelper.StoredName(AProp: TRttiProperty): string;
-begin
-  Result := Name;
-  if Result = '' then begin
-    Result := AProp.Name;
-  end;
-end;
-
-function TStoredAttributeHelper.StoredName(AField: TRttiField): string;
-begin
-  Result := Name;
-  if Result = '' then begin
-    { Skip the leading F for fields }
-    Result := AField.Name.Substring(1);
-  end;
 end;
 
 procedure TCustomStoredClass.Finalize;
