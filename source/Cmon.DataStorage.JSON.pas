@@ -10,6 +10,7 @@ type
   TJSONStorageTarget = class(TCustomStorageTarget)
   private
     FJson: TJSONObject;
+    FModified: Boolean;
     procedure SetJson(const Value: TJSONObject);
   strict protected
     function ReadString(const Key: string; const Ident: string; const Default: string): string; override;
@@ -22,6 +23,7 @@ type
     procedure LoadFromFile(const AFileName: string); override;
     procedure SaveToFile(const AFileName: string); override;
     property Json: TJSONObject read FJson write SetJson;
+    property Modified: Boolean read FModified write FModified;
   end;
 
 type
@@ -75,23 +77,20 @@ begin
     Json := TJSONValue.ParseJSONValue(TFile.ReadAllText(AFileName)) as TJSONObject
   else
     Json := TJSONObject.Create;
+  Modified := False;
+  inherited;
 end;
 
 function TJSONStorageTarget.ReadString(const Key, Ident, Default: string): string;
-var
-  keys: TArray<string>;
-  node: TJSONObject;
-  temp: TJSONString;
 begin
   Result := Default;
-  node := Json;
-  keys := TDataStorage.SplitStorageKey(Key);
-  for var subKey in keys do begin
+  var node := Json;
+  for var subKey in TDataStorage.SplitStorageKey(Key) do begin
     node := node.FindKey(subKey);
     if node = nil then Exit;
   end;
   if node <> nil then begin
-    temp := node.FindIdent(Ident);
+    var temp := node.FindIdent(Ident);
     if temp <> nil then
       Result := temp.Value;
   end;
@@ -99,8 +98,10 @@ end;
 
 procedure TJSONStorageTarget.SaveToFile(const AFileName: string);
 begin
-  if Json <> nil then
+  if Modified and (Json <> nil) then
     TFile.WriteAllText(AFileName, Json.Format(4), TEncoding.UTF8);
+  Modified := False;
+  inherited;
 end;
 
 procedure TJSONStorageTarget.SetJson(const Value: TJSONObject);
@@ -112,16 +113,12 @@ begin
 end;
 
 procedure TJSONStorageTarget.WriteString(const Key, Ident, Value: string);
-var
-  keys: TArray<string>;
-  node: TJSONObject;
 begin
-  node := Json;
-  keys := TDataStorage.SplitStorageKey(Key);
-  for var subKey in keys do
+  var node := Json;
+  for var subKey in TDataStorage.SplitStorageKey(Key) do
     node := node.FindOrCreateKey(subKey);
   node.WriteIdent(Ident, Value);
-  SaveToFile(FileName);
+  Modified := True;
 end;
 
 function TJsonObjectHelper.FindIdent(const AIdent: string): TJSONString;
