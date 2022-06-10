@@ -83,6 +83,7 @@
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="DataTypes.pas"/>
+        <DCCReference Include="ObservableData.pas"/>
         <DCCReference Include="Main.Form.pas">
             <Form>DemoMainForm</Form>
             <FormType>dfm</FormType>

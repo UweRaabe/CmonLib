@@ -4,6 +4,7 @@ uses
   Vcl.Forms,
   Cmon.Messaging.Dialogs.Vcl,
   DataTypes in 'DataTypes.pas',
+  ObservableData in 'ObservableData.pas',
   Main.Form in 'Main.Form.pas' {DemoMainForm};
 
 {$R *.res}
