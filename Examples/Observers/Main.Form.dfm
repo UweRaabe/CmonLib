@@ -17,8 +17,6 @@ object DemoMainForm: TDemoMainForm
     Width = 369
     Height = 161
     TabStop = False
-    Lines.Strings = (
-      'Memo1')
     TabOrder = 4
   end
   object MyStringEdit: TEdit
@@ -27,15 +25,12 @@ object DemoMainForm: TDemoMainForm
     Width = 185
     Height = 23
     TabOrder = 0
-    Text = 'MyStringEdit'
   end
   object MyLinesMemo: TMemo
     Left = 32
     Top = 77
     Width = 185
     Height = 148
-    Lines.Strings = (
-      'Memo2')
     TabOrder = 1
   end
   object MySelectedComboBox: TComboBox
@@ -44,7 +39,6 @@ object DemoMainForm: TDemoMainForm
     Width = 178
     Height = 23
     TabOrder = 2
-    Text = 'MySelectedComboBox'
     Items.Strings = (
       'Combo 1'
       'Combo 2'

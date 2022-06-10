@@ -9,7 +9,7 @@ uses
   Common.Frame;
 
 type
-  TDemoFrame = class(TCommonFrame)
+  TDemoFrame = class(TFrame)
     SomeTextEdit: TLabeledEdit;
     SomeIndexSelector: TRadioGroup;
     TitleLabel: TLabel;
@@ -18,11 +18,12 @@ type
     function GetSomeText: string;
     procedure SetSomeIndex(const Value: Integer);
     procedure SetSomeText(const Value: string);
+  protected
   public
     procedure UpdateTitle;
-    [Stored]
+    [Stored, Default(-1)]
     property SomeIndex: Integer read GetSomeIndex write SetSomeIndex;
-    [Stored]
+    [Stored, Default('')]
     property SomeText: string read GetSomeText write SetSomeText;
   end;
 

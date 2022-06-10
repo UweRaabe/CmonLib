@@ -8,86 +8,89 @@ uses
 
 type
   TCommonFrame = class(TFrame)
-  strict protected
-    function GetStorageKey(DataStorage: TDataStorage): string; virtual;
-    procedure InternalInitDefaults(DataStorage: TDataStorage); virtual;
-    procedure InternalLoadFromStorage(DataStorage: TDataStorage); virtual;
-    procedure InternalPrepareStorage(DataStorage: TDataStorage); virtual;
-    procedure InternalSaveToStorage(DataStorage: TDataStorage); virtual;
+  protected
+    function GetStorageKey(Storage: TDataStorage): string; virtual;
+    procedure InternalInitDefaults(Storage: TDataStorage); virtual;
+    procedure InternalLoadFromStorage(Storage: TDataStorage); virtual;
+    procedure InternalPrepareStorage(Storage: TDataStorage); virtual;
+    procedure InternalSaveToStorage(Storage: TDataStorage); virtual;
   public
-    procedure InitDefaults(DataStorage: TDataStorage); virtual;
-    procedure LoadFromStorage(DataStorage: TDataStorage); virtual;
-    procedure PrepareStorage(DataStorage: TDataStorage); virtual;
-    procedure SaveToStorage(DataStorage: TDataStorage); virtual;
+    procedure InitDefaults(Storage: TDataStorage); virtual;
+    procedure LoadFromStorage(Storage: TDataStorage); virtual;
+    procedure PrepareStorage(Storage: TDataStorage); virtual;
+    procedure SaveToStorage(Storage: TDataStorage); virtual;
   end;
+  
+type
+  { This allows to inherit a TFrame without using visual inheritance keeping the IDE designer happy.
+    Just use this unit in the interface part after Vcl.Forms. }
+  TFrame = TCommonFrame;
 
 implementation
 
 uses
   Cmon.Utilities;
 
-{$R *.dfm}
-
-function TCommonFrame.GetStorageKey(DataStorage: TDataStorage): string;
+function TCommonFrame.GetStorageKey(Storage: TDataStorage): string;
 begin
-  result := DataStorage.MakeStorageSubKey(Name);
+  Result := Storage.MakeStorageSubKey(Name);
 end;
 
-procedure TCommonFrame.InitDefaults(DataStorage: TDataStorage);
+procedure TCommonFrame.InitDefaults(Storage: TDataStorage);
 begin
-  DataStorage.InitDefaults(Self);
+  Storage.InitDefaults(Self);
   for var frame in ComponentsOf<TCommonFrame> do
-    frame.InitDefaults(DataStorage);
-  InternalInitDefaults(DataStorage);
+    frame.InitDefaults(Storage);
+  InternalInitDefaults(Storage);
 end;
 
-procedure TCommonFrame.InternalInitDefaults(DataStorage: TDataStorage);
+procedure TCommonFrame.InternalInitDefaults(Storage: TDataStorage);
 begin
 end;
 
-procedure TCommonFrame.InternalLoadFromStorage(DataStorage: TDataStorage);
+procedure TCommonFrame.InternalLoadFromStorage(Storage: TDataStorage);
 begin
 end;
 
-procedure TCommonFrame.InternalPrepareStorage(DataStorage: TDataStorage);
+procedure TCommonFrame.InternalPrepareStorage(Storage: TDataStorage);
 begin
 end;
 
-procedure TCommonFrame.InternalSaveToStorage(DataStorage: TDataStorage);
+procedure TCommonFrame.InternalSaveToStorage(Storage: TDataStorage);
 begin
 end;
 
-procedure TCommonFrame.LoadFromStorage(DataStorage: TDataStorage);
+procedure TCommonFrame.LoadFromStorage(Storage: TDataStorage);
 begin
-  DataStorage.PushStorageKey;
+  Storage.PushStorageKey;
   try
-    PrepareStorage(DataStorage);
-    DataStorage.LoadFromStorage(Self);
+    PrepareStorage(Storage);
+    Storage.LoadFromStorage(Self);
     for var frame in ComponentsOf<TCommonFrame> do
-      frame.LoadFromStorage(DataStorage);
-    InternalLoadFromStorage(DataStorage);
+      frame.LoadFromStorage(Storage);
+    InternalLoadFromStorage(Storage);
   finally
-    DataStorage.PopStorageKey;
+    Storage.PopStorageKey;
   end;
 end;
 
-procedure TCommonFrame.PrepareStorage(DataStorage: TDataStorage);
+procedure TCommonFrame.PrepareStorage(Storage: TDataStorage);
 begin
-  DataStorage.StorageKey := GetStorageKeyFromAttribute(Self, GetStorageKey(DataStorage));
-  InternalPrepareStorage(DataStorage);
+  Storage.StorageKey := GetStorageKeyFromAttribute(Self, GetStorageKey(Storage));
+  InternalPrepareStorage(Storage);
 end;
 
-procedure TCommonFrame.SaveToStorage(DataStorage: TDataStorage);
+procedure TCommonFrame.SaveToStorage(Storage: TDataStorage);
 begin
-  DataStorage.PushStorageKey;
+  Storage.PushStorageKey;
   try
-    PrepareStorage(DataStorage);
-    DataStorage.SaveToStorage(Self);
+    PrepareStorage(Storage);
+    Storage.SaveToStorage(Self);
     for var frame in ComponentsOf<TCommonFrame> do
-      frame.SaveToStorage(DataStorage);
-    InternalSaveToStorage(DataStorage);
+      frame.SaveToStorage(Storage);
+    InternalSaveToStorage(Storage);
   finally
-    DataStorage.PopStorageKey;
+    Storage.PopStorageKey;
   end;
 end;
 

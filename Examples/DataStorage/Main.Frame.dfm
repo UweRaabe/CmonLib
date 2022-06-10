@@ -1,4 +1,9 @@
-inherited DemoFrame: TDemoFrame
+object DemoFrame: TDemoFrame
+  Left = 0
+  Top = 0
+  Width = 320
+  Height = 240
+  TabOrder = 0
   object TitleLabel: TLabel
     Left = 32
     Top = 3
