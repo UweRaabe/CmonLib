@@ -1,24 +1,32 @@
-inherited DemoMainForm: TDemoMainForm
+object DemoMainForm: TDemoMainForm
+  Left = 0
+  Top = 0
   Caption = 'DataStorage Demo'
-  ClientHeight = 411
+  ClientHeight = 539
   ClientWidth = 852
-  ExplicitWidth = 868
-  ExplicitHeight = 450
-  TextHeight = 13
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -12
+  Font.Name = 'Segoe UI'
+  Font.Style = []
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  TextHeight = 15
   object TitleLabel: TLabel
     Left = 32
     Top = 3
-    Width = 45
-    Height = 13
+    Width = 50
+    Height = 15
     Caption = 'TitleLabel'
   end
   object SomeTextEdit: TLabeledEdit
     Left = 32
     Top = 64
     Width = 185
-    Height = 21
-    EditLabel.Width = 51
-    EditLabel.Height = 13
+    Height = 23
+    EditLabel.Width = 54
+    EditLabel.Height = 15
     EditLabel.Caption = 'Some Text'
     TabOrder = 0
     Text = ''
@@ -45,21 +53,10 @@ inherited DemoMainForm: TDemoMainForm
     TabOrder = 2
     ExplicitLeft = 264
     ExplicitWidth = 241
-    inherited TitleLabel: TLabel
-      Width = 45
-      Height = 13
-      ExplicitWidth = 45
-      ExplicitHeight = 13
-    end
     inherited SomeTextEdit: TLabeledEdit
-      Height = 21
-      EditLabel.Width = 51
-      EditLabel.Height = 13
       EditLabel.ExplicitLeft = 32
-      EditLabel.ExplicitTop = 48
-      EditLabel.ExplicitWidth = 51
-      EditLabel.ExplicitHeight = 13
-      ExplicitHeight = 21
+      EditLabel.ExplicitTop = 46
+      EditLabel.ExplicitWidth = 54
     end
   end
   inline DemoFrame2: TDemoFrame
@@ -70,21 +67,10 @@ inherited DemoMainForm: TDemoMainForm
     TabOrder = 3
     ExplicitLeft = 520
     ExplicitWidth = 241
-    inherited TitleLabel: TLabel
-      Width = 45
-      Height = 13
-      ExplicitWidth = 45
-      ExplicitHeight = 13
-    end
     inherited SomeTextEdit: TLabeledEdit
-      Height = 21
-      EditLabel.Width = 51
-      EditLabel.Height = 13
       EditLabel.ExplicitLeft = 32
-      EditLabel.ExplicitTop = 48
-      EditLabel.ExplicitWidth = 51
-      EditLabel.ExplicitHeight = 13
-      ExplicitHeight = 21
+      EditLabel.ExplicitTop = 46
+      EditLabel.ExplicitWidth = 54
     end
   end
   object SomeEnumSelector: TRadioGroup
@@ -122,5 +108,42 @@ inherited DemoMainForm: TDemoMainForm
     Style = bsCommandLink
     TabOrder = 7
     OnClick = LoadSettingsButtonClick
+  end
+  object RestoreDefaultsButton: TButton
+    Left = 456
+    Top = 384
+    Width = 175
+    Height = 41
+    Caption = 'Restore Defaults'
+    Style = bsCommandLink
+    TabOrder = 8
+    OnClick = RestoreDefaultsButtonClick
+  end
+  object MainDataTree: TTreeView
+    Left = 648
+    Top = 256
+    Width = 153
+    Height = 169
+    AutoExpand = True
+    Indent = 19
+    TabOrder = 9
+    OnDblClick = MainDataTreeDblClick
+    OnEdited = MainDataTreeEdited
+    OnEditing = MainDataTreeEditing
+    OnKeyDown = MainDataTreeKeyDown
+  end
+  object LoadSettingsDialog: TFileOpenDialog
+    FavoriteLinks = <>
+    FileTypes = <>
+    Options = [fdoStrictFileTypes, fdoPathMustExist, fdoFileMustExist]
+    Left = 680
+    Top = 328
+  end
+  object SaveSettingsDialog: TFileSaveDialog
+    FavoriteLinks = <>
+    FileTypes = <>
+    Options = [fdoOverWritePrompt, fdoStrictFileTypes, fdoPathMustExist]
+    Left = 680
+    Top = 256
   end
 end

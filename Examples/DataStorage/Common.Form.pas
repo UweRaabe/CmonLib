@@ -8,74 +8,45 @@ uses
 
 type
   TCommonForm = class(TForm)
-    procedure FormDestroy(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
-  private
-  strict protected
-    function GetDefaultDataStorage: TDataStorage; virtual;
-    procedure PrepareStorage(DataStorage: TDataStorage); virtual;
   protected
-    function GetStorageKey(DataStorage: TDataStorage): string; virtual;
-    procedure InternalLoadFromStorage(DataStorage: TDataStorage); virtual;
-    procedure InternalSaveToStorage(DataStorage: TDataStorage); virtual;
-    procedure InternalInitDefaults(DataStorage: TDataStorage); virtual;
-    procedure InternalPrepareStorage(DataStorage: TDataStorage); virtual;
+    function GetDefaultDataStorage: TDataStorage; virtual;
+    function GetStorageKey(Storage: TDataStorage): string; virtual;
+    procedure InternalInitDefaults(Storage: TDataStorage); virtual;
+    procedure InternalLoadFromStorage(Storage: TDataStorage); virtual;
+    procedure InternalPrepareStorage(Storage: TDataStorage); virtual;
+    procedure InternalSaveToStorage(Storage: TDataStorage); virtual;
+    procedure PrepareStorage(Storage: TDataStorage); virtual;
   public
     procedure InitDefaults; overload; virtual;
-    procedure InitDefaults(DataStorage: TDataStorage); overload; virtual;
+    procedure InitDefaults(Storage: TDataStorage); overload; virtual;
     procedure LoadFromStorage; overload; virtual;
-    procedure LoadFromStorage(DataStorage: TDataStorage); overload; virtual;
+    procedure LoadFromStorage(Storage: TDataStorage); overload; virtual;
     procedure LoadFromStorage(ATarget: IStorageTarget); overload;
+    procedure LoadFromStorage(const AFileName: string); overload;
     procedure SaveToStorage; overload; virtual;
-    procedure SaveToStorage(DataStorage: TDataStorage); overload; virtual;
+    procedure SaveToStorage(Storage: TDataStorage); overload; virtual;
     procedure SaveToStorage(ATarget: IStorageTarget); overload;
+    procedure SaveToStorage(const AFileName: string); overload;
     property DefaultDataStorage: TDataStorage read GetDefaultDataStorage;
   end;
+  
+type
+  TForm = TCommonForm;
 
 implementation
 
 uses
-  Cmon.Utilities, Common.Frame;
-
-{$R *.dfm}
-
-procedure TCommonForm.FormDestroy(Sender: TObject);
-begin
-  SaveToStorage;
-  inherited;
-end;
-
-procedure TCommonForm.FormCreate(Sender: TObject);
-begin
-  inherited;
-  InitDefaults;
-  LoadFromStorage;
-end;
+  Cmon.Utilities,
+  Common.Frame;
 
 function TCommonForm.GetDefaultDataStorage: TDataStorage;
 begin
   Result := TDataStorage.DefaultInstance;
 end;
 
-function TCommonForm.GetStorageKey(DataStorage: TDataStorage): string;
+function TCommonForm.GetStorageKey(Storage: TDataStorage): string;
 begin
-  result := Name;
-end;
-
-procedure TCommonForm.InternalLoadFromStorage(DataStorage: TDataStorage);
-begin
-end;
-
-procedure TCommonForm.InternalSaveToStorage(DataStorage: TDataStorage);
-begin
-end;
-
-procedure TCommonForm.InternalInitDefaults(DataStorage: TDataStorage);
-begin
-end;
-
-procedure TCommonForm.InternalPrepareStorage(DataStorage: TDataStorage);
-begin
+  Result := Name;
 end;
 
 procedure TCommonForm.InitDefaults;
@@ -83,12 +54,28 @@ begin
   InitDefaults(DefaultDataStorage);
 end;
 
-procedure TCommonForm.InitDefaults(DataStorage: TDataStorage);
+procedure TCommonForm.InitDefaults(Storage: TDataStorage);
 begin
-  DataStorage.InitDefaults(Self);
+  Storage.InitDefaults(Self);
   for var frame in ComponentsOf<TCommonFrame> do
-    frame.InitDefaults(DataStorage);
-  InternalInitDefaults(DataStorage);
+    frame.InitDefaults(Storage);
+  InternalInitDefaults(Storage);
+end;
+
+procedure TCommonForm.InternalInitDefaults(Storage: TDataStorage);
+begin
+end;
+
+procedure TCommonForm.InternalLoadFromStorage(Storage: TDataStorage);
+begin
+end;
+
+procedure TCommonForm.InternalPrepareStorage(Storage: TDataStorage);
+begin
+end;
+
+procedure TCommonForm.InternalSaveToStorage(Storage: TDataStorage);
+begin
 end;
 
 procedure TCommonForm.LoadFromStorage;
@@ -96,17 +83,17 @@ begin
   LoadFromStorage(DefaultDataStorage);
 end;
 
-procedure TCommonForm.LoadFromStorage(DataStorage: TDataStorage);
+procedure TCommonForm.LoadFromStorage(Storage: TDataStorage);
 begin
-  DataStorage.PushStorageKey;
+  Storage.PushStorageKey;
   try
-    PrepareStorage(DataStorage);
-    DataStorage.LoadFromStorage(Self);
+    PrepareStorage(Storage);
+    Storage.LoadFromStorage(Self);
     for var frame in ComponentsOf<TCommonFrame> do
-      frame.LoadFromStorage(DataStorage);
-    InternalLoadFromStorage(DataStorage);
+      frame.LoadFromStorage(Storage);
+    InternalLoadFromStorage(Storage);
   finally
-    DataStorage.PopStorageKey;
+    Storage.PopStorageKey;
   end;
 end;
 
@@ -123,10 +110,15 @@ begin
   end;
 end;
 
-procedure TCommonForm.PrepareStorage(DataStorage: TDataStorage);
+procedure TCommonForm.LoadFromStorage(const AFileName: string);
 begin
-  DataStorage.StorageKey := GetStorageKeyFromAttribute(Self, GetStorageKey(DataStorage));
-  InternalPrepareStorage(DataStorage);
+  LoadFromStorage(TDataStorage.CreateStorageTarget(Self, AFileName));
+end;
+
+procedure TCommonForm.PrepareStorage(Storage: TDataStorage);
+begin
+  Storage.StorageKey := GetStorageKeyFromAttribute(Self, GetStorageKey(Storage));
+  InternalPrepareStorage(Storage);
 end;
 
 procedure TCommonForm.SaveToStorage;
@@ -134,17 +126,17 @@ begin
   SaveToStorage(DefaultDataStorage);
 end;
 
-procedure TCommonForm.SaveToStorage(DataStorage: TDataStorage);
+procedure TCommonForm.SaveToStorage(Storage: TDataStorage);
 begin
-  DataStorage.PushStorageKey;
+  Storage.PushStorageKey;
   try
-    PrepareStorage(DataStorage);
-    DataStorage.SaveToStorage(Self);
+    PrepareStorage(Storage);
+    Storage.SaveToStorage(Self);
     for var frame in ComponentsOf<TCommonFrame> do
-      frame.SaveToStorage(DataStorage);
-    InternalSaveToStorage(DataStorage);
+      frame.SaveToStorage(Storage);
+    InternalSaveToStorage(Storage);
   finally
-    DataStorage.PopStorageKey;
+    Storage.PopStorageKey;
   end;
 end;
 
@@ -159,6 +151,11 @@ begin
   finally
     tmpStorage.Free;
   end;
+end;
+
+procedure TCommonForm.SaveToStorage(const AFileName: string);
+begin
+  SaveToStorage(TDataStorage.CreateStorageTarget(Self, AFileName));
 end;
 
 end.

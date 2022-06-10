@@ -8,8 +8,6 @@ uses
 
 type
   TdmCommon = class(TDataModule)
-    procedure DataModuleDestroy(Sender: TObject);
-    procedure DataModuleCreate(Sender: TObject);
   strict protected
     function GetDefaultDataStorage: TDataStorage; virtual;
     function GetStorageKey(DataStorage: TDataStorage): string; virtual;
@@ -29,27 +27,14 @@ type
     procedure SaveToStorage(DataStorage: TDataStorage); overload; virtual;
     procedure SaveToStorage(ATarget: IStorageTarget); overload;
   end;
+  
+type
+  TDataModule = TdmCommon; 
 
 implementation
 
 uses
   Cmon.Utilities;
-
-{%CLASSGROUP 'System.Classes.TPersistent'}
-{$R *.dfm}
-
-procedure TdmCommon.DataModuleDestroy(Sender: TObject);
-begin
-  SaveToStorage;
-  inherited;
-end;
-
-procedure TdmCommon.DataModuleCreate(Sender: TObject);
-begin
-  inherited;
-  InitDefaults;
-  LoadFromStorage;
-end;
 
 function TdmCommon.GetDefaultDataStorage: TDataStorage;
 begin

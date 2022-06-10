@@ -4,11 +4,10 @@ uses
   Vcl.Forms,
   Cmon.Messaging.Dialogs.Vcl,
   Cmon.DataStorage.Target,
-  Cmon.DataStorage.JSON,
   Cmon.DataStorage.Inifile,
-  Common.DM in 'Common.DM.pas' {dmCommon: TDataModule},
-  Common.Frame in 'Common.Frame.pas' {CommonFrame: TFrame},
-  Common.Form in 'Common.Form.pas' {CommonForm},
+  Cmon.DataStorage.JSON,
+  Common.Frame in 'Common.Frame.pas',
+  Common.Form in 'Common.Form.pas',
   Main.Frame in 'Main.Frame.pas' {DemoFrame: TFrame},
   Main.Form in 'Main.Form.pas' {DemoMainForm};
 
