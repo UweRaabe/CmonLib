@@ -2,12 +2,12 @@
 
 uses
   Vcl.Forms,
-  Cmon.Messaging.Dialogs.Vcl,
   Cmon.DataStorage.Target,
   Cmon.DataStorage.Inifile,
   Cmon.DataStorage.JSON,
   Common.Frame in 'Common.Frame.pas',
   Common.Form in 'Common.Form.pas',
+  Main.Data.Types in 'Main.Data.Types.pas',
   Main.Frame in 'Main.Frame.pas' {DemoFrame: TFrame},
   Main.Form in 'Main.Form.pas' {DemoMainForm};
 
@@ -15,16 +15,14 @@ uses
 
 procedure PreInitialize;
 begin
-  { Per default using Cmon.Messaging.Dialogs.Vcl, Cmon.DataStorage.JSON and Cmon.DataStorage.Inifile will automatically
+  { Per default using  Cmon.DataStorage.JSON and Cmon.DataStorage.Inifile will automatically
     register the containing message handlers during Application.Initialize. To optionally disable auto registering of all
-    DlgMessage handlers and/or TDataStorageTarget handlers this is one place to do.
-    You need to add Cmon.Messaging and/or Cmon.DataStorage to the uses to make it compile. }
-//  TDlgMessage.AutoRegisterHandler := False;
+    TDataStorageTarget handlers this is one place to do.
+    You need to Cmon.DataStorage to the uses to make it compile. }
 //  TDataStorage.AutoRegisterHandler := False;
 
   { You can as well disable automatic registration of individual handlers. That implies to leave the corresponding settings
     above at True of course. }
-//  TDlgMessageHandlerVcl.AutoRegisterHandler := False;
 //  TIniStorageTargetHandler.AutoRegisterHandler := False;
 //  TJSONStorageTargetHandler.AutoRegisterHandler := False;
 

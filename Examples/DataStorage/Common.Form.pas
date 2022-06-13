@@ -8,7 +8,11 @@ uses
 
 type
   TCommonForm = class(TForm)
+  strict protected
+    function AutoDataStorage: Boolean; virtual;
   protected
+    procedure DoCreate; override;
+    procedure DoDestroy; override;
     function GetDefaultDataStorage: TDataStorage; virtual;
     function GetStorageKey(Storage: TDataStorage): string; virtual;
     procedure InternalInitDefaults(Storage: TDataStorage); virtual;
@@ -40,6 +44,28 @@ implementation
 uses
   Cmon.Utilities,
   Common.Frame;
+
+function TCommonForm.AutoDataStorage: Boolean;
+begin
+  Result := True;
+end;
+
+procedure TCommonForm.DoCreate;
+begin
+  if AutoDataStorage then begin
+    InitDefaults;
+    LoadFromStorage;
+  end;
+  inherited;
+end;
+
+procedure TCommonForm.DoDestroy;
+begin
+  inherited;
+  if AutoDataStorage then begin
+    SaveToStorage;
+  end;
+end;
 
 function TCommonForm.GetDefaultDataStorage: TDataStorage;
 begin

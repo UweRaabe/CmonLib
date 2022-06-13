@@ -11,7 +11,6 @@ object DemoMainForm: TDemoMainForm
   Font.Name = 'Segoe UI'
   Font.Style = []
   OnCreate = FormCreate
-  OnDestroy = FormDestroy
   TextHeight = 15
   object TitleLabel: TLabel
     Left = 32

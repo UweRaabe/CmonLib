@@ -35,7 +35,6 @@ type
     SaveSettingsDialog: TFileSaveDialog;
     RestoreDefaultsButton: TButton;
     MainDataTree: TTreeView;
-    procedure FormDestroy(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure LoadSettingsButtonClick(Sender: TObject);
     procedure MainDataTreeDblClick(Sender: TObject);
@@ -162,11 +161,6 @@ begin
   end;
 end;
 
-procedure TDemoMainForm.FormDestroy(Sender: TObject);
-begin
-  SaveToStorage;
-end;
-
 procedure TDemoMainForm.FormCreate(Sender: TObject);
 begin
   TMyEnum.ListNames(SomeEnumSelector.Items);
@@ -175,8 +169,6 @@ begin
   SaveSettingsDialog.Title := SSaveSettings;
   PrepareFileDialog(LoadSettingsDialog);
   PrepareFileDialog(SaveSettingsDialog);
-  InitDefaults;
-  LoadFromStorage;
   UpdateTitle;
   for var frame in ComponentsOf<TDemoFrame> do
     frame.UpdateTitle;
