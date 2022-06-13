@@ -8,9 +8,9 @@ uses
 type
   TSubData = class
   private
-    [Stored, Default(100)]
+    [Storage, Default(100)]
     FSomeInteger: Integer;
-    [Stored, Default('Bar')]
+    [Storage, Default('Bar')]
     FSomeString: string;
   public
     property SomeInteger: Integer read FSomeInteger write FSomeInteger;
@@ -21,11 +21,11 @@ type
   [StorageKey('Settings')]
   TMainData = class
   private
-    [Stored, Default(10)]
+    [Storage, Default(10)]
     FSomeInteger: Integer;
-    [Stored, Default('Foo')]
+    [Storage, Default('Foo')]
     FSomeString: string;
-    [Stored('Sub'), Default]
+    [Storage('Sub'), Default]
     FSubData: TSubData;
   public
     constructor Create;

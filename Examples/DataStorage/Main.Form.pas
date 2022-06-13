@@ -70,13 +70,13 @@ type
     procedure UpdateTitle;
     class property SettingsFileExtension: string read FSettingsFileExtension write FSettingsFileExtension;
     class property SettingsFileName: string read GetSettingsFileName write FSettingsFileName;
-    [Stored, Default(True)]
+    [Storage, Default(True)]
     property SomeBoolean: Boolean read GetSomeBoolean write SetSomeBoolean;
-    [Stored, DefaultMyEnum(TMyEnum.none)]
+    [Storage, DefaultMyEnum(TMyEnum.none)]
     property SomeEnum: TMyEnum read GetSomeEnum write SetSomeEnum;
-    [Stored, Default(1)]
+    [Storage, Default(1)]
     property SomeIndex: Integer read GetSomeIndex write SetSomeIndex;
-    [Stored, Default('Hello World')]
+    [Storage, Default('Hello World')]
     property SomeText: string read GetSomeText write SetSomeText;
   end;
 

@@ -26,7 +26,7 @@ type
   DefaultAttribute = class(TCustomDefaultAttribute);
 
 type
-  StoredAttribute = System.Classes.StoredAttribute;
+  StorageAttribute = System.Classes.StoredAttribute;
 
   StorageKeyAttribute = class(TCustomAttribute)
   private
@@ -87,12 +87,12 @@ type
     class procedure InitDefaults<T: TCustomDefaultAttribute>(Instance: TObject; AProp: TRttiProperty); overload;
     function InternalReadString(const Ident, Default: string): string; virtual;
     procedure InternalWriteString(const Ident, Value: string); virtual;
-    procedure LoadFromStorage<T: StoredAttribute>(Instance: TObject; AField: TRttiField); overload;
-    procedure LoadFromStorage<T: StoredAttribute>(Instance: TObject; AProp: TRttiProperty); overload;
-    procedure ReadInstance<T: StoredAttribute>(const Ident: string; Instance: TObject);
-    procedure SaveToStorage<T: StoredAttribute>(Instance: TObject; AField: TRttiField); overload;
-    procedure SaveToStorage<T: StoredAttribute>(Instance: TObject; AProp: TRttiProperty); overload;
-    procedure WriteInstance<T: StoredAttribute>(const Ident: string; Instance: TObject);
+    procedure LoadFromStorage<T: StorageAttribute>(Instance: TObject; AField: TRttiField); overload;
+    procedure LoadFromStorage<T: StorageAttribute>(Instance: TObject; AProp: TRttiProperty); overload;
+    procedure ReadInstance<T: StorageAttribute>(const Ident: string; Instance: TObject);
+    procedure SaveToStorage<T: StorageAttribute>(Instance: TObject; AField: TRttiField); overload;
+    procedure SaveToStorage<T: StorageAttribute>(Instance: TObject; AProp: TRttiProperty); overload;
+    procedure WriteInstance<T: StorageAttribute>(const Ident: string; Instance: TObject);
   protected
     function GetStoredName(const Value, Default: string): string;
   public
@@ -105,7 +105,7 @@ type
     class function IsSupportedTargetExtension(const AExtension: string): Boolean;
     class procedure ListStorageTargets(Target: TStorageTargetDescriptorList);
     procedure LoadFromStorage(Instance: TObject); overload;
-    procedure LoadFromStorage<T: StoredAttribute>(Instance: TObject); overload;
+    procedure LoadFromStorage<T: StorageAttribute>(Instance: TObject); overload;
     function MakeStorageSubKey(const ASubKey: string): string;
     class function MakeStorageTargetFileFilter: string;
     procedure PopStorageKey;
@@ -118,7 +118,7 @@ type
     procedure ReadStrings(const Ident: string; Target: TStrings);
     function ReadValue(const Ident: string; const Default: TValue): TValue;
     procedure SaveToStorage(Instance: TObject); overload;
-    procedure SaveToStorage<T: StoredAttribute>(Instance: TObject); overload;
+    procedure SaveToStorage<T: StorageAttribute>(Instance: TObject); overload;
     class function SplitStorageKey(const AStorageKey: string): TArray<string>;
     procedure WriteBoolean(const Ident: string; const Value: Boolean);
     procedure WriteDateTime(const Ident: string; const Value: TDateTime);
@@ -362,7 +362,7 @@ end;
 
 procedure TDataStorage.LoadFromStorage(Instance: TObject);
 begin
-  LoadFromStorage<StoredAttribute>(Instance);
+  LoadFromStorage<StorageAttribute>(Instance);
 end;
 
 procedure TDataStorage.LoadFromStorage<T>(Instance: TObject);
@@ -554,13 +554,13 @@ begin
     tkUString: Result := S;
   else
     { tkSet, tkClass, tkMethod, tkVariant, tkArray, tkRecord, tkInterface, tkDynArray, tkClassRef, tkPointer, tkProcedure }
-    raise ENotImplemented.CreateFmt('Stored type "%s" not supported!', [GetTypeName(Default.TypeInfo)]);
+    raise ENotImplemented.CreateFmt('Storage type "%s" not supported!', [GetTypeName(Default.TypeInfo)]);
   end;
 end;
 
 procedure TDataStorage.SaveToStorage(Instance: TObject);
 begin
-  SaveToStorage<StoredAttribute>(Instance);
+  SaveToStorage<StorageAttribute>(Instance);
 end;
 
 procedure TDataStorage.SaveToStorage<T>(Instance: TObject);
@@ -692,7 +692,7 @@ begin
     tkUString: ; { Value.ToString already did the job }
   else
     { tkSet, tkClass, tkMethod, tkVariant, tkArray, tkRecord, tkInterface, tkDynArray, tkClassRef, tkPointer, tkProcedure }
-    raise ENotImplemented.CreateFmt('Stored type "%s" not supported!', [GetTypeName(Value.TypeInfo)]);
+    raise ENotImplemented.CreateFmt('Storage type "%s" not supported!', [GetTypeName(Value.TypeInfo)]);
   end;
   WriteString(Ident, S);
 end;

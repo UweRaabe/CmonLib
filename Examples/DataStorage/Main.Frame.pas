@@ -21,9 +21,9 @@ type
   protected
   public
     procedure UpdateTitle;
-    [Stored, Default(-1)]
+    [Storage, Default(-1)]
     property SomeIndex: Integer read GetSomeIndex write SetSomeIndex;
-    [Stored, Default('')]
+    [Storage, Default('')]
     property SomeText: string read GetSomeText write SetSomeText;
   end;
 
