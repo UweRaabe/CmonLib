@@ -11,7 +11,7 @@ type
     type information gets lost, while we do rely on it here. Therefore we declare our own DefaultAttribute based on TValue
     and provide constructors for all types we need. Other types can be added in special derived classes if necessary.
   }
-  DefaultAttribute = class(TCustomAttribute)
+  TCustomDefaultAttribute = class(TCustomAttribute)
   private
     FValue: TValue;
   public
@@ -23,6 +23,9 @@ type
     property Value: TValue read FValue;
   end;
 
+  DefaultAttribute = class(TCustomDefaultAttribute);
+
+type
   StoredAttribute = System.Classes.StoredAttribute;
 
   StorageKeyAttribute = class(TCustomAttribute)
@@ -80,8 +83,8 @@ type
     FStorageTarget: IStorageTarget;
     procedure SetStorageTarget(const Value: IStorageTarget);
   strict protected
-    class procedure InitDefaults(Instance: TObject; AField: TRttiField); overload;
-    class procedure InitDefaults(Instance: TObject; AProp: TRttiProperty); overload;
+    class procedure InitDefaults<T: TCustomDefaultAttribute>(Instance: TObject; AField: TRttiField); overload;
+    class procedure InitDefaults<T: TCustomDefaultAttribute>(Instance: TObject; AProp: TRttiProperty); overload;
     function InternalReadString(const Ident, Default: string): string; virtual;
     procedure InternalWriteString(const Ident, Value: string); virtual;
     procedure LoadFromStorage<T: StoredAttribute>(Instance: TObject; AField: TRttiField); overload;
@@ -98,6 +101,7 @@ type
     function CreateStorageTarget(const AFileName: string = ''): IStorageTarget; overload;
     class function CreateStorageTarget(Sender: TObject; const AFileName: string = ''): IStorageTarget; overload;
     class procedure InitDefaults(Instance: TObject); overload; static;
+    class procedure InitDefaults<T: TCustomDefaultAttribute>(Instance: TObject); overload; static;
     class function IsSupportedTargetExtension(const AExtension: string): Boolean;
     class procedure ListStorageTargets(Target: TStorageTargetDescriptorList);
     procedure LoadFromStorage(Instance: TObject); overload;
@@ -201,31 +205,31 @@ begin
   end;
 end;
 
-constructor DefaultAttribute.Create(AValue: Boolean);
+constructor TCustomDefaultAttribute.Create(AValue: Boolean);
 begin
   inherited Create;
   FValue := AValue;
 end;
 
-constructor DefaultAttribute.Create(AValue: Integer);
+constructor TCustomDefaultAttribute.Create(AValue: Double);
 begin
   inherited Create;
   FValue := AValue;
 end;
 
-constructor DefaultAttribute.Create(const AValue: string);
+constructor TCustomDefaultAttribute.Create(AValue: Integer);
 begin
   inherited Create;
   FValue := AValue;
 end;
 
-constructor DefaultAttribute.Create(AValue: Double);
+constructor TCustomDefaultAttribute.Create(const AValue: string);
 begin
   inherited Create;
   FValue := AValue;
 end;
 
-constructor DefaultAttribute.Create(AValue: TValue);
+constructor TCustomDefaultAttribute.Create(AValue: TValue);
 begin
   inherited Create;
   FValue := AValue;
@@ -275,6 +279,11 @@ begin
 end;
 
 class procedure TDataStorage.InitDefaults(Instance: TObject);
+begin
+  InitDefaults<DefaultAttribute>(Instance);
+end;
+
+class procedure TDataStorage.InitDefaults<T>(Instance: TObject);
 var
   context: TRttiContext;
 begin
@@ -286,23 +295,23 @@ begin
     if myType <> nil then begin
       { initialize all fields having a Default attribute }
       for var field in myType.GetFields do
-        InitDefaults(Instance, field);
+        InitDefaults<T>(Instance, field);
 
       { initialize all properties having a Default attribute }
       for var prop in myType.GetProperties do
-        InitDefaults(Instance, prop);
+        InitDefaults<T>(Instance, prop);
     end;
   finally
     context.Free;
   end;
 end;
 
-class procedure TDataStorage.InitDefaults(Instance: TObject; AField: TRttiField);
+class procedure TDataStorage.InitDefaults<T>(Instance: TObject; AField: TRttiField);
 begin
-  var attr := AField.GetAttribute<DefaultAttribute>;
+  var attr := AField.GetAttribute<T>;
   if (attr = nil) then Exit;
   if AField.FieldType.IsInstance then begin
-    InitDefaults(AField.GetValue(Instance).AsObject);
+    InitDefaults<T>(AField.GetValue(Instance).AsObject);
   end
   else begin
     if attr.Value.IsEmpty then Exit;
@@ -310,9 +319,9 @@ begin
   end;
 end;
 
-class procedure TDataStorage.InitDefaults(Instance: TObject; AProp: TRttiProperty);
+class procedure TDataStorage.InitDefaults<T>(Instance: TObject; AProp: TRttiProperty);
 begin
-  var attr := AProp.GetAttribute<DefaultAttribute>;
+  var attr := AProp.GetAttribute<T>;
   if (attr = nil) or attr.Value.IsEmpty then Exit;
   AProp.SetValue(Instance, attr.value);
 end;
