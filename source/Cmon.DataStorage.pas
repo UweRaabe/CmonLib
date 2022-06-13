@@ -94,6 +94,7 @@ type
     FStorageTarget: IStorageTarget;
     procedure SetStorageTarget(const Value: IStorageTarget);
   strict protected
+    procedure ErrorNotImplemented(const ATypeName: string);
     class procedure InitDefaults<T: TCustomDefaultAttribute>(Instance: TObject; AField: TRttiField); overload;
     class procedure InitDefaults<T: TCustomDefaultAttribute>(Instance: TObject; AProp: TRttiProperty); overload;
     function InternalReadString(const Ident, Default: string): string; virtual;
@@ -277,6 +278,11 @@ end;
 function TDataStorage.CreateStorageTarget(const AFileName: string = ''): IStorageTarget;
 begin
   Result := CreateStorageTarget(Self, AFileName);
+end;
+
+procedure TDataStorage.ErrorNotImplemented(const ATypeName: string);
+begin
+  raise ENotImplemented.CreateFmt('Storage type "%s" not supported!', [ATypeName]);
 end;
 
 class function TDataStorage.GetDefaultInstance: TDataStorage;
@@ -571,7 +577,7 @@ begin
     tkUString: Result := S;
   else
     { tkSet, tkClass, tkMethod, tkVariant, tkArray, tkRecord, tkInterface, tkDynArray, tkClassRef, tkPointer, tkProcedure }
-    raise ENotImplemented.CreateFmt('Storage type "%s" not supported!', [GetTypeName(Default.TypeInfo)]);
+    ErrorNotImplemented(GetTypeName(Default.TypeInfo));
   end;
 end;
 
@@ -709,7 +715,7 @@ begin
     tkUString: ; { Value.ToString already did the job }
   else
     { tkSet, tkClass, tkMethod, tkVariant, tkArray, tkRecord, tkInterface, tkDynArray, tkClassRef, tkPointer, tkProcedure }
-    raise ENotImplemented.CreateFmt('Storage type "%s" not supported!', [GetTypeName(Value.TypeInfo)]);
+    ErrorNotImplemented(GetTypeName(Value.TypeInfo));
   end;
   WriteString(Ident, S);
 end;
