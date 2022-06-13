@@ -3,7 +3,8 @@ unit Main.Form;
 interface
 
 uses
-  System.Classes, System.IniFiles,
+  Winapi.Windows,
+  System.Classes, System.IniFiles, System.Types,
   Vcl.Forms, Vcl.Controls, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Mask, Vcl.Dialogs, Vcl.ComCtrls,
   Cmon.DataStorage,
   Common.Frame, Common.Form,
@@ -21,6 +22,10 @@ type
   end;
 
 type
+  LayoutAttribute = class(TCustomStorageAttribute);
+  LayoutDefaultAttribute = class(TCustomDefaultAttribute);
+
+type
   TDemoMainForm = class(TForm)
     SomeTextEdit: TLabeledEdit;
     SomeIndexSelector: TRadioGroup;
@@ -35,39 +40,70 @@ type
     SaveSettingsDialog: TFileSaveDialog;
     RestoreDefaultsButton: TButton;
     MainDataTree: TTreeView;
+    pnlBottom: TPanel;
+    pnlLeft: TPanel;
+    pnlCenter: TPanel;
+    pnlFrames: TPanel;
+    splFrames: TSplitter;
+    splMainData: TSplitter;
+    splLeft: TSplitter;
+    LoadLayoutButton: TButton;
+    SaveLayoutButton: TButton;
+    RestoreLayoutButton: TButton;
     procedure FormCreate(Sender: TObject);
+    procedure LoadLayoutButtonClick(Sender: TObject);
     procedure LoadSettingsButtonClick(Sender: TObject);
     procedure MainDataTreeDblClick(Sender: TObject);
     procedure MainDataTreeEdited(Sender: TObject; Node: TTreeNode; var S: string);
     procedure MainDataTreeEditing(Sender: TObject; Node: TTreeNode; var AllowEdit: Boolean);
     procedure MainDataTreeKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure RestoreDefaultsButtonClick(Sender: TObject);
+    procedure RestoreLayoutButtonClick(Sender: TObject);
+    procedure SaveLayoutButtonClick(Sender: TObject);
     procedure SaveSettingsButtonClick(Sender: TObject);
   strict private
   class var
     FSettingsFileExtension: string;
     FSettingsFileName: string;
   private
+    FLayoutFileName: string;
+    function GetLayoutFileName: string;
+    function GetLayoutRect: TRect;
     class function GetSettingsFileName: string; static;
     function GetSomeBoolean: Boolean;
     function GetSomeEnum: TMyEnum;
     function GetSomeIndex: Integer;
     function GetSomeText: string;
+    function GetSplitterFrames: Integer;
+    function GetSplitterLeft: Integer;
+    function GetSplitterMainData: Integer;
     procedure LoadMainData;
     procedure PrepareFileDialog(ADialog: TCustomFileDialog);
+    procedure SetLayoutRect(const Value: TRect);
     procedure SetSomeBoolean(const Value: Boolean);
     procedure SetSomeEnum(const Value: TMyEnum);
     procedure SetSomeIndex(const Value: Integer);
     procedure SetSomeText(const Value: string);
+    procedure SetSplitterFrames(const Value: Integer);
+    procedure SetSplitterLeft(const Value: Integer);
+    procedure SetSplitterMainData(const Value: Integer);
   protected
+    procedure LoadLayout; overload;
     procedure LoadSettings;
     procedure RestoreDefaults;
+    procedure RestoreLayout;
+    procedure SaveLayout; overload;
     procedure SaveSettings;
+    function UnscaledValue(Value: Integer): Integer;
+    function ScaledValue(Value: Integer): Integer;
   public
     procedure InitDefaults(Storage: TDataStorage); overload; override;
     procedure LoadFromStorage(Storage: TDataStorage); overload; override;
+    procedure LoadLayout(const AFileName: string); overload;
+    procedure SaveLayout(const AFileName: string); overload;
     procedure SaveToStorage(Storage: TDataStorage); overload; override;
     procedure UpdateTitle;
+    property LayoutFileName: string read GetLayoutFileName write FLayoutFileName;
     class property SettingsFileExtension: string read FSettingsFileExtension write FSettingsFileExtension;
     class property SettingsFileName: string read GetSettingsFileName write FSettingsFileName;
     [Storage, Default(True)]
@@ -78,6 +114,14 @@ type
     property SomeIndex: Integer read GetSomeIndex write SetSomeIndex;
     [Storage, Default('Hello World')]
     property SomeText: string read GetSomeText write SetSomeText;
+//    [Layout]
+    property LayoutRect: TRect read GetLayoutRect write SetLayoutRect;
+    [Layout, LayoutDefault(241)]
+    property SplitterFrames: Integer read GetSplitterFrames write SetSplitterFrames;
+    [Layout, LayoutDefault(249)]
+    property SplitterLeft: Integer read GetSplitterLeft write SetSplitterLeft;
+    [Layout, LayoutDefault(217)]
+    property SplitterMainData: Integer read GetSplitterMainData write SetSplitterMainData;
   end;
 
 var
@@ -174,6 +218,18 @@ begin
     frame.UpdateTitle;
 end;
 
+function TDemoMainForm.GetLayoutFileName: string;
+begin
+  Result := FLayoutFileName;
+  if Result.IsEmpty then
+    Result := TPath.Combine(TUtilities.UserDocumentsPath, TPath.ChangeExtension('Layout', SettingsFileExtension));
+end;
+
+function TDemoMainForm.GetLayoutRect: TRect;
+begin
+  Result := BoundsRect;
+end;
+
 class function TDemoMainForm.GetSettingsFileName: string;
 begin
   if FSettingsFileName.IsEmpty then
@@ -222,6 +278,21 @@ begin
   Result := SomeTextEdit.Text;
 end;
 
+function TDemoMainForm.GetSplitterFrames: Integer;
+begin
+  Result := UnscaledValue(DemoFrame1.Width);
+end;
+
+function TDemoMainForm.GetSplitterLeft: Integer;
+begin
+  Result := UnscaledValue(pnlLeft.Width);
+end;
+
+function TDemoMainForm.GetSplitterMainData: Integer;
+begin
+  Result := UnscaledValue(pnlFrames.Height);
+end;
+
 procedure TDemoMainForm.InitDefaults(Storage: TDataStorage);
 begin
   inherited;
@@ -234,6 +305,33 @@ begin
   inherited;
   Storage.LoadFromStorage(MainData);
   LoadMainData;
+end;
+
+procedure TDemoMainForm.LoadLayout(const AFileName: string);
+var
+  storage: TDataStorage;
+begin
+  storage := TDataStorage.Create;
+  try
+    storage.StorageTarget := TDataStorage.CreateStorageTarget(Self, AFileName);
+    storage.LoadFromStorage<LayoutAttribute>(Self);
+  finally
+    storage.Free;
+  end;
+end;
+
+procedure TDemoMainForm.LoadLayout;
+begin
+  LoadSettingsDialog.FileName := LayoutFileName;
+  if LoadSettingsDialog.Execute then begin
+    LayoutFileName := LoadSettingsDialog.FileName;
+    LoadLayout(LayoutFileName);
+  end;
+end;
+
+procedure TDemoMainForm.LoadLayoutButtonClick(Sender: TObject);
+begin
+  LoadLayout;
 end;
 
 procedure TDemoMainForm.LoadMainData;
@@ -274,7 +372,6 @@ begin
     targets.Free;
   end;
   ADialog.DefaultExtension := defaultExt.Substring(1);
-  ADialog.FileName := SettingsFileName;
 end;
 
 procedure TDemoMainForm.SetSomeBoolean(const Value: Boolean);
@@ -299,6 +396,7 @@ end;
 
 procedure TDemoMainForm.LoadSettings;
 begin
+  LoadSettingsDialog.FileName := SettingsFileName;
   if LoadSettingsDialog.Execute then
     LoadFromStorage(LoadSettingsDialog.FileName);
 end;
@@ -346,8 +444,46 @@ begin
   InitDefaults;
 end;
 
+procedure TDemoMainForm.RestoreLayout;
+begin
+  TDataStorage.InitDefaults<LayoutDefaultAttribute>(Self);
+end;
+
+procedure TDemoMainForm.RestoreLayoutButtonClick(Sender: TObject);
+begin
+  RestoreLayout;
+end;
+
+procedure TDemoMainForm.SaveLayout(const AFileName: string);
+var
+  storage: TDataStorage;
+begin
+  storage := TDataStorage.Create;
+  try
+    storage.StorageTarget := TDataStorage.CreateStorageTarget(Self, AFileName);
+    storage.SaveToStorage<LayoutAttribute>(Self);
+  finally
+    storage.Free;
+  end;
+end;
+
+procedure TDemoMainForm.SaveLayout;
+begin
+  SaveSettingsDialog.FileName := LayoutFileName;
+  if SaveSettingsDialog.Execute then begin
+    LayoutFileName := SaveSettingsDialog.FileName;
+    SaveLayout(LayoutFileName);
+  end;
+end;
+
+procedure TDemoMainForm.SaveLayoutButtonClick(Sender: TObject);
+begin
+  SaveLayout;
+end;
+
 procedure TDemoMainForm.SaveSettings;
 begin
+  SaveSettingsDialog.FileName := SettingsFileName;
   if SaveSettingsDialog.Execute then
     SaveToStorage(SaveSettingsDialog.FileName);
 end;
@@ -356,6 +492,36 @@ procedure TDemoMainForm.SaveToStorage(Storage: TDataStorage);
 begin
   inherited;
   Storage.SaveToStorage(MainData);
+end;
+
+procedure TDemoMainForm.SetLayoutRect(const Value: TRect);
+begin
+  BoundsRect := Value;
+end;
+
+procedure TDemoMainForm.SetSplitterFrames(const Value: Integer);
+begin
+  DemoFrame1.Width := ScaledValue(Value);
+end;
+
+procedure TDemoMainForm.SetSplitterLeft(const Value: Integer);
+begin
+  pnlLeft.Width := ScaledValue(Value);
+end;
+
+procedure TDemoMainForm.SetSplitterMainData(const Value: Integer);
+begin
+  pnlFrames.Height := ScaledValue(Value);
+end;
+
+function TDemoMainForm.UnscaledValue(Value: Integer): Integer;
+begin
+  Result := MulDiv(Value, Screen.DefaultPixelsPerInch, GetCurrentPPI);
+end;
+
+function TDemoMainForm.ScaledValue(Value: Integer): Integer;
+begin
+  Result := MulDiv(Value, GetCurrentPPI, Screen.DefaultPixelsPerInch);
 end;
 
 procedure TDemoMainForm.UpdateTitle;

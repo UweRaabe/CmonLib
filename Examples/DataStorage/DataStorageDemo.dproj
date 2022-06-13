@@ -2,7 +2,7 @@
     <PropertyGroup>
         <Base>True</Base>
         <AppType>Application</AppType>
-        <Config Condition="'$(Config)'==''">Release</Config>
+        <Config Condition="'$(Config)'==''">Debug</Config>
         <FrameworkType>VCL</FrameworkType>
         <MainSource>DataStorageDemo.dpr</MainSource>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
@@ -122,7 +122,7 @@
             </Platforms>
             <MMX>
                 <UsesClauseFormatter AutoFormat="1">
-                    <GroupNames>WinApi;System.Win;System;Data;FireDAC;Vcl;Cmon</GroupNames>
+                    <GroupNames>WinApi;System.Win;System;Data;FireDAC;Vcl;Cmon;Common</GroupNames>
                 </UsesClauseFormatter>
             </MMX>
         </BorlandProject>
