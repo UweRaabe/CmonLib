@@ -11,7 +11,7 @@ A collection of several units with different purpose.
 
 **Cmon.Dialogs** abstracts standard dialogs from any framework. Built upon **Cmon.Messaging**.
 
-**Cmon.Initializing** establishes a way to control initialize code for other units into the call to _Application.Initialize_. This allows some to make some adjustments before, which would be near to impossible if the initialize code would execute in the units initialization section.
+**Cmon.Initializing** establishes a way to control initialize code for other units into the call to _Application.Initialize_. This allows to make adjustments before, which would be near to impossible if the initialize code would execute in the units initialization section.
 
 **Cmon.Logging** adds a simple, abstract logging mechanism. Built upon **Cmon.Messaging**.
 
