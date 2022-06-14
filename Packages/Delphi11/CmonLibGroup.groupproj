@@ -18,6 +18,12 @@
         <Projects Include="..\..\Examples\DataStorage\DataStorageDemo.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="..\..\Examples\DataSetHelper\DataSetHelperDemo.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="..\..\Examples\Dialogs\DialogsDemo.dproj">
+            <Dependencies/>
+        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -71,14 +77,32 @@
     <Target Name="DataStorageDemo:Make">
         <MSBuild Projects="..\..\Examples\DataStorage\DataStorageDemo.dproj" Targets="Make"/>
     </Target>
+    <Target Name="DataSetHelperDemo">
+        <MSBuild Projects="..\..\Examples\DataSetHelper\DataSetHelperDemo.dproj"/>
+    </Target>
+    <Target Name="DataSetHelperDemo:Clean">
+        <MSBuild Projects="..\..\Examples\DataSetHelper\DataSetHelperDemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="DataSetHelperDemo:Make">
+        <MSBuild Projects="..\..\Examples\DataSetHelper\DataSetHelperDemo.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="DialogsDemo">
+        <MSBuild Projects="..\..\Examples\Dialogs\DialogsDemo.dproj"/>
+    </Target>
+    <Target Name="DialogsDemo:Clean">
+        <MSBuild Projects="..\..\Examples\Dialogs\DialogsDemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="DialogsDemo:Make">
+        <MSBuild Projects="..\..\Examples\Dialogs\DialogsDemo.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="CmonLib;CmonLibVcl;CmonLibDB;ObserversDemo;DataStorageDemo"/>
+        <CallTarget Targets="CmonLib;CmonLibVcl;CmonLibDB;ObserversDemo;DataStorageDemo;DataSetHelperDemo;DialogsDemo"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="CmonLib:Clean;CmonLibVcl:Clean;CmonLibDB:Clean;ObserversDemo:Clean;DataStorageDemo:Clean"/>
+        <CallTarget Targets="CmonLib:Clean;CmonLibVcl:Clean;CmonLibDB:Clean;ObserversDemo:Clean;DataStorageDemo:Clean;DataSetHelperDemo:Clean;DialogsDemo:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="CmonLib:Make;CmonLibVcl:Make;CmonLibDB:Make;ObserversDemo:Make;DataStorageDemo:Make"/>
+        <CallTarget Targets="CmonLib:Make;CmonLibVcl:Make;CmonLibDB:Make;ObserversDemo:Make;DataStorageDemo:Make;DataSetHelperDemo:Make;DialogsDemo:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>
