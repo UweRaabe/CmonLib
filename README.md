@@ -17,6 +17,6 @@ A collection of several units with different purpose.
 
 **Cmon.Messaging** provides some bases for using _System.Messaging_.
 
-**Cmon.Observers** introduces some helper classes for leveraging the observer support of severla VCL controls as well as implement observer support for other classes.
+**Cmon.Observers** introduces some helper classes for leveraging the observer support of several VCL controls as well as implement observer support for other classes.
 
 **Cmon.Utilities** contains some class helpers and general purpose routines.
