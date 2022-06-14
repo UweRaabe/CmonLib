@@ -1,9 +1,9 @@
-program DialogsDemo;
+program DialogsDemoVCL;
 
 uses
   Vcl.Forms,
   Cmon.Messaging.Dialogs.Vcl,
-  Main.Form in 'Main.Form.pas' {MainForm},
+  Main.VclForm in 'Main.VclForm.pas' {MainForm},
   Utilities in 'Utilities.pas';
 
 {$R *.res}

@@ -49,10 +49,6 @@ object MainForm: TMainForm
         'die ihr Volk retten und der Galaxis die Freiheit wiedergeben k'#246'n' +
         'nten....')
     TabOrder = 0
-    ExplicitLeft = 16
-    ExplicitTop = 17
-    ExplicitWidth = 365
-    ExplicitHeight = 365
   end
   object pnlTop: TPanel
     Left = 0
@@ -65,8 +61,6 @@ object MainForm: TMainForm
     ParentBackground = False
     ShowCaption = False
     TabOrder = 1
-    ExplicitLeft = -3
-    ExplicitTop = -3
     object LoadButton: TButton
       Left = 12
       Top = 9

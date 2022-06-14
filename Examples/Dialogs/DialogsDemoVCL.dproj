@@ -4,7 +4,7 @@
         <AppType>Application</AppType>
         <Config Condition="'$(Config)'==''">Debug</Config>
         <FrameworkType>VCL</FrameworkType>
-        <MainSource>DialogsDemo.dpr</MainSource>
+        <MainSource>DialogsDemoVCL.dpr</MainSource>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <ProjectGuid>{93E178D3-738E-4BF3-A765-B374AE64BAEA}</ProjectGuid>
         <ProjectVersion>19.4</ProjectVersion>
@@ -41,7 +41,7 @@
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
-        <SanitizedProjectName>DialogsDemo</SanitizedProjectName>
+        <SanitizedProjectName>DialogsDemoVCL</SanitizedProjectName>
         <DCC_DcuOutput>.\$(Platform)\$(Config)</DCC_DcuOutput>
         <DCC_ExeOutput>.\$(Platform)\$(Config)</DCC_ExeOutput>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
@@ -84,8 +84,9 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="Main.Form.pas">
+        <DCCReference Include="Main.VclForm.pas">
             <Form>MainForm</Form>
+            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="Utilities.pas"/>
         <BuildConfiguration Include="Base">
@@ -106,7 +107,7 @@
         <BorlandProject>
             <Delphi.Personality>
                 <Source>
-                    <Source Name="MainSource">DialogsDemo.dpr</Source>
+                    <Source Name="MainSource">DialogsDemoVCL.dpr</Source>
                 </Source>
                 <Excluded_Packages/>
             </Delphi.Personality>

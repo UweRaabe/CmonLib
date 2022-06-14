@@ -1,9 +1,9 @@
-unit Main.Form;
+unit Main.VclForm;
 
 interface
 
 uses
-  System.Classes, System.Messaging,
+  System.Classes,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtDlgs, Vcl.StdCtrls, Vcl.ExtCtrls;
 
 type
@@ -27,7 +27,6 @@ implementation
 
 uses
   System.UITypes,
-  Cmon.Logging,
   Utilities;
 
 {$R *.dfm}
