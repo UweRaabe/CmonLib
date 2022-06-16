@@ -36,7 +36,7 @@ implementation
 
 uses
   System.SysUtils,
-  Cmon.Logging, Cmon.Observers.Vcl,
+  Cmon.Logging, Cmon.Observers, Cmon.Observers.Vcl,
   ObservableData;
 
 var
@@ -54,13 +54,15 @@ begin
   Data := GlobalData;
 
   { link observers }
-  MyStringEdit.AddValidator(Data.IsMyStringValid);
   MyStringEdit.AddObserver(procedure(AValue: string) begin Data.MyString := AValue end);
   MyLinesMemo.AddObserver(procedure(AValue: TStrings) begin Data.MyLines := AValue end);
   MySelectedComboBox.AddObserver(procedure(AValue: Integer) begin Data.MySelectedIndex := AValue end);
   MySelectedComboBox.AddObserver(procedure(AValue: string) begin Data.MySelected := AValue end);
   MyListItemListBox.AddObserver(procedure(AValue: Integer) begin Data.MyListItemIndex := AValue end);
   MyListItemListBox.AddObserver(procedure(AValue: string) begin Data.MyListItem := AValue end);
+
+  { link validator with priority }
+  MyStringEdit.AddValidator(Data.IsMyStringValid, TObserverPriority.VeryEarly);
 end;
 
 destructor TDemoMainForm.Destroy;

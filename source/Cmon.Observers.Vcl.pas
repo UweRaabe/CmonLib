@@ -10,37 +10,41 @@ uses
 type
   TCustomEditHelper = class helper for TCustomEdit
   public
-    procedure AddObserver(AOnUpdate: TNotifyEvent; AOnModified: TNotifyEvent = nil); overload;
-    procedure AddObserver(AOnUpdateValue: TProc<string>); overload;
-    procedure AddValidator(AOnValidateValue: TPredicate<string>);
+    procedure AddObserver(AOnUpdate: TNotifyEvent; AOnModified: TNotifyEvent = nil; APriority: TObserverPriority =
+        TObserverPriority.Normal); overload;
+    procedure AddObserver(AOnUpdateValue: TProc<string>; APriority: TObserverPriority = TObserverPriority.Normal); overload;
+    procedure AddValidator(AOnValidateValue: TPredicate<string>; APriority: TObserverPriority = TObserverPriority.Normal);
   end;
 
 type
   TCustomMemoHelper = class helper for TCustomMemo
   public
-    procedure AddObserver(AOnUpdate: TNotifyEvent; AOnModified: TNotifyEvent = nil); overload;
-    procedure AddObserver(AOnUpdateValue: TProc<TStrings>); overload;
-    procedure AddValidator(AOnValidateValue: TPredicate<TStrings>);
+    procedure AddObserver(AOnUpdate: TNotifyEvent; AOnModified: TNotifyEvent = nil; APriority: TObserverPriority =
+        TObserverPriority.Normal); overload;
+    procedure AddObserver(AOnUpdateValue: TProc<TStrings>; APriority: TObserverPriority = TObserverPriority.Normal); overload;
+    procedure AddValidator(AOnValidateValue: TPredicate<TStrings>; APriority: TObserverPriority = TObserverPriority.Normal);
   end;
 
 type
   TCustomComboBoxHelper = class helper for TCustomComboBox
   public
-    procedure AddObserver(AOnUpdate: TNotifyEvent; AOnModified: TNotifyEvent = nil); overload;
-    procedure AddObserver(AOnUpdateValue: TProc<string>); overload;
-    procedure AddObserver(AOnUpdateValue: TProc<Integer>); overload;
-    procedure AddValidator(AOnValidateValue: TPredicate<string>); overload;
-    procedure AddValidator(AOnValidateValue: TPredicate<Integer>); overload;
+    procedure AddObserver(AOnUpdate: TNotifyEvent; AOnModified: TNotifyEvent = nil; APriority: TObserverPriority =
+        TObserverPriority.Normal); overload;
+    procedure AddObserver(AOnUpdateValue: TProc<string>; APriority: TObserverPriority = TObserverPriority.Normal); overload;
+    procedure AddObserver(AOnUpdateValue: TProc<Integer>; APriority: TObserverPriority = TObserverPriority.Normal); overload;
+    procedure AddValidator(AOnValidateValue: TPredicate<string>; APriority: TObserverPriority = TObserverPriority.Normal); overload;
+    procedure AddValidator(AOnValidateValue: TPredicate<Integer>; APriority: TObserverPriority = TObserverPriority.Normal); overload;
   end;
 
 type
   TCustomListBoxHelper = class helper for TCustomListBox
   public
-    procedure AddObserver(AOnUpdate: TNotifyEvent; AOnModified: TNotifyEvent = nil); overload;
-    procedure AddObserver(AOnUpdateValue: TProc<string>); overload;
-    procedure AddObserver(AOnUpdateValue: TProc<Integer>); overload;
-    procedure AddValidator(AOnValidateValue: TPredicate<string>); overload;
-    procedure AddValidator(AOnValidateValue: TPredicate<Integer>); overload;
+    procedure AddObserver(AOnUpdate: TNotifyEvent; AOnModified: TNotifyEvent = nil; APriority: TObserverPriority =
+        TObserverPriority.Normal); overload;
+    procedure AddObserver(AOnUpdateValue: TProc<string>; APriority: TObserverPriority = TObserverPriority.Normal); overload;
+    procedure AddObserver(AOnUpdateValue: TProc<Integer>; APriority: TObserverPriority = TObserverPriority.Normal); overload;
+    procedure AddValidator(AOnValidateValue: TPredicate<string>; APriority: TObserverPriority = TObserverPriority.Normal); overload;
+    procedure AddValidator(AOnValidateValue: TPredicate<Integer>; APriority: TObserverPriority = TObserverPriority.Normal); overload;
   end;
 
 implementation
@@ -132,90 +136,100 @@ begin
   Target.ReSelectAll;
 end;
 
-procedure TCustomEditHelper.AddObserver(AOnUpdate: TNotifyEvent; AOnModified: TNotifyEvent = nil);
+procedure TCustomEditHelper.AddObserver(AOnUpdate, AOnModified: TNotifyEvent; APriority: TObserverPriority);
 begin
-  Observers.AddObserver(TObserverMapping.ControlValueID, TCustomEditObserver.Create(Self, AOnUpdate, AOnModified));
+  Observers.AddObserver(TObserverMapping.ControlValueID, TCustomEditObserver.Create(Self, AOnUpdate, AOnModified, APriority));
+  Observers.SortObservers(TObserverMapping.ControlValueID);
 end;
 
-procedure TCustomEditHelper.AddObserver(AOnUpdateValue: TProc<string>);
+procedure TCustomEditHelper.AddObserver(AOnUpdateValue: TProc<string>; APriority: TObserverPriority);
 begin
-  Observers.AddObserver(TObserverMapping.ControlValueID, TCustomEditObserver.Create(Self, AOnUpdateValue));
+  Observers.AddObserver(TObserverMapping.ControlValueID, TCustomEditObserver.Create(Self, AOnUpdateValue, APriority));
+  Observers.SortObservers(TObserverMapping.ControlValueID);
 end;
 
-procedure TCustomEditHelper.AddValidator(AOnValidateValue: TPredicate<string>);
+procedure TCustomEditHelper.AddValidator(AOnValidateValue: TPredicate<string>; APriority: TObserverPriority);
 begin
   if not Assigned(AOnValidateValue) then Exit;
-  AddObserver(TValidator.Create<string>(AOnValidateValue));
+  AddObserver(TValidator.Create<string>(AOnValidateValue), APriority);
 end;
 
-procedure TCustomComboBoxHelper.AddObserver(AOnUpdate, AOnModified: TNotifyEvent);
+procedure TCustomComboBoxHelper.AddObserver(AOnUpdate, AOnModified: TNotifyEvent; APriority: TObserverPriority);
 begin
-  Observers.AddObserver(TObserverMapping.ControlValueID, TCustomComboBoxObserver.Create(Self, AOnUpdate, AOnModified));
+  Observers.AddObserver(TObserverMapping.ControlValueID, TCustomComboBoxObserver.Create(Self, AOnUpdate, AOnModified, APriority));
+  Observers.SortObservers(TObserverMapping.ControlValueID);
 end;
 
-procedure TCustomComboBoxHelper.AddObserver(AOnUpdateValue: TProc<string>);
+procedure TCustomComboBoxHelper.AddObserver(AOnUpdateValue: TProc<string>; APriority: TObserverPriority);
 begin
-  Observers.AddObserver(TObserverMapping.ControlValueID, TCustomComboBoxObserver.Create(Self, AOnUpdateValue));
+  Observers.AddObserver(TObserverMapping.ControlValueID, TCustomComboBoxObserver.Create(Self, AOnUpdateValue, APriority));
+  Observers.SortObservers(TObserverMapping.ControlValueID);
 end;
 
-procedure TCustomComboBoxHelper.AddObserver(AOnUpdateValue: TProc<Integer>);
+procedure TCustomComboBoxHelper.AddObserver(AOnUpdateValue: TProc<Integer>; APriority: TObserverPriority);
 begin
-  Observers.AddObserver(TObserverMapping.ControlValueID, TCustomComboBoxIndexObserver.Create(Self, AOnUpdateValue));
+  Observers.AddObserver(TObserverMapping.ControlValueID, TCustomComboBoxIndexObserver.Create(Self, AOnUpdateValue, APriority));
+  Observers.SortObservers(TObserverMapping.ControlValueID);
 end;
 
-procedure TCustomComboBoxHelper.AddValidator(AOnValidateValue: TPredicate<Integer>);
-begin
-  if not Assigned(AOnValidateValue) then Exit;
-  AddObserver(TValidator.Create<Integer>(AOnValidateValue));
-end;
-
-procedure TCustomComboBoxHelper.AddValidator(AOnValidateValue: TPredicate<string>);
+procedure TCustomComboBoxHelper.AddValidator(AOnValidateValue: TPredicate<Integer>; APriority: TObserverPriority);
 begin
   if not Assigned(AOnValidateValue) then Exit;
-  AddObserver(TValidator.Create<string>(AOnValidateValue));
+  AddObserver(TValidator.Create<Integer>(AOnValidateValue), APriority);
 end;
 
-procedure TCustomListBoxHelper.AddObserver(AOnUpdate, AOnModified: TNotifyEvent);
-begin
-  Observers.AddObserver(TObserverMapping.ControlValueID, TCustomListBoxObserver.Create(Self, AOnUpdate, AOnModified));
-end;
-
-procedure TCustomListBoxHelper.AddObserver(AOnUpdateValue: TProc<string>);
-begin
-  Observers.AddObserver(TObserverMapping.ControlValueID, TCustomListBoxObserver.Create(Self, AOnUpdateValue));
-end;
-
-procedure TCustomListBoxHelper.AddObserver(AOnUpdateValue: TProc<Integer>);
-begin
-  Observers.AddObserver(TObserverMapping.ControlValueID, TCustomListBoxIndexObserver.Create(Self, AOnUpdateValue));
-end;
-
-procedure TCustomListBoxHelper.AddValidator(AOnValidateValue: TPredicate<Integer>);
+procedure TCustomComboBoxHelper.AddValidator(AOnValidateValue: TPredicate<string>; APriority: TObserverPriority);
 begin
   if not Assigned(AOnValidateValue) then Exit;
-  AddObserver(TValidator.Create<Integer>(AOnValidateValue));
+  AddObserver(TValidator.Create<string>(AOnValidateValue), APriority);
 end;
 
-procedure TCustomListBoxHelper.AddValidator(AOnValidateValue: TPredicate<string>);
+procedure TCustomListBoxHelper.AddObserver(AOnUpdate, AOnModified: TNotifyEvent; APriority: TObserverPriority);
+begin
+  Observers.AddObserver(TObserverMapping.ControlValueID, TCustomListBoxObserver.Create(Self, AOnUpdate, AOnModified, APriority));
+  Observers.SortObservers(TObserverMapping.ControlValueID);
+end;
+
+procedure TCustomListBoxHelper.AddObserver(AOnUpdateValue: TProc<string>; APriority: TObserverPriority);
+begin
+  Observers.AddObserver(TObserverMapping.ControlValueID, TCustomListBoxObserver.Create(Self, AOnUpdateValue, APriority));
+  Observers.SortObservers(TObserverMapping.ControlValueID);
+end;
+
+procedure TCustomListBoxHelper.AddObserver(AOnUpdateValue: TProc<Integer>; APriority: TObserverPriority);
+begin
+  Observers.AddObserver(TObserverMapping.ControlValueID, TCustomListBoxIndexObserver.Create(Self, AOnUpdateValue, APriority));
+  Observers.SortObservers(TObserverMapping.ControlValueID);
+end;
+
+procedure TCustomListBoxHelper.AddValidator(AOnValidateValue: TPredicate<Integer>; APriority: TObserverPriority);
 begin
   if not Assigned(AOnValidateValue) then Exit;
-  AddObserver(TValidator.Create<string>(AOnValidateValue));
+  AddObserver(TValidator.Create<Integer>(AOnValidateValue), APriority);
 end;
 
-procedure TCustomMemoHelper.AddObserver(AOnUpdateValue: TProc<TStrings>);
-begin
-  Observers.AddObserver(TObserverMapping.ControlValueID, TCustomMemoObserver.Create(Self, AOnUpdateValue));
-end;
-
-procedure TCustomMemoHelper.AddValidator(AOnValidateValue: TPredicate<TStrings>);
+procedure TCustomListBoxHelper.AddValidator(AOnValidateValue: TPredicate<string>; APriority: TObserverPriority);
 begin
   if not Assigned(AOnValidateValue) then Exit;
-  AddObserver(TValidator.Create<TStrings>(AOnValidateValue));
+  AddObserver(TValidator.Create<string>(AOnValidateValue), APriority);
 end;
 
-procedure TCustomMemoHelper.AddObserver(AOnUpdate: TNotifyEvent; AOnModified: TNotifyEvent = nil);
+procedure TCustomMemoHelper.AddObserver(AOnUpdateValue: TProc<TStrings>; APriority: TObserverPriority);
 begin
-  Observers.AddObserver(TObserverMapping.ControlValueID, TCustomMemoObserver.Create(Self, AOnUpdate, AOnModified));
+  Observers.AddObserver(TObserverMapping.ControlValueID, TCustomMemoObserver.Create(Self, AOnUpdateValue, APriority));
+  Observers.SortObservers(TObserverMapping.ControlValueID);
+end;
+
+procedure TCustomMemoHelper.AddValidator(AOnValidateValue: TPredicate<TStrings>; APriority: TObserverPriority);
+begin
+  if not Assigned(AOnValidateValue) then Exit;
+  AddObserver(TValidator.Create<TStrings>(AOnValidateValue), APriority);
+end;
+
+procedure TCustomMemoHelper.AddObserver(AOnUpdate, AOnModified: TNotifyEvent; APriority: TObserverPriority);
+begin
+  Observers.AddObserver(TObserverMapping.ControlValueID, TCustomMemoObserver.Create(Self, AOnUpdate, AOnModified, APriority));
+  Observers.SortObservers(TObserverMapping.ControlValueID);
 end;
 
 function TCustomMemoObserver.GetTrack: Boolean;

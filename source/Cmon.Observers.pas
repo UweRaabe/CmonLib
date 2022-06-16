@@ -15,18 +15,37 @@ type
   end;
 
 type
-  TBaseObserver = class(TInterfacedObject, IObserver)
+{$SCOPEDENUMS ON}
+  TObserverPriority = (VeryEarly, Early, Normal, Late, VeryLate);
+{$SCOPEDENUMS OFF}
+
+  IObserverPriority = interface
+    ['{254BF223-348B-440A-A596-D9357BA78D32}']
+    function GetPriority: TObserverPriority;
+    property Priority: TObserverPriority read GetPriority;
+  end;
+
+type
+  TObserversHelper = class helper for TObservers
+  public
+    procedure SortObservers(AID: Integer);
+  end;
+
+type
+  TBaseObserver = class(TInterfacedObject, IObserver, IObserverPriority)
   private
     FActive: Boolean;
     FOnToggle: TObserverToggleEvent;
+    FPriority: TObserverPriority;
   strict protected
     function GetActive: Boolean; virtual;
     function GetOnObserverToggle: TObserverToggleEvent; virtual;
+    function GetPriority: TObserverPriority;
     procedure Removed; virtual;
     procedure SetActive(Value: Boolean); virtual;
     procedure SetOnObserverToggle(AEvent: TObserverToggleEvent); virtual;
   public
-    constructor Create;
+    constructor Create(APriority: TObserverPriority = TObserverPriority.Normal);
   end;
 
 type
@@ -43,7 +62,8 @@ type
     procedure DoValueModified;
     procedure DoValueUpdate;
   public
-    constructor Create(ATarget: T; AOnUpdate: TNotifyEvent; AOnModified: TNotifyEvent = nil);
+    constructor Create(ATarget: T; AOnUpdate: TNotifyEvent; AOnModified: TNotifyEvent = nil; APriority: TObserverPriority =
+        TObserverPriority.Normal);
     property Target: T read FTarget;
   end;
 
@@ -57,7 +77,8 @@ type
     procedure DoNotifyValue(const AValue: V);
     procedure NotifyValue(Sender: TObject); virtual; abstract;
   public
-    constructor Create(ATarget: T; AOnNotifyValue: TNotifyValue); reintroduce; overload;
+    constructor Create(ATarget: T; AOnNotifyValue: TNotifyValue; APriority: TObserverPriority = TObserverPriority.Normal);
+        reintroduce; overload;
   end;
 
 type
@@ -104,8 +125,10 @@ type
     procedure SetTracking(const Value: Boolean); virtual;
     procedure ValueChanged; virtual;
   public
-    constructor Create(ATarget: T; AOnNotifyValue: TNotifyValue; AOnGetValue: TGetValue; ATracking: Boolean = True); overload;
-    constructor Create(ATarget: T; AOnNotifyValue: TNotifyValueExt; AOnGetValue: TGetValue; ATracking: Boolean = True); overload;
+    constructor Create(ATarget: T; AOnNotifyValue: TNotifyValue; AOnGetValue: TGetValue; ATracking: Boolean = True; APriority:
+        TObserverPriority = TObserverPriority.Normal); overload;
+    constructor Create(ATarget: T; AOnNotifyValue: TNotifyValueExt; AOnGetValue: TGetValue; ATracking: Boolean = True; APriority:
+        TObserverPriority = TObserverPriority.Normal); overload;
     property Target: T read FTarget;
   end;
 
@@ -114,9 +137,9 @@ implementation
 uses
   System.Rtti;
 
-constructor TControlValueObserver<T>.Create(ATarget: T; AOnUpdate: TNotifyEvent; AOnModified: TNotifyEvent = nil);
+constructor TControlValueObserver<T>.Create(ATarget: T; AOnUpdate, AOnModified: TNotifyEvent; APriority: TObserverPriority);
 begin
-  inherited Create;
+  inherited Create(APriority);
   FTarget := ATarget;
   FOnModified := AOnModified;
   FOnUpdate := AOnUpdate;
@@ -151,9 +174,9 @@ end;
 
 { TControlValueObserver<T, V> }
 
-constructor TControlValueObserver<T, V>.Create(ATarget: T; AOnNotifyValue: TNotifyValue);
+constructor TControlValueObserver<T, V>.Create(ATarget: T; AOnNotifyValue: TNotifyValue; APriority: TObserverPriority);
 begin
-  inherited Create(ATarget, NotifyValue, nil);
+  inherited Create(ATarget, NotifyValue, nil, APriority);
   FOnNotifyValue := AOnNotifyValue;
 end;
 
@@ -163,10 +186,11 @@ begin
     FOnNotifyValue(AValue);
 end;
 
-constructor TBaseObserver.Create;
+constructor TBaseObserver.Create(APriority: TObserverPriority = TObserverPriority.Normal);
 begin
-  inherited;
+  inherited Create;
   FActive := True;
+  FPriority := APriority;
 end;
 
 function TBaseObserver.GetActive: Boolean;
@@ -177,6 +201,11 @@ end;
 function TBaseObserver.GetOnObserverToggle: TObserverToggleEvent;
 begin
   Result := FOnToggle;
+end;
+
+function TBaseObserver.GetPriority: TObserverPriority;
+begin
+  Result := FPriority;
 end;
 
 procedure TBaseObserver.Removed;
@@ -280,19 +309,20 @@ begin
   ValueChanged(GetObserverID(Key));
 end;
 
-constructor TValueObserver<T, V>.Create(ATarget: T; AOnNotifyValue: TNotifyValue; AOnGetValue: TGetValue; ATracking: Boolean);
+constructor TValueObserver<T, V>.Create(ATarget: T; AOnNotifyValue: TNotifyValue; AOnGetValue: TGetValue; ATracking: Boolean;
+    APriority: TObserverPriority);
 begin
-  inherited Create;
+  inherited Create(APriority);
   FTarget := ATarget;
   FOnNotifyValue := AOnNotifyValue;
   FOnGetValue := AOnGetValue;
   FTracking := ATracking;
 end;
 
-constructor TValueObserver<T, V>.Create(ATarget: T; AOnNotifyValue: TNotifyValueExt; AOnGetValue: TGetValue; ATracking: Boolean =
-    True);
+constructor TValueObserver<T, V>.Create(ATarget: T; AOnNotifyValue: TNotifyValueExt; AOnGetValue: TGetValue; ATracking: Boolean;
+    APriority: TObserverPriority);
 begin
-  inherited Create;
+  inherited Create(APriority);
   FTarget := ATarget;
   FOnNotifyValueExt := AOnNotifyValue;
   FOnGetValue := AOnGetValue;
@@ -327,6 +357,57 @@ end;
 procedure TValueObserver<T, V>.ValueChanged;
 begin
   DoNotifyValue(DoGetValue);
+end;
+
+procedure TObserversHelper.SortObservers(AID: Integer);
+
+  function Getpriority(AIntf: IInterface): TObserverPriority;
+  var
+    prio: IObserverPriority;
+  begin
+    Result := TObserverPriority.Normal;
+    if Supports(AIntf, IObserverPriority, prio) then
+      Result := prio.Priority;
+  end;
+
+var
+  lastPrio: TObserverPriority;
+  list: IInterfaceList;
+  needsSort: Boolean;
+  prioLists: array[TObserverPriority] of IInterfaceList;
+begin
+  needsSort := False;
+  lastPrio := Low(TObserverPriority);
+  list := GetMultiCastObserver(AID);
+  for var I := 0 to list.Count - 1 do begin
+    var prio := GetPriority(list[I]);
+    if prio < lastPrio then
+      needsSort := True
+    else
+      lastPrio := prio;
+    var prioList := prioLists[prio];
+    if prioList = nil then begin
+      prioList := TInterfaceList.Create;
+      prioLists[prio] := prioList;
+    end;
+    prioList.Add(list[I]);
+  end;
+  if needsSort then begin
+    var saveEvent := OnObserverAdded;
+    try
+      for var I := 0 to list.Count - 1 do
+        RemoveObserver(AID, list[I]);
+      for var prio := Low(prioLists) to High(prioLists) do begin
+        var prioList := prioLists[prio];
+        if Assigned(prioList) then begin
+          for var I := 0 to prioList.Count - 1 do
+            AddObserver(AID, prioList[I]);
+        end;
+      end;
+    finally
+      OnObserverAdded := saveEvent;
+    end;
+Hurz  end;
 end;
 
 end.
