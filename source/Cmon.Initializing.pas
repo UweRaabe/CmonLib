@@ -10,7 +10,10 @@ type
   ///   The order in which each group of procedures with the same priority is
   ///   called.
   /// </summary>
+{$SCOPEDENUMS ON}
   TInitPriority = (VeryEarly, Early, Normal, Late, VeryLate);
+{$SCOPEDENUMS OFF}
+
   TInitialize = record
   strict private
   class var
