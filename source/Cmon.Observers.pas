@@ -407,7 +407,7 @@ begin
     finally
       OnObserverAdded := saveEvent;
     end;
-Hurz  end;
+  end;
 end;
 
 end.
