@@ -52,6 +52,8 @@ type
     class function GetExeName: string; static; inline;
     class procedure Postpone(AProc: TThreadMethod; ADelayMS: Cardinal = 0); overload; static;
     class procedure Postpone(AProc: TThreadProcedure; ADelayMS: Cardinal = 0); overload; static;
+    class function StripFolder(const AFolder, Value: string): string; overload; static;
+    class function StripFolder(const AFolder: string; const Values: TArray<string>): TArray<string>; overload; static;
     class function UserAppDataPath: string; static; inline;
     class function UserDocumentsPath: string; static; inline;
     class property AppName: string read FAppName write FAppName;
@@ -100,6 +102,21 @@ begin
 {$ELSE}
   TThread.ForceQueue(nil, AProc, ADelayMS);
 {$ENDIF}
+end;
+
+class function TUtilities.StripFolder(const AFolder, Value: string): string;
+begin
+  if Value.StartsWith(AFolder, True) then
+    Result := Value.Remove(0, AFolder.Length + 1);
+end;
+
+class function TUtilities.StripFolder(const AFolder: string; const Values: TArray<string>): TArray<string>;
+var
+  I: Integer;
+begin
+  SetLength(Result, Length(Values));
+  for I := 0 to Length(Values) - 1 do
+    Result[I] := StripFolder(AFolder, Values[I]);
 end;
 
 class function TUtilities.UserAppDataPath: string;
