@@ -285,7 +285,7 @@ end;
 
 procedure TDataStorage.EraseStorageKey;
 begin
-  // TODO -cMM: TDataStorage.EraseStorageKey default body inserted
+  InternalEraseStorageKey;
 end;
 
 procedure TDataStorage.ErrorNotImplemented(const ATypeName: string);
