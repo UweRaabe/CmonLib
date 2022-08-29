@@ -50,6 +50,7 @@ type
 type
   IStorageTarget = interface
   ['{13CF0202-A7DB-4452-A48C-58B1EEE804BD}']
+    procedure EraseStorageKey(const Key: string);
     function ReadString(const Key, Ident, Default: string): string;
     procedure WriteString(const Key, Ident, Value: string);
   end;
@@ -97,6 +98,7 @@ type
     procedure ErrorNotImplemented(const ATypeName: string);
     class procedure InitDefaults<T: TCustomDefaultAttribute>(Instance: TObject; AField: TRttiField); overload;
     class procedure InitDefaults<T: TCustomDefaultAttribute>(Instance: TObject; AProp: TRttiProperty); overload;
+    procedure InternalEraseStorageKey; virtual;
     function InternalReadString(const Ident, Default: string): string; virtual;
     procedure InternalWriteString(const Ident, Value: string); virtual;
     procedure LoadFromStorage<T: TCustomStorageAttribute>(Instance: TObject; AProp: TRttiProperty); overload;
@@ -112,6 +114,7 @@ type
     destructor Destroy; override;
     function CreateStorageTarget(const AFileName: string = ''): IStorageTarget; overload;
     class function CreateStorageTarget(Sender: TObject; const AFileName: string = ''): IStorageTarget; overload;
+    procedure EraseStorageKey;
     class procedure InitDefaults(Instance: TObject); overload; static;
     class procedure InitDefaults<T: TCustomDefaultAttribute>(Instance: TObject); overload; static;
     class function IsSupportedTargetExtension(const AExtension: string): Boolean;
@@ -280,6 +283,11 @@ begin
   Result := CreateStorageTarget(Self, AFileName);
 end;
 
+procedure TDataStorage.EraseStorageKey;
+begin
+  // TODO -cMM: TDataStorage.EraseStorageKey default body inserted
+end;
+
 procedure TDataStorage.ErrorNotImplemented(const ATypeName: string);
 begin
   raise ENotImplemented.CreateFmt('Storage type "%s" not supported!', [ATypeName]);
@@ -347,6 +355,12 @@ begin
   var attr := AProp.GetAttribute<T>;
   if (attr = nil) or attr.Value.IsEmpty then Exit;
   AProp.SetValue(Instance, attr.value);
+end;
+
+procedure TDataStorage.InternalEraseStorageKey;
+begin
+  if Assigned(FStorageTarget) then
+    FStorageTarget.EraseStorageKey(StorageKey);
 end;
 
 function TDataStorage.InternalReadString(const Ident, Default: string): string;

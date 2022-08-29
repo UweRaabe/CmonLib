@@ -12,6 +12,7 @@ type
     FIniFile: TMemIniFile;
     procedure SetIniFile(const Value: TMemIniFile);
   strict protected
+    procedure EraseStorageKey(const Key: string); override;
     function ReadString(const Key: string; const Ident: string; const Default: string): string; override;
     procedure WriteString(const Key: string; const Ident: string; const Value: string); override;
     property IniFile: TMemIniFile read FIniFile write SetIniFile;
@@ -49,6 +50,11 @@ destructor TIniStorageTarget.Destroy;
 begin
   FIniFile.Free;
   inherited Destroy;
+end;
+
+procedure TIniStorageTarget.EraseStorageKey(const Key: string);
+begin
+  IniFile.EraseSection(Key);
 end;
 
 class function TIniStorageTarget.FileExtension: string;
