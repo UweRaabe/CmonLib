@@ -164,7 +164,7 @@ begin
         TEnumDirection.Normal: idx := FIndex;
         TEnumDirection.Reverse: idx := FCount - FIndex - 1;
       end;
-      cmp := FGetItem(FIndex);
+      cmp := FGetItem(idx);
       if cmp.InheritsFrom(T) then
       begin
         FCurrent := T(cmp);
