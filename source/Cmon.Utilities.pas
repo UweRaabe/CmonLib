@@ -9,6 +9,9 @@ type
   EValidationError = class(Exception);
 
 type
+{$SCOPEDENUMS ON}
+  TEnumDirection = (Normal, Reverse);
+{$SCOPEDENUMS OFF}
   TEnumWrapper<T: class> = record
   type
     TGetItemFunc = TFunc<Integer, TObject>;
@@ -17,6 +20,7 @@ type
       FIndex: Integer;
       FCount: Integer;
       FCurrent: T;
+      FDirection: TEnumDirection;
       FGetItem: TGetItemFunc;
     public
       function MoveNext: Boolean; inline;
@@ -24,23 +28,24 @@ type
     end;
   private
     FCount: Integer;
+    FDirection: TEnumDirection;
     FGetItem: TGetItemFunc;
   public
-    constructor Create(ACount: Integer; AGetItem: TGetItemFunc);
+    constructor Create(ACount: Integer; AGetItem: TGetItemFunc; ADirection: TEnumDirection);
     function GetEnumerator: TEnumerator; inline;
   end;
 
 type
   TComponentHelper = class helper for TComponent
   public
-    function ComponentsOf<T: TComponent>: TEnumWrapper<T>; inline;
+    function ComponentsOf<T: TComponent>(ADirection: TEnumDirection = TEnumDirection.Normal): TEnumWrapper<T>; inline;
     function FindComponentOf<T: TComponent>(const AName: string): T; inline;
   end;
 
 type
   TCollectionHelper = class helper for TCollection
   public
-    function ItemsOf<T: TCollectionItem>: TEnumWrapper<T>; inline;
+    function ItemsOf<T: TCollectionItem>(ADirection: TEnumDirection = TEnumDirection.Normal): TEnumWrapper<T>; inline;
   end;
 
 type
@@ -131,15 +136,17 @@ end;
 
 { TEnumWrapper<T> }
 
-constructor TEnumWrapper<T>.Create(ACount: Integer; AGetItem: TGetItemFunc);
+constructor TEnumWrapper<T>.Create(ACount: Integer; AGetItem: TGetItemFunc; ADirection: TEnumDirection);
 begin
   FCount := ACount;
   FGetItem := AGetItem;
+  FDirection := ADirection;
 end;
 
 function TEnumWrapper<T>.GetEnumerator: TEnumerator;
 begin
   Result.FCount := FCount;
+  Result.FDirection := FDirection;
   Result.FGetItem := FGetItem;
   Result.FIndex := -1;
 end;
@@ -147,11 +154,16 @@ end;
 function TEnumWrapper<T>.TEnumerator.MoveNext: Boolean;
 var
   cmp: TObject;
+  idx: Integer;
 begin
   while True do begin
     Inc(FIndex);
     if FIndex < FCount then
     begin
+      case FDirection of
+        TEnumDirection.Normal: idx := FIndex;
+        TEnumDirection.Reverse: idx := FCount - FIndex - 1;
+      end;
       cmp := FGetItem(FIndex);
       if cmp.InheritsFrom(T) then
       begin
@@ -166,13 +178,14 @@ end;
 
 { TComponentHelper }
 
-function TComponentHelper.ComponentsOf<T>: TEnumWrapper<T>;
+function TComponentHelper.ComponentsOf<T>(ADirection: TEnumDirection = TEnumDirection.Normal): TEnumWrapper<T>;
 begin
   Result := TEnumWrapper<T>.Create(ComponentCount,
     function(Index: Integer): TObject
     begin
       Result := Components[Index];
-    end);
+    end,
+    ADirection);
 end;
 
 function TComponentHelper.FindComponentOf<T>(const AName: string): T;
@@ -182,13 +195,14 @@ end;
 
 { TCollectionHelper }
 
-function TCollectionHelper.ItemsOf<T>: TEnumWrapper<T>;
+function TCollectionHelper.ItemsOf<T>(ADirection: TEnumDirection = TEnumDirection.Normal): TEnumWrapper<T>;
 begin
   Result := TEnumWrapper<T>.Create(Count,
     function(Index: Integer): TObject
     begin
       Result := Items[Index];
-    end);
+    end,
+    ADirection);
 end;
 
 end.
