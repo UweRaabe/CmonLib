@@ -9,20 +9,19 @@ uses
 type
   TWinControlHelper = class helper for TWinControl
   public
-    function ControlsOf<T: TControl>: TEnumWrapper<T>; inline;
+    function ControlsOf<T: TControl>(ADirection: TEnumDirection = TEnumDirection.Normal): TEnumWrapper<T>; inline;
   end;
 
 implementation
 
-{ TWinControlHelper }
-
-function TWinControlHelper.ControlsOf<T>: TEnumWrapper<T>;
+function TWinControlHelper.ControlsOf<T>(ADirection: TEnumDirection): TEnumWrapper<T>;
 begin
   Result := TEnumWrapper<T>.Create(ControlCount,
     function(Index: Integer): TObject
     begin
       Result := Controls[Index];
-    end);
+    end,
+    ADirection);
 end;
 
 end.
