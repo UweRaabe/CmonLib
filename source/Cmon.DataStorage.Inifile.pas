@@ -64,6 +64,7 @@ end;
 
 procedure TIniStorageTarget.LoadFromFile(const AFileName: string);
 begin
+  TDirectory.CreateDirectory(TPath.GetDirectoryName(AFileName));
   IniFile := TMemIniFile.Create(AFileName);
 end;
 
