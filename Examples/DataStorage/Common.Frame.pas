@@ -29,11 +29,16 @@ type
 implementation
 
 uses
+  System.SysUtils,
   Cmon.Utilities;
 
 function TCommonFrame.GetStorageKey(Storage: TDataStorage): string;
 begin
-  Result := Storage.MakeStorageSubKey(Name);
+  var key: string := Name;
+  if key.IsEmpty then
+    key := ClassName.Substring(1);
+
+  Result := Storage.MakeStorageSubKey(key);
 end;
 
 procedure TCommonFrame.InitDefaults(Storage: TDataStorage);
