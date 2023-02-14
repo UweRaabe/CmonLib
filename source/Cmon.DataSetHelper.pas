@@ -1,5 +1,8 @@
 unit Cmon.DataSetHelper;
 
+{ Note: TValue doesn't handle BCD data types, so we convert them to/from Double.
+  As this might affect precision in some cases, it is suggested to handle these fields manually to avoid that. }
+
 interface
 
 uses
@@ -432,6 +435,8 @@ var
 begin
   if FField.IsNull then
     val := TValue.Empty
+  else if FField.DataType in [ftBCD, ftFMTBcd] then
+    val := TValue.From<Double>(FField.AsFloat)
   else
     val := TValue.FromVariant(FField.Value);
   FRTTIField.SetValue(GetPointer(Target), val);
@@ -439,7 +444,10 @@ end;
 
 procedure TDataSetHelper.TDataSetRecord<T>.TFieldMapping.StoreToField(var Source: T);
 begin
-  FField.Value := FRTTIField.GetValue(GetPointer(Source)).AsVariant;
+  if FField.DataType in [ftBCD, ftFMTBcd] then
+    FField.AsFloat := FRTTIField.GetValue(GetPointer(Source)).AsType<Double>
+  else
+    FField.Value := FRTTIField.GetValue(GetPointer(Source)).AsVariant;
 end;
 
 constructor TDataSetHelper.TDataSetRecord<T>.TPropMapping.Create(AField: TField; ARTTIProp: TRttiProperty;
@@ -451,7 +459,10 @@ end;
 
 procedure TDataSetHelper.TDataSetRecord<T>.TPropMapping.StoreToField(var Source: T);
 begin
-  FField.Value := FRTTIProp.GetValue(GetPointer(Source)).AsVariant;
+  if FField.DataType in [ftBCD, ftFMTBcd] then
+    FField.AsFloat := FRTTIProp.GetValue(GetPointer(Source)).AsType<Double>
+  else
+    FField.Value := FRTTIProp.GetValue(GetPointer(Source)).AsVariant;
 end;
 
 procedure TDataSetHelper.TDataSetRecord<T>.TPropMapping.LoadFromField(var Target: T);
@@ -460,6 +471,8 @@ var
 begin
   if FField.IsNull then
     val := TValue.Empty
+  else if FField.DataType in [ftBCD, ftFMTBcd] then
+    val := TValue.From<Double>(FField.AsFloat)
   else
     val := TValue.FromVariant(FField.Value);
   FRTTIProp.SetValue(GetPointer(Target), val);
