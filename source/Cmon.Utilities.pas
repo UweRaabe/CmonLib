@@ -53,15 +53,21 @@ type
   private
   class var
     FAppName: string;
+    FCompanyName: string;
+  var
   public
+    class function GetCompanyAppSubPath: string; static;
     class function GetExeName: string; static; inline;
     class procedure Postpone(AProc: TThreadMethod; ADelayMS: Cardinal = 0); overload; static;
     class procedure Postpone(AProc: TThreadProcedure; ADelayMS: Cardinal = 0); overload; static;
     class function StripFolder(const AFolder, Value: string): string; overload; static;
     class function StripFolder(const AFolder: string; const Values: TArray<string>): TArray<string>; overload; static;
-    class function UserAppDataPath: string; static; inline;
-    class function UserDocumentsPath: string; static; inline;
+    class function UserAppDataPath: string; overload; static; inline;
+    class function UserAppDataPath(const AFileName: string): string; overload; static; inline;
+    class function UserDocumentsPath: string; overload; static; inline;
+    class function UserDocumentsPath(const AFileName: string): string; overload; static; inline;
     class property AppName: string read FAppName write FAppName;
+    class property CompanyName: string read FCompanyName write FCompanyName;
   end;
 
 implementation
@@ -70,6 +76,11 @@ uses
   System.Threading;
 
 { TUtilities }
+
+class function TUtilities.GetCompanyAppSubPath: string;
+begin
+  Result := TPath.Combine(CompanyName, AppName);
+end;
 
 class function TUtilities.GetExeName: string;
 begin
@@ -126,12 +137,22 @@ end;
 
 class function TUtilities.UserAppDataPath: string;
 begin
-  Result := TPath.Combine(TPath.GetHomePath, AppName);
+  Result := TPath.Combine(TPath.GetHomePath, GetCompanyAppSubPath);
+end;
+
+class function TUtilities.UserAppDataPath(const AFileName: string): string;
+begin
+  Result := TPath.Combine(UserAppDataPath, AFileName);
 end;
 
 class function TUtilities.UserDocumentsPath: string;
 begin
-  Result := TPath.Combine(TPath.GetDocumentsPath, AppName);
+  Result := TPath.Combine(TPath.GetDocumentsPath, GetCompanyAppSubPath);
+end;
+
+class function TUtilities.UserDocumentsPath(const AFileName: string): string;
+begin
+  Result := TPath.Combine(UserDocumentsPath, AFileName);
 end;
 
 { TEnumWrapper<T> }
