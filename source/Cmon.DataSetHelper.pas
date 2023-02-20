@@ -131,6 +131,8 @@ type
     end;
 
   public
+    function AssureEdit: Boolean;
+    procedure AssurePost;
     function GetCurrentRec<T: record>: T;
     procedure SetCurrentRec<T: record>(AInstance: T);
     procedure LoadInstanceFromCurrent<T: class>(AInstance: T);
@@ -169,6 +171,22 @@ begin
   inherited Create;
   FIsStored := true;
   FFieldName := AFieldName;
+end;
+
+function TDataSetHelper.AssureEdit: Boolean;
+begin
+  Result := False;
+  if not (State in [dsEdit, dsInsert]) then begin
+    Edit;
+    Result := True;
+  end;
+end;
+
+procedure TDataSetHelper.AssurePost;
+begin
+  if State in [dsEdit, dsInsert] then begin
+    Post;
+  end;
 end;
 
 procedure TDataSetHelper.LoadInstanceFromCurrent<T>(AInstance: T);
