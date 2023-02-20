@@ -1,7 +1,9 @@
 unit Cmon.DataSetHelper;
 
 { Note: TValue doesn't handle BCD data types, so we convert them to/from Double.
-  As this might affect precision in some cases, it is suggested to handle these fields manually to avoid that. }
+  As this might affect precision in some cases, it is suggested to handle these fields manually to avoid that.
+  In addition a SQLTimeStampField value is treated as TDateTime.
+}
 
 interface
 
@@ -44,8 +46,11 @@ type
       private
         FField: TField;
         FIsInstanceType: Boolean;
+        function GetFieldValue: TValue;
+        procedure SetFieldValue(const Value: TValue);
       protected
         function GetPointer(var Target: T): Pointer;
+        property FieldValue: TValue read GetFieldValue write SetFieldValue;
         property IsInstanceType: Boolean read FIsInstanceType;
       public
         constructor Create(AField: TField; AIsInstanceType: Boolean);
@@ -412,6 +417,18 @@ begin
   FIsInstanceType := AIsInstanceType;
 end;
 
+function TDataSetHelper.TDataSetRecord<T>.TMapping.GetFieldValue: TValue;
+begin
+  if FField.IsNull then
+    Result := TValue.Empty
+  else if FField.DataType in [ftTimeStamp, ftTimeStampOffset] then
+    Result := TValue.From<TDateTime>(FField.AsDateTime)
+  else if FField.DataType in [ftBCD, ftFMTBcd] then
+    Result := TValue.From<Double>(FField.AsFloat)
+  else
+    Result := TValue.FromVariant(FField.Value);
+end;
+
 function TDataSetHelper.TDataSetRecord<T>.TMapping.GetPointer(var Target: T): Pointer;
 begin
   if IsInstanceType then begin
@@ -422,6 +439,21 @@ begin
   end;
 end;
 
+procedure TDataSetHelper.TDataSetRecord<T>.TMapping.SetFieldValue(const Value: TValue);
+begin
+  if FField.DataType = ftAutoInc then Exit;
+  if FField.ReadOnly then Exit;
+
+  if Value.IsEmpty then
+    FField.Clear
+  else if FField.DataType in [ftTimeStamp, ftTimeStampOffset] then
+    FField.AsDateTime := Value.AsType<TDateTime>
+  else if FField.DataType in [ftBCD, ftFMTBcd] then
+    FField.AsFloat := Value.AsType<Double>
+  else
+    FField.Value := Value.AsVariant;
+end;
+
 constructor TDataSetHelper.TDataSetRecord<T>.TFieldMapping.Create(AField: TField; ARTTIField: TRTTIField;
     AIsInstanceType: Boolean);
 begin
@@ -430,24 +462,13 @@ begin
 end;
 
 procedure TDataSetHelper.TDataSetRecord<T>.TFieldMapping.LoadFromField(var Target: T);
-var
-  val: TValue;
 begin
-  if FField.IsNull then
-    val := TValue.Empty
-  else if FField.DataType in [ftBCD, ftFMTBcd] then
-    val := TValue.From<Double>(FField.AsFloat)
-  else
-    val := TValue.FromVariant(FField.Value);
-  FRTTIField.SetValue(GetPointer(Target), val);
+  FRTTIField.SetValue(GetPointer(Target), FieldValue);
 end;
 
 procedure TDataSetHelper.TDataSetRecord<T>.TFieldMapping.StoreToField(var Source: T);
 begin
-  if FField.DataType in [ftBCD, ftFMTBcd] then
-    FField.AsFloat := FRTTIField.GetValue(GetPointer(Source)).AsType<Double>
-  else
-    FField.Value := FRTTIField.GetValue(GetPointer(Source)).AsVariant;
+  FieldValue := FRTTIField.GetValue(GetPointer(Source));
 end;
 
 constructor TDataSetHelper.TDataSetRecord<T>.TPropMapping.Create(AField: TField; ARTTIProp: TRttiProperty;
@@ -459,23 +480,12 @@ end;
 
 procedure TDataSetHelper.TDataSetRecord<T>.TPropMapping.StoreToField(var Source: T);
 begin
-  if FField.DataType in [ftBCD, ftFMTBcd] then
-    FField.AsFloat := FRTTIProp.GetValue(GetPointer(Source)).AsType<Double>
-  else
-    FField.Value := FRTTIProp.GetValue(GetPointer(Source)).AsVariant;
+  FieldValue := FRTTIProp.GetValue(GetPointer(Source));
 end;
 
 procedure TDataSetHelper.TDataSetRecord<T>.TPropMapping.LoadFromField(var Target: T);
-var
-  val: TValue;
 begin
-  if FField.IsNull then
-    val := TValue.Empty
-  else if FField.DataType in [ftBCD, ftFMTBcd] then
-    val := TValue.From<Double>(FField.AsFloat)
-  else
-    val := TValue.FromVariant(FField.Value);
-  FRTTIProp.SetValue(GetPointer(Target), val);
+  FRTTIProp.SetValue(GetPointer(Target), FieldValue);
 end;
 
 constructor TDataSetHelper.TRecordsInstance<T>.Create(ADataSet: TDataSet; AInstance: T);
