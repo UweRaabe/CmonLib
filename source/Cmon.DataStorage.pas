@@ -166,6 +166,8 @@ type
   TCustomStoredClass = class
   strict protected
     function GetDataStorage: TDataStorage; virtual;
+    function GetTarget: TObject; virtual;
+    property Target: TObject read GetTarget;
   protected
     function InternalGetStorageKey: string; virtual;
     procedure InternalInitDefaults; virtual;
@@ -186,16 +188,15 @@ type
   TStoredWrapper = class(TCustomStoredClass)
   private
     FTarget: TObject;
-  protected
-    function InternalGetStorageKey: string; override;
-    procedure InternalInitDefaults; override;
-    procedure InternalLoadFromStorage; override;
-    procedure InternalPrepareStorage; override;
-    procedure InternalSaveToStorage; override;
+  strict protected
+    function GetTarget: TObject; override;
   public
     constructor Create(ATarget: TObject);
-    property Target: TObject read FTarget;
+    property Target: TObject read GetTarget;
   end;
+
+type
+  TStoredClass = class(TCustomStoredClass);
 
 function GetStorageKeyFromAttribute(AInstance: TObject; const ADefault: string = ''): string;
 
@@ -744,6 +745,11 @@ begin
   Result := TDataStorage.DefaultInstance;
 end;
 
+function TCustomStoredClass.GetTarget: TObject;
+begin
+  Result := Self;
+end;
+
 procedure TCustomStoredClass.InitDefaults;
 begin
   InternalInitDefaults;
@@ -756,24 +762,51 @@ begin
 end;
 
 function TCustomStoredClass.InternalGetStorageKey: string;
+var
+  intf: IStorageKey;
 begin
-  Result := '';
+  { do we have a StorageKey attribute? }
+  Result := GetStorageKeyFromAttribute(Target);
+  if Result.IsEmpty then begin
+    { no, then we look for IStorageKey support }
+    if Supports(Target, IStorageKey, intf) then
+      Result := intf.GetStorageKey(DataStorage);
+  end;
 end;
 
 procedure TCustomStoredClass.InternalInitDefaults;
+var
+  intf: IStoredData;
 begin
+  DataStorage.InitDefaults(Target);
+  if Supports(Target, IStoredData, intf) then
+    intf.InternalInitDefaults(DataStorage);
 end;
 
 procedure TCustomStoredClass.InternalLoadFromStorage;
+var
+  intf: IStoredData;
 begin
+  DataStorage.LoadFromStorage(Target);
+  if Supports(Target, IStoredData, intf) then
+    intf.InternalLoadFromStorage(DataStorage);
 end;
 
 procedure TCustomStoredClass.InternalPrepareStorage;
+var
+  intf: IStoredData;
 begin
+  if Supports(Target, IStoredData, intf) then
+    intf.InternalPrepareStorage(DataStorage);
 end;
 
 procedure TCustomStoredClass.InternalSaveToStorage;
+var
+  intf: IStoredData;
 begin
+  DataStorage.SaveToStorage(Target);
+  if Supports(Target, IStoredData, intf) then
+    intf.InternalSaveToStorage(DataStorage);
 end;
 
 procedure TCustomStoredClass.LoadFromStorage;
@@ -814,52 +847,9 @@ begin
   FTarget := ATarget;
 end;
 
-function TStoredWrapper.InternalGetStorageKey: string;
-var
-  intf: IStorageKey;
+function TStoredWrapper.GetTarget: TObject;
 begin
-  { do we have a StorageKey attribute? }
-  Result := GetStorageKeyFromAttribute(Target);
-  if Result.IsEmpty then begin
-    { no, then we look for IStorageKey support }
-    if Supports(Target, IStorageKey, intf) then
-      Result := intf.GetStorageKey(DataStorage);
-  end;
-end;
-
-procedure TStoredWrapper.InternalInitDefaults;
-var
-  intf: IStoredData;
-begin
-  DataStorage.InitDefaults(Target);
-  if Supports(Target, IStoredData, intf) then
-    intf.InternalInitDefaults(DataStorage);
-end;
-
-procedure TStoredWrapper.InternalLoadFromStorage;
-var
-  intf: IStoredData;
-begin
-  DataStorage.LoadFromStorage(Target);
-  if Supports(Target, IStoredData, intf) then
-    intf.InternalLoadFromStorage(DataStorage);
-end;
-
-procedure TStoredWrapper.InternalPrepareStorage;
-var
-  intf: IStoredData;
-begin
-  if Supports(Target, IStoredData, intf) then
-    intf.InternalPrepareStorage(DataStorage);
-end;
-
-procedure TStoredWrapper.InternalSaveToStorage;
-var
-  intf: IStoredData;
-begin
-  DataStorage.SaveToStorage(Target);
-  if Supports(Target, IStoredData, intf) then
-    intf.InternalSaveToStorage(DataStorage);
+  Result := FTarget;
 end;
 
 constructor StorageKeyAttribute.Create(const AKey: string);
