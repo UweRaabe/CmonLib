@@ -565,7 +565,20 @@ begin
 
   case Default.Kind of
     tkEnumeration: begin
-      Result := TValue.FromOrdinal(Default.TypeInfo, GetEnumValue(Default.TypeInfo, S));
+      var valInt64: Int64;
+      if TryStrToInt64(S, valInt64) then begin
+        if Default.TypeInfo = TypeInfo(Boolean) then
+          Result := (valInt64 = cBool[True])
+        else
+          Result := TValue.FromOrdinal(Default.TypeInfo, valInt64);
+      end
+      else begin
+        var ordinal := GetEnumValue(Default.TypeInfo, S);
+        if ordinal < 0 then
+          Result := Default
+        else
+          Result := TValue.FromOrdinal(Default.TypeInfo, ordinal);
+      end;
     end;
     tkFloat: begin { independent from current FormatSettings! }
       case Default.TypeData.FloatType of
