@@ -65,6 +65,7 @@ type
     property FileName: string read GetFileName;
     property StorageTarget: IStorageTarget read FStorageTarget write FStorageTarget;
   end;
+  TStorageTargetMissingMessage = class(TCommonMessage<string>);
 
   TStorageTargetDescriptor = record
     Description: string;

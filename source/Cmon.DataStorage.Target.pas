@@ -24,6 +24,7 @@ type
     class function FileExtension: string; virtual; abstract;
     procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
+    class function EffectiveFileName(const AFileName: string): string;
     procedure LoadFromFile(const AFileName: string); virtual;
     procedure SaveToFile(const AFileName: string); virtual;
     class property DefaultFileExtension: string read FDefaultFileExtension write FDefaultFileExtension;
@@ -68,13 +69,18 @@ end;
 constructor TCustomStorageTarget.Create(const AFileName: string);
 begin
   inherited Create;
-  FFileName := AFileName;
-  if FFileName.IsEmpty or FFileName.Contains('*') then begin
-    FFileName := DefaultFileName;
-    if FFileName.IsEmpty then
-      FFileName := TPath.ChangeExtension(TUtilities.GetExeName, FileExtension);
+  FFileName := EffectiveFileName(AFileName);
+end;
+
+class function TCustomStorageTarget.EffectiveFileName(const AFileName: string): string;
+begin
+  Result := AFileName;
+  if Result.IsEmpty or Result.Contains('*') then begin
+    Result := DefaultFileName;
+    if Result.IsEmpty then
+      Result := TPath.ChangeExtension(TUtilities.GetExeName, FileExtension);
     if not DefaultFilePath.IsEmpty then
-      FFileName := TPath.Combine(DefaultFilePath, TPath.GetFileName(FFileName));
+      Result := TPath.Combine(DefaultFilePath, TPath.GetFileName(Result));
   end;
 end;
 
@@ -109,8 +115,13 @@ begin
   var ext := TPath.GetExtension(msg.FileName);
   if ext.IsEmpty then
     ext := TCustomStorageTarget.DefaultFileExtension;
-  if ext.IsEmpty or SameText(ext, T.FileExtension) then
-    msg.StorageTarget := T.Create(msg.Value);
+  if ext.IsEmpty or SameText(ext, T.FileExtension) then begin
+    var fileName := T.EffectiveFileName(msg.Value);
+    if not TFile.Exists(fileName) then
+      TStorageTargetMissingMessage.SendMessage(Sender, fileName);
+
+    msg.StorageTarget := T.Create(fileName);
+  end;
 end;
 
 procedure TStorageTargetHandler<T>.StorageTargetListMessage(const Sender: TObject; const M: TMessage);
