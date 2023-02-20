@@ -462,7 +462,10 @@ end;
 
 function TDataStorage.MakeStorageSubKey(const ASubKey: string): string;
 begin
-  Result := StorageKey + cKeySeparator + ASubKey;
+  if StorageKey.IsEmpty then
+    Result := ASubKey
+  else
+    Result := StorageKey + cKeySeparator + ASubKey;
 end;
 
 class function TDataStorage.MakeStorageTargetFileFilter: string;
