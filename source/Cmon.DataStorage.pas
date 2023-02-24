@@ -96,7 +96,7 @@ type
     FStorageTarget: IStorageTarget;
     procedure SetStorageTarget(const Value: IStorageTarget);
   strict protected
-    procedure ErrorNotImplemented(const ATypeName: string);
+    class procedure ErrorNotImplemented(const ATypeName: string);
     class procedure InitDefaults<T: TCustomDefaultAttribute>(Instance: TObject; AField: TRttiField); overload;
     class procedure InitDefaults<T: TCustomDefaultAttribute>(Instance: TObject; AProp: TRttiProperty); overload;
     procedure InternalEraseStorageKey; virtual;
@@ -136,6 +136,8 @@ type
     procedure SaveToStorage(Instance: TObject); overload;
     procedure SaveToStorage<T: TCustomStorageAttribute>(Instance: TObject); overload;
     class function SplitStorageKey(const AStorageKey: string): TArray<string>;
+    class function StringToValue(const AString: string; const Default: TValue): TValue;
+    class function ValueToString(const Value: TValue): string;
     procedure WriteBoolean(const Ident: string; const Value: Boolean);
     procedure WriteDateTime(const Ident: string; const Value: TDateTime);
     procedure WriteInteger(const Ident: string; const Value: Integer);
@@ -205,6 +207,35 @@ implementation
 
 uses
   System.TypInfo;
+
+function GetDynArrayElType(ATypeInfo: PTypeInfo): PTypeInfo;
+var
+  ref: PPTypeInfo;
+begin
+  // Get real element type of dynamic array, even if it's array of array of etc.
+  ref := GetTypeData(ATypeInfo).DynArrElType;
+  if ref = nil then
+    Exit(nil);
+  Result := ref^;
+end;
+
+function GetArrayElType(ATypeInfo: PTypeInfo): PTypeInfo;
+var
+  ref: PPTypeInfo;
+begin
+  if ATypeInfo^.Kind = tkArray then
+  begin
+    ref := GetTypeData(ATypeInfo)^.ArrayData.ElType;
+    if ref = nil then
+      Result := nil
+    else
+      Result := ref^;
+  end
+  else if ATypeInfo^.Kind = tkDynArray then
+    Exit(GetDynArrayElType(ATypeInfo))
+  else
+    Exit(nil);
+end;
 
 function GetStorageKeyFromAttribute(AInstance: TObject; const ADefault: string = ''): string;
 begin
@@ -290,7 +321,7 @@ begin
   InternalEraseStorageKey;
 end;
 
-procedure TDataStorage.ErrorNotImplemented(const ATypeName: string);
+class procedure TDataStorage.ErrorNotImplemented(const ATypeName: string);
 begin
   raise ENotImplemented.CreateFmt('Storage type "%s" not supported!', [ATypeName]);
 end;
@@ -564,53 +595,7 @@ begin
     Exit(Default);
   end;
 
-  case Default.Kind of
-    tkEnumeration: begin
-      var valInt64: Int64;
-      if TryStrToInt64(S, valInt64) then begin
-        if Default.TypeInfo = TypeInfo(Boolean) then
-          Result := (valInt64 = cBool[True])
-        else
-          Result := TValue.FromOrdinal(Default.TypeInfo, valInt64);
-      end
-      else begin
-        var ordinal := GetEnumValue(Default.TypeInfo, S);
-        if ordinal < 0 then
-          Result := Default
-        else
-          Result := TValue.FromOrdinal(Default.TypeInfo, ordinal);
-      end;
-    end;
-    tkFloat: begin { independent from current FormatSettings! }
-      case Default.TypeData.FloatType of
-        ftDouble: begin { handle special Double cases }
-          if Default.TypeInfo = TypeInfo(TDate) then
-            Result := TValue.From<TDate>(StrToDateDef(S, Default.AsType<TDate>, TFormatSettings.Invariant))
-          else if Default.TypeInfo = TypeInfo(TTime) then
-            Result := TValue.From<TTime>(StrToTimeDef(S, Default.AsType<TTime>, TFormatSettings.Invariant))
-          else if Default.TypeInfo = TypeInfo(TDateTime) then
-            Result := TValue.From<TDateTime>(StrToDateTimeDef(S, Default.AsType<TDateTime>, TFormatSettings.Invariant))
-          else
-            Result := TValue.From<Double>(StrToFloatDef(S, Default.AsType<Double>, TFormatSettings.Invariant));
-        end;
-        ftSingle: Result := TValue.From<Single>(StrToFloatDef(S, Default.AsType<Single>, TFormatSettings.Invariant));
-        ftExtended: Result := TValue.From<Extended>(StrToFloatDef(S, Default.AsType<Extended>, TFormatSettings.Invariant));
-        ftComp: Result := TValue.From<Comp>(StrToInt64Def(S, Default.AsInt64));
-        ftCurr: Result := TValue.From<Currency>(StrToCurrDef(S, Default.AsCurrency, TFormatSettings.Invariant));
-      end;
-    end;
-    tkInteger: Result := StrToIntDef(S, Default.AsInteger);
-    tkInt64: Result := StrToInt64Def(S, Default.AsInt64);
-    tkWChar,
-    tkChar: Result := TValue.From<Char>(S.Chars[0]); { an empty string S has already be handled at the start of this method }
-    tkString,
-    tkLString,
-    tkWString,
-    tkUString: Result := S;
-  else
-    { tkSet, tkClass, tkMethod, tkVariant, tkArray, tkRecord, tkInterface, tkDynArray, tkClassRef, tkPointer, tkProcedure }
-    ErrorNotImplemented(GetTypeName(Default.TypeInfo));
-  end;
+  Result := StringToValue(S, Default);
 end;
 
 procedure TDataStorage.SaveToStorage(Instance: TObject);
@@ -677,6 +662,174 @@ begin
   Result := AStorageKey.Split([cKeySeparator]);
 end;
 
+class function TDataStorage.StringToValue(const AString: string; const Default: TValue): TValue;
+begin
+  Result := Default;
+
+  case Default.Kind of
+    tkEnumeration: begin
+      var valInt64: Int64;
+      if TryStrToInt64(AString, valInt64) then begin
+        if Default.TypeInfo = TypeInfo(Boolean) then
+          Result := (valInt64 = cBool[True])
+        else
+          Result := TValue.FromOrdinal(Default.TypeInfo, valInt64);
+      end
+      else begin
+        var ordinal := GetEnumValue(Default.TypeInfo, AString);
+        if ordinal < 0 then
+          Result := Default
+        else
+          Result := TValue.FromOrdinal(Default.TypeInfo, ordinal);
+      end;
+    end;
+    tkSet: begin
+      StringToSet(Result.TypeInfo, AString, Result.GetReferenceToRawData);
+    end;
+    tkFloat: begin { independent from current FormatSettings! }
+      case Default.TypeData.FloatType of
+        ftDouble: begin { handle special Double cases }
+          if Default.TypeInfo = TypeInfo(TDate) then
+            Result := TValue.From<TDate>(StrToDateDef(AString, Default.AsType<TDate>, TFormatSettings.Invariant))
+          else if Default.TypeInfo = TypeInfo(TTime) then
+            Result := TValue.From<TTime>(StrToTimeDef(AString, Default.AsType<TTime>, TFormatSettings.Invariant))
+          else if Default.TypeInfo = TypeInfo(TDateTime) then
+            Result := TValue.From<TDateTime>(StrToDateTimeDef(AString, Default.AsType<TDateTime>, TFormatSettings.Invariant))
+          else
+            Result := TValue.From<Double>(StrToFloatDef(AString, Default.AsType<Double>, TFormatSettings.Invariant));
+        end;
+        ftSingle: Result := TValue.From<Single>(StrToFloatDef(AString, Default.AsType<Single>, TFormatSettings.Invariant));
+        ftExtended: Result := TValue.From<Extended>(StrToFloatDef(AString, Default.AsType<Extended>, TFormatSettings.Invariant));
+        ftComp: Result := TValue.From<Comp>(StrToInt64Def(AString, Default.AsInt64));
+        ftCurr: Result := TValue.From<Currency>(StrToCurrDef(AString, Default.AsCurrency, TFormatSettings.Invariant));
+      end;
+    end;
+    tkInteger: Result := StrToIntDef(AString, Default.AsInteger);
+    tkInt64: Result := StrToInt64Def(AString, Default.AsInt64);
+    tkArray,
+    tkDynArray: begin
+      if AString.StartsWith('[') and AString.EndsWith(']') then begin
+        var lst := TStringList.Create();
+        try
+          lst.CommaText := AString.Substring(1, AString.Length - 2);
+          var dummy: TValue;
+          TValue.Make(nil, GetArrayElType(Default.TypeInfo), dummy);
+          var arr: TArray<TValue>;
+          SetLength(arr, lst.Count);
+          for var I := 0 to lst.Count - 1 do
+            arr[I] := StringToValue(lst[I], dummy);
+          Result := TValue.FromArray(Default.TypeInfo, arr);
+        finally
+          lst.Free;
+        end;
+      end;
+    end;
+    tkRecord,
+    tkMRecord: begin
+      if AString.StartsWith('(') and AString.EndsWith(')') then begin
+        var lst := TStringList.Create();
+        try
+          lst.NameValueSeparator := ':';
+          for var S in AString.Substring(1, AString.Length - 2).Split([';'], '"') do
+            lst.Add(S);
+          var context := TRttiContext.Create;
+          var recType := context.GetType(Default.TypeInfo) as TRttiRecordType;
+          for var field in recType.GetFields do begin
+            var idx := lst.IndexOfName(field.Name);
+            if idx >= 0 then begin
+              var S := lst.ValueFromIndex[idx];
+              if field.FieldType.TypeKind in [tkString, tkLString, tkWString, tkWideString, tkUString, tkChar, tkWChar, tkWideChar, tkShortString] then
+                S := S.DeQuotedString('"');
+              field.SetValue(Result.GetReferenceToRawData, StringToValue(S, field.GetValue(Default.GetReferenceToRawData)));
+            end;
+          end;
+        finally
+          lst.Free;
+        end;
+      end;
+    end;
+    tkWChar,
+    tkChar: Result := TValue.From<Char>(AString.Chars[0]); { an empty string AString has already be handled at the start of this method }
+    tkString,
+    tkLString,
+    tkWString,
+    tkUString: Result := AString;
+  else
+    { tkClass, tkMethod, tkVariant, tkRecord, tkInterface, tkClassRef, tkPointer, tkProcedure }
+    ErrorNotImplemented(GetTypeName(Default.TypeInfo));
+  end;
+end;
+
+class function TDataStorage.ValueToString(const Value: TValue): string;
+begin
+  Result := Value.ToString; { ToString already handle most of the cases correct }
+  case Value.Kind of
+    tkFloat: begin { independent from current FormatSettings! }
+      case Value.TypeData.FloatType of
+        ftDouble: begin { handle special Double cases }
+          if Value.TypeInfo = TypeInfo(TDate) then
+            Result := DateToStr(Value.AsType<TDate>, TFormatSettings.Invariant)
+          else if Value.TypeInfo = TypeInfo(TTime) then
+            Result := TimeToStr(Value.AsType<TTime>, TFormatSettings.Invariant)
+          else if Value.TypeInfo = TypeInfo(TDateTime) then
+            Result := DateTimeToStr(Value.AsType<TDateTime>, TFormatSettings.Invariant)
+          else
+            Result := FloatToStr(Value.AsType<Double>, TFormatSettings.Invariant);
+        end;
+        ftSingle,
+        ftExtended: begin
+          Result := FloatToStr(Value.AsExtended, TFormatSettings.Invariant);
+        end;
+        ftComp: Result := IntToStr(Value.AsInt64);
+        ftCurr: Result := CurrToStr(Value.AsCurrency, TFormatSettings.Invariant);
+      end;
+    end;
+    tkArray,
+    tkDynArray: begin
+      var lst := TStringList.Create;
+      try
+        for var I := 0 to Value.GetArrayLength - 1 do begin
+          lst.Add(ValueToString(Value.GetArrayElement(I)));
+        end;
+        Result := '[' + lst.CommaText + ']';
+      finally
+        lst.Free;
+      end;
+    end;
+    tkRecord,
+    tkMRecord: begin
+      var lst := TStringList.Create;
+      try
+        lst.NameValueSeparator := ':';
+        var context := TRttiContext.Create;
+        var recType := context.GetType(Value.TypeInfo) as TRttiRecordType;
+        for var field in recType.GetFields do begin
+          var S := ValueToString(field.GetValue(Value.GetReferenceToRawData));
+          if field.FieldType.TypeKind in [tkString, tkLString, tkWString, tkWideString, tkUString, tkChar, tkWChar, tkWideChar, tkShortString] then
+            S := S.QuotedString('"');
+          lst.AddPair(field.Name, S);
+        end;
+        Result := '(' + string.Join(';', lst.ToStringArray) + ')';
+      finally
+        lst.Free;
+      end;
+    end;
+    tkEnumeration,
+    tkSet,
+    tkInteger,
+    tkInt64,
+    tkChar,
+    tkWChar,
+    tkString,
+    tkLString,
+    tkWString,
+    tkUString: ; { Value.ToString already did the job }
+  else
+    { tkClass, tkMethod, tkVariant, tkRecord, tkInterface, tkClassRef, tkPointer, tkProcedure }
+    ErrorNotImplemented(GetTypeName(Value.TypeInfo));
+  end;
+end;
+
 procedure TDataStorage.WriteBoolean(const Ident: string; const Value: Boolean);
 begin
   WriteInteger(Ident, cBool[Value]);
@@ -714,42 +867,7 @@ end;
 
 procedure TDataStorage.WriteValue(const Ident: string; const Value: TValue);
 begin
-  var S := Value.ToString; { ToString already handle most of the cases correct }
-  case Value.Kind of
-    tkFloat: begin { independent from current FormatSettings! }
-      case Value.TypeData.FloatType of
-        ftDouble: begin { handle special Double cases }
-          if Value.TypeInfo = TypeInfo(TDate) then
-            S := DateToStr(Value.AsType<TDate>, TFormatSettings.Invariant)
-          else if Value.TypeInfo = TypeInfo(TTime) then
-            S := TimeToStr(Value.AsType<TTime>, TFormatSettings.Invariant)
-          else if Value.TypeInfo = TypeInfo(TDateTime) then
-            S := DateTimeToStr(Value.AsType<TDateTime>, TFormatSettings.Invariant)
-          else
-            S := FloatToStr(Value.AsType<Double>, TFormatSettings.Invariant);
-        end;
-        ftSingle,
-        ftExtended: begin
-          S := FloatToStr(Value.AsExtended, TFormatSettings.Invariant);
-        end;
-        ftComp: S := IntToStr(Value.AsInt64);
-        ftCurr: S := CurrToStr(Value.AsCurrency, TFormatSettings.Invariant);
-      end;
-    end;
-    tkEnumeration,
-    tkInteger,
-    tkInt64,
-    tkChar,
-    tkWChar,
-    tkString,
-    tkLString,
-    tkWString,
-    tkUString: ; { Value.ToString already did the job }
-  else
-    { tkSet, tkClass, tkMethod, tkVariant, tkArray, tkRecord, tkInterface, tkDynArray, tkClassRef, tkPointer, tkProcedure }
-    ErrorNotImplemented(GetTypeName(Value.TypeInfo));
-  end;
-  WriteString(Ident, S);
+  WriteString(Ident, ValueToString(Value));
 end;
 
 procedure TCustomStoredClass.Finalize;

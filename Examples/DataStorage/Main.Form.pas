@@ -113,7 +113,7 @@ type
     property SomeIndex: Integer read GetSomeIndex write SetSomeIndex;
     [Storage, Default('Hello World')]
     property SomeText: string read GetSomeText write SetSomeText;
-//    [Layout]
+    [Layout]
     property LayoutRect: TRect read GetLayoutRect write SetLayoutRect;
     [Layout, LayoutDefault(241)]
     property SplitterFrames: Integer read GetSplitterFrames write SetSplitterFrames;
