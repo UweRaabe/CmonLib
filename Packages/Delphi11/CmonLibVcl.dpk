@@ -32,7 +32,8 @@ package CmonLibVcl;
 
 requires
   CmonLib,
-  vcl;
+  vcl,
+  vclwinx;
 
 contains
   Cmon.Messaging.Dialogs.Vcl in '..\..\source\Cmon.Messaging.Dialogs.Vcl.pas',

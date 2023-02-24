@@ -7,9 +7,6 @@ uses
   Main.Frame in 'Main.Frame.pas' {MainFrame: TFrame},
   Main.Form in 'Main.Form.pas' {MainForm},
   Base.Form in 'Base.Form.pas' {BaseForm},
-  Common.Types in 'Common.Types.pas',
-  Common.Form in 'Common.Form.pas',
-  Common.Frame in 'Common.Frame.pas',
   Simple.Form in 'Simple.Form.pas' {SimpleForm},
   StaticFrame.Form in 'StaticFrame.Form.pas' {StaticFrameForm};
 

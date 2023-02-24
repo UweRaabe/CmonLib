@@ -5,7 +5,7 @@ interface
 uses
   System.Classes,
   Vcl.Forms, Vcl.StdCtrls, Vcl.Controls, Vcl.ComCtrls, Vcl.ToolWin,
-  Common.Form,
+  Cmon.Vcl.Forms,
   Base.Form, Main.Frame, Simple.Form;
 
 type

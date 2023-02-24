@@ -4,7 +4,7 @@ interface
 
 uses
   System.Classes,
-  Vcl.Forms,
+  Vcl.Forms, Vcl.Controls,
   Cmon.DataStorage;
 
 type
@@ -15,6 +15,7 @@ type
     procedure InternalLoadFromStorage(Storage: TDataStorage); virtual;
     procedure InternalPrepareStorage(Storage: TDataStorage); virtual;
     procedure InternalSaveToStorage(Storage: TDataStorage); virtual;
+    procedure SetParent(AParent: TWinControl); override;
   public
     procedure AfterConstruction; override;
     procedure InitDefaults(Storage: TDataStorage); virtual;
@@ -30,23 +31,38 @@ type
   end;
 
 type
-  TCommonForm = class(TForm, INotifyOwner)
+  IRedirectReferences = interface
+    ['{346E9829-E9A8-4E1A-BAF1-9B1FD033562E}']
+    procedure RedirectReferences;
+  end;
+
+type
+  TDataModuleClass = class of TDataModule;
+  TCommonForm = class(TForm, INotifyOwner, IRedirectReferences)
   strict private
     procedure NotifyLoaded(Sender: TCommonFrame);
   private
     FAutoDataStorage: Boolean;
+    FHandledReferences: TStrings;
   protected
     procedure DoCreate; override;
     procedure DoDestroy; override;
     function GetDefaultDataStorage: TDataStorage; virtual;
     function GetStorageKey(Storage: TDataStorage): string; virtual;
+    procedure GrabVirtualImageLists(AClass: TDataModuleClass);
     procedure InternalInitDefaults(Storage: TDataStorage); virtual;
     procedure InternalLoadFromStorage(Storage: TDataStorage); virtual;
     procedure InternalPrepareStorage(Storage: TDataStorage); virtual;
     procedure InternalSaveToStorage(Storage: TDataStorage); virtual;
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     procedure PrepareStorage(Storage: TDataStorage); virtual;
+    procedure RedirectReferences;
+    procedure ResolveReferences;
+    property HandledReferences: TStrings read FHandledReferences;
   public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+    procedure AfterConstruction; override;
     procedure InitDefaults; overload; virtual;
     procedure InitDefaults(Storage: TDataStorage); overload; virtual;
     procedure InitDefaults(AFrame: TCommonFrame); overload; virtual;
@@ -76,8 +92,28 @@ type
 implementation
 
 uses
+  Winapi.Windows,
   System.SysUtils,
+  Vcl.VirtualImageList,
   Cmon.Utilities;
+
+constructor TCommonForm.Create(AOwner: TComponent);
+begin
+  FHandledReferences := TStringList.Create(dupIgnore, True, False);
+  inherited Create(AOwner);
+end;
+
+destructor TCommonForm.Destroy;
+begin
+  inherited Destroy;
+  FHandledReferences.Free;
+end;
+
+procedure TCommonForm.AfterConstruction;
+begin
+  RedirectReferences;
+  inherited;
+end;
 
 procedure TCommonForm.DoCreate;
 begin
@@ -109,6 +145,42 @@ begin
     key := ClassName.Substring(1);
 
   Result := Storage.MakeStorageSubKey(key);
+end;
+
+procedure TCommonForm.GrabVirtualImageLists(AClass: TDataModuleClass);
+var
+  cmp: TComponent;
+  instance: TDataModule;
+begin
+  { just creating the instance will resolve all pending references to it }
+  instance := AClass.Create(nil);
+  try
+    var dmPPI := instance.PixelsPerInch;
+    if dmPPI = 0 then
+      dmPPI := Screen.DefaultPixelsPerInch; { should be 96 }
+    if HandledReferences.IndexOf(instance.Name) < 0 then
+    begin
+      HandledReferences.Add(instance.Name);
+      for var I := instance.ComponentCount - 1 downto 0 do
+      begin
+        cmp := instance.Components[I];
+        if cmp is TVirtualImageList then
+        begin
+          { Moving the component to Self will keep all references intact.
+            That is why a clone won't work here. }
+          InsertComponent(cmp);
+          if CurrentPPI <> dmPPI then begin
+            var img := TVirtualImageList(cmp);
+            var W := MulDiv(img.Width, CurrentPPI, dmPPI);
+            var H := MulDiv(img.Height, CurrentPPI, dmPPI);
+            img.SetSize(W, H);
+          end;
+        end;
+      end;
+    end;
+  finally
+    instance.Free;
+  end;
 end;
 
 procedure TCommonForm.InitDefaults;
@@ -233,6 +305,33 @@ procedure TCommonForm.PrepareStorage(Storage: TDataStorage);
 begin
   Storage.StorageKey := GetStorageKeyFromAttribute(Self, GetStorageKey(Storage));
   InternalPrepareStorage(Storage);
+end;
+
+procedure TCommonForm.RedirectReferences;
+{ static frames call this when their parent is set during loading }
+begin
+  { first resolve all existing references }
+  for var reference in FHandledReferences do
+    RedirectFixupReferences(nil, reference, Name);
+  { now resolve any remaining references by cloning the necessary image lists }
+  ResolveReferences;
+end;
+
+procedure TCommonForm.ResolveReferences;
+var
+  lst: TStringList;
+begin
+  lst := TStringList.Create();
+  try
+    GetFixupReferenceNames(nil, lst);
+    for var reference in lst do begin
+      var cls := GetClass('T' + reference);
+      if (cls <> nil) and cls.InheritsFrom(TDataModule) then
+        GrabVirtualImageLists(TDataModuleClass(cls));
+    end;
+  finally
+    lst.Free;
+  end;
 end;
 
 procedure TCommonForm.SaveToStorage;
@@ -365,4 +464,29 @@ begin
   end;
 end;
 
+procedure TCommonFrame.SetParent(AParent: TWinControl);
+var
+  intf: IRedirectReferences;
+begin
+  inherited;
+  if Supports(GetParentForm(Self), IRedirectReferences, intf) then
+    intf.RedirectReferences;
+end;
+
+function FindGlobalComponent(const Name: string): TComponent;
+begin
+  Result := nil;
+  var idx := Name.IndexOf('.');
+  if idx > 0 then begin
+    Result := System.Classes.FindGlobalComponent(Name.Remove(idx));
+    if Result <> nil then begin
+      Result := FindNestedComponent(Result, Name.Substring(idx + 1));
+    end;
+  end;
+end;
+
+initialization
+  System.Classes.RegisterFindGlobalComponentProc(FindGlobalComponent);
+finalization
+  System.Classes.UnregisterFindGlobalComponentProc(FindGlobalComponent);
 end.

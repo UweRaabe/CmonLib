@@ -110,9 +110,6 @@
             <Form>BaseForm</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="Common.Types.pas"/>
-        <DCCReference Include="Common.Form.pas"/>
-        <DCCReference Include="Common.Frame.pas"/>
         <DCCReference Include="Simple.Form.pas">
             <Form>SimpleForm</Form>
             <FormType>dfm</FormType>

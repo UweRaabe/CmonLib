@@ -5,7 +5,7 @@ interface
 uses
   System.Classes,
   Vcl.Forms, Vcl.Controls, Vcl.ComCtrls, Vcl.ToolWin,
-  Common.Frame;
+  Cmon.Vcl.Forms;
 
 type
   TMainFrame = class(TFrame)

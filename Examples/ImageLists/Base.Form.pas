@@ -5,7 +5,7 @@ interface
 uses
   System.Classes,
   Vcl.Forms, Vcl.Controls, Vcl.StdCtrls,
-  Common.Form;
+  Cmon.Vcl.Forms;
 
 type
   TBaseForm = class(TForm)
@@ -27,6 +27,7 @@ implementation
 
 uses
   System.SysUtils,
+  Vcl.VirtualImageList,
   Cmon.Utilities,
   Main.Frame;
 
@@ -47,7 +48,11 @@ end;
 
 procedure TBaseForm.UpdateInfo;
 begin
-  InfoLabel.Caption := Format('TVirtualImageList instances: %d', [VirtualImageListCount]);
+  var cnt := 0;
+  for var img in ComponentsOf<TVirtualImageList> do
+    Inc(cnt);
+
+  InfoLabel.Caption := Format('TVirtualImageList instances: %d', [cnt]);
 end;
 
 end.

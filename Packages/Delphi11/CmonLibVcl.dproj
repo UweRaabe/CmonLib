@@ -87,6 +87,7 @@
         </DelphiCompile>
         <DCCReference Include="CmonLib.dcp"/>
         <DCCReference Include="vcl.dcp"/>
+        <DCCReference Include="vclwinx.dcp"/>
         <DCCReference Include="..\..\source\Cmon.Messaging.Dialogs.Vcl.pas"/>
         <DCCReference Include="..\..\source\Cmon.Observers.Vcl.pas"/>
         <DCCReference Include="..\..\source\Cmon.Utilities.Vcl.pas"/>
