@@ -15,6 +15,9 @@
         <Projects Include="CmonLibDB.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="CmonLibVclDB.dproj">
+            <Dependencies/>
+        </Projects>
         <Projects Include="..\..\Examples\Observers\ObserversDemo.dproj">
             <Dependencies/>
         </Projects>
@@ -31,6 +34,9 @@
             <Dependencies/>
         </Projects>
         <Projects Include="..\..\Examples\ImageLists\ImageListsDemo.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="..\..\source\TestCmonLib.dproj">
             <Dependencies/>
         </Projects>
     </ItemGroup>
@@ -76,6 +82,15 @@
     </Target>
     <Target Name="CmonLibDB:Make">
         <MSBuild Projects="CmonLibDB.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="CmonLibVclDB">
+        <MSBuild Projects="CmonLibVclDB.dproj"/>
+    </Target>
+    <Target Name="CmonLibVclDB:Clean">
+        <MSBuild Projects="CmonLibVclDB.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="CmonLibVclDB:Make">
+        <MSBuild Projects="CmonLibVclDB.dproj" Targets="Make"/>
     </Target>
     <Target Name="ObserversDemo">
         <MSBuild Projects="..\..\Examples\Observers\ObserversDemo.dproj"/>
@@ -131,14 +146,23 @@
     <Target Name="ImageListsDemo:Make">
         <MSBuild Projects="..\..\Examples\ImageLists\ImageListsDemo.dproj" Targets="Make"/>
     </Target>
+    <Target Name="TestCmonLib">
+        <MSBuild Projects="..\..\source\TestCmonLib.dproj"/>
+    </Target>
+    <Target Name="TestCmonLib:Clean">
+        <MSBuild Projects="..\..\source\TestCmonLib.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="TestCmonLib:Make">
+        <MSBuild Projects="..\..\source\TestCmonLib.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="CmonLib;CmonLibVcl;CmonLibFmx;CmonLibDB;ObserversDemo;DataStorageDemo;DataSetHelperDemo;DialogsDemoVCL;DialogsDemoFMX;ImageListsDemo"/>
+        <CallTarget Targets="CmonLib;CmonLibVcl;CmonLibFmx;CmonLibDB;CmonLibVclDB;ObserversDemo;DataStorageDemo;DataSetHelperDemo;DialogsDemoVCL;DialogsDemoFMX;ImageListsDemo;TestCmonLib"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="CmonLib:Clean;CmonLibVcl:Clean;CmonLibFmx:Clean;CmonLibDB:Clean;ObserversDemo:Clean;DataStorageDemo:Clean;DataSetHelperDemo:Clean;DialogsDemoVCL:Clean;DialogsDemoFMX:Clean;ImageListsDemo:Clean"/>
+        <CallTarget Targets="CmonLib:Clean;CmonLibVcl:Clean;CmonLibFmx:Clean;CmonLibDB:Clean;CmonLibVclDB:Clean;ObserversDemo:Clean;DataStorageDemo:Clean;DataSetHelperDemo:Clean;DialogsDemoVCL:Clean;DialogsDemoFMX:Clean;ImageListsDemo:Clean;TestCmonLib:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="CmonLib:Make;CmonLibVcl:Make;CmonLibFmx:Make;CmonLibDB:Make;ObserversDemo:Make;DataStorageDemo:Make;DataSetHelperDemo:Make;DialogsDemoVCL:Make;DialogsDemoFMX:Make;ImageListsDemo:Make"/>
+        <CallTarget Targets="CmonLib:Make;CmonLibVcl:Make;CmonLibFmx:Make;CmonLibDB:Make;CmonLibVclDB:Make;ObserversDemo:Make;DataStorageDemo:Make;DataSetHelperDemo:Make;DialogsDemoVCL:Make;DialogsDemoFMX:Make;ImageListsDemo:Make;TestCmonLib:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

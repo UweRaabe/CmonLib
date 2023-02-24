@@ -6,8 +6,7 @@ uses
   Winapi.Windows,
   System.Classes, System.IniFiles, System.Types,
   Vcl.Forms, Vcl.Controls, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Mask, Vcl.Dialogs, Vcl.ComCtrls,
-  Cmon.DataStorage,
-  Common.Frame, Common.Form,
+  Cmon.DataStorage, Cmon.Vcl.Forms,
   Main.Frame;
 
 type
@@ -216,6 +215,8 @@ begin
   UpdateTitle;
   for var frame in ComponentsOf<TDemoFrame> do
     frame.UpdateTitle;
+
+  AutoDataStorage := True;
 end;
 
 function TDemoMainForm.GetLayoutFileName: string;

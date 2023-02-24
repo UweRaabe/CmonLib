@@ -5,8 +5,7 @@ interface
 uses
   System.Classes,
   Vcl.Forms, Vcl.Controls, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Mask,
-  Cmon.DataStorage,
-  Common.Frame;
+  Cmon.DataStorage, Cmon.Vcl.Forms;
 
 type
   TDemoFrame = class(TFrame)

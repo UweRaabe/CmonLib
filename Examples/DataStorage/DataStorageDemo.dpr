@@ -5,8 +5,6 @@ uses
   Cmon.DataStorage.Target,
   Cmon.DataStorage.Inifile,
   Cmon.DataStorage.JSON,
-  Common.Frame in 'Common.Frame.pas',
-  Common.Form in 'Common.Form.pas',
   Main.Data.Types in 'Main.Data.Types.pas',
   Main.Frame in 'Main.Frame.pas' {DemoFrame: TFrame},
   Main.Form in 'Main.Form.pas' {DemoMainForm};

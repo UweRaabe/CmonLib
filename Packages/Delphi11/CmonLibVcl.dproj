@@ -90,6 +90,7 @@
         <DCCReference Include="..\..\source\Cmon.Messaging.Dialogs.Vcl.pas"/>
         <DCCReference Include="..\..\source\Cmon.Observers.Vcl.pas"/>
         <DCCReference Include="..\..\source\Cmon.Utilities.Vcl.pas"/>
+        <DCCReference Include="..\..\source\Cmon.Vcl.Forms.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

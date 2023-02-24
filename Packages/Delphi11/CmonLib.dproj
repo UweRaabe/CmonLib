@@ -86,20 +86,21 @@
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="rtl.dcp"/>
-        <DCCReference Include="..\..\source\Cmon.DataStorage.Inifile.pas"/>
         <DCCReference Include="..\..\source\Cmon.DataStorage.pas"/>
-        <DCCReference Include="..\..\source\Cmon.Dialogs.pas"/>
-        <DCCReference Include="..\..\source\Cmon.Logging.pas"/>
-        <DCCReference Include="..\..\source\Cmon.Messaging.Dialogs.pas"/>
+        <DCCReference Include="..\..\source\Cmon.DataStorage.Target.pas"/>
+        <DCCReference Include="..\..\source\Cmon.DataStorage.Inifile.pas"/>
+        <DCCReference Include="..\..\source\Cmon.DataStorage.JSON.pas"/>
+        <DCCReference Include="..\..\source\Cmon.DataModule.pas"/>
         <DCCReference Include="..\..\source\Cmon.Messaging.pas"/>
+        <DCCReference Include="..\..\source\Cmon.Messaging.Dialogs.pas"/>
+        <DCCReference Include="..\..\source\Cmon.Dialogs.pas"/>
+        <DCCReference Include="..\..\source\Cmon.Messaging.Logging.pas"/>
+        <DCCReference Include="..\..\source\Cmon.Messaging.Logging.TextFile.pas"/>
+        <DCCReference Include="..\..\source\Cmon.Logging.pas"/>
         <DCCReference Include="..\..\source\Cmon.Observers.pas"/>
         <DCCReference Include="..\..\source\Cmon.Utilities.pas"/>
         <DCCReference Include="..\..\source\Cmon.CmdLineHandler.pas"/>
         <DCCReference Include="..\..\source\Cmon.CmdLineFileHandler.pas"/>
-        <DCCReference Include="..\..\source\Cmon.DataStorage.JSON.pas"/>
-        <DCCReference Include="..\..\source\Cmon.DataStorage.Target.pas"/>
-        <DCCReference Include="..\..\source\Cmon.Messaging.Logging.pas"/>
-        <DCCReference Include="..\..\source\Cmon.Messaging.Logging.TextFile.pas"/>
         <DCCReference Include="..\..\source\Cmon.Initializing.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

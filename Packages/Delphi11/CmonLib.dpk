@@ -34,20 +34,21 @@ requires
   rtl;
 
 contains
-  Cmon.DataStorage.Inifile in '..\..\source\Cmon.DataStorage.Inifile.pas',
   Cmon.DataStorage in '..\..\source\Cmon.DataStorage.pas',
-  Cmon.Dialogs in '..\..\source\Cmon.Dialogs.pas',
-  Cmon.Logging in '..\..\source\Cmon.Logging.pas',
-  Cmon.Messaging.Dialogs in '..\..\source\Cmon.Messaging.Dialogs.pas',
+  Cmon.DataStorage.Target in '..\..\source\Cmon.DataStorage.Target.pas',
+  Cmon.DataStorage.Inifile in '..\..\source\Cmon.DataStorage.Inifile.pas',
+  Cmon.DataStorage.JSON in '..\..\source\Cmon.DataStorage.JSON.pas',
+  Cmon.DataModule in '..\..\source\Cmon.DataModule.pas',
   Cmon.Messaging in '..\..\source\Cmon.Messaging.pas',
+  Cmon.Messaging.Dialogs in '..\..\source\Cmon.Messaging.Dialogs.pas',
+  Cmon.Dialogs in '..\..\source\Cmon.Dialogs.pas',
+  Cmon.Messaging.Logging in '..\..\source\Cmon.Messaging.Logging.pas',
+  Cmon.Messaging.Logging.TextFile in '..\..\source\Cmon.Messaging.Logging.TextFile.pas',
+  Cmon.Logging in '..\..\source\Cmon.Logging.pas',
   Cmon.Observers in '..\..\source\Cmon.Observers.pas',
   Cmon.Utilities in '..\..\source\Cmon.Utilities.pas',
   Cmon.CmdLineHandler in '..\..\source\Cmon.CmdLineHandler.pas',
   Cmon.CmdLineFileHandler in '..\..\source\Cmon.CmdLineFileHandler.pas',
-  Cmon.DataStorage.JSON in '..\..\source\Cmon.DataStorage.JSON.pas',
-  Cmon.DataStorage.Target in '..\..\source\Cmon.DataStorage.Target.pas',
-  Cmon.Messaging.Logging in '..\..\source\Cmon.Messaging.Logging.pas',
-  Cmon.Messaging.Logging.TextFile in '..\..\source\Cmon.Messaging.Logging.TextFile.pas',
   Cmon.Initializing in '..\..\source\Cmon.Initializing.pas';
 
 end.
