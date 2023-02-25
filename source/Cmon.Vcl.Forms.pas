@@ -8,6 +8,32 @@ uses
   Cmon.DataStorage;
 
 type
+{$SCOPEDENUMS ON}
+  /// <summary>
+  ///   Declares the possible values to defines if and when loading and storing
+  ///   data is executed.
+  /// </summary>
+  /// <seealso cref="TCommonForm.AutoDataStorage">
+  ///   AutoDataStorage
+  /// </seealso>
+  TAutoDataStorage = (
+    /// <summary>
+    ///   No automatic loading or storeing.
+    /// </summary>
+    none,
+    /// <summary>
+    ///   Loading is done after all OnCreate events, while storing happens
+    ///   before any OnDestroy event.
+    /// </summary>
+    callInside,
+    /// <summary>
+    ///   Loading is done before any OnCreate event, while storing happens
+    ///   after all OnDestroy events. <br />
+    /// </summary>
+    callOutside);
+{$SCOPEDENUMS OFF}
+
+type
   TCommonFrame = class(TFrame)
   protected
     function GetStorageKey(Storage: TDataStorage): string; virtual;
@@ -42,11 +68,17 @@ type
   strict private
     procedure NotifyLoaded(Sender: TCommonFrame);
   private
-    FAutoDataStorage: Boolean;
+  class var
+    FDefaultAutoDataStorage: TAutoDataStorage;
+    FDefaultHandleGlobalVirtualImageLists: Boolean;
+  var
+    FAutoDataStorage: TAutoDataStorage;
     FHandledReferences: TStrings;
+    FHandleGlobalVirtualImageLists: Boolean;
   protected
     procedure DoCreate; override;
     procedure DoDestroy; override;
+    function GetAutoDataStorage: TAutoDataStorage; virtual;
     function GetDefaultDataStorage: TDataStorage; virtual;
     function GetStorageKey(Storage: TDataStorage): string; virtual;
     procedure GrabVirtualImageLists(AClass: TDataModuleClass);
@@ -62,25 +94,43 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    class function NewInstance: TObject; override;
     procedure AfterConstruction; override;
     procedure InitDefaults; overload; virtual;
-    procedure InitDefaults(Storage: TDataStorage); overload; virtual;
     procedure InitDefaults(AFrame: TCommonFrame); overload; virtual;
     procedure InitDefaults(AFrame: TCommonFrame; Storage: TDataStorage); overload; virtual;
+    procedure InitDefaults(Storage: TDataStorage); overload; virtual;
     procedure LoadFromStorage; overload; virtual;
-    procedure LoadFromStorage(Storage: TDataStorage); overload; virtual;
-    procedure LoadFromStorage(ATarget: IStorageTarget); overload;
     procedure LoadFromStorage(const AFileName: string); overload;
+    procedure LoadFromStorage(ATarget: IStorageTarget); overload;
     procedure LoadFromStorage(AFrame: TCommonFrame); overload; virtual;
     procedure LoadFromStorage(AFrame: TCommonFrame; Storage: TDataStorage); overload; virtual;
+    procedure LoadFromStorage(Storage: TDataStorage); overload; virtual;
     procedure SaveToStorage; overload; virtual;
-    procedure SaveToStorage(Storage: TDataStorage); overload; virtual;
-    procedure SaveToStorage(ATarget: IStorageTarget); overload;
     procedure SaveToStorage(const AFileName: string); overload;
+    procedure SaveToStorage(ATarget: IStorageTarget); overload;
     procedure SaveToStorage(AFrame: TCommonFrame); overload; virtual;
     procedure SaveToStorage(AFrame: TCommonFrame; Storage: TDataStorage); overload; virtual;
-    property AutoDataStorage: Boolean read FAutoDataStorage write FAutoDataStorage;
+    procedure SaveToStorage(Storage: TDataStorage); overload; virtual;
+    /// <summary>
+    ///   The value <i>AutoDataStorage</i> is initialized with in a new form
+    ///   instance
+    /// </summary>
+    class property DefaultAutoDataStorage: TAutoDataStorage read FDefaultAutoDataStorage write FDefaultAutoDataStorage;
+    class property DefaultHandleGlobalVirtualImageLists: Boolean read FDefaultHandleGlobalVirtualImageLists write FDefaultHandleGlobalVirtualImageLists;
+    /// <summary>
+    ///   Defines if and when loading and storing happens automatically
+    /// </summary>
+    /// <remarks>
+    ///   The value is initialized with <i>DefaultAutoDataStorage</i>, but it
+    ///   can be adjusted in the forms constructor. Note that setting it in the
+    ///   OnCreate event will have no effect if it was initialised with <i>
+    ///   TAutoDataStorage.callOutside</i> or going to be set to that value in
+    ///   the event.
+    /// </remarks>
+    property AutoDataStorage: TAutoDataStorage read GetAutoDataStorage write FAutoDataStorage;
     property DefaultDataStorage: TDataStorage read GetDefaultDataStorage;
+    property HandleGlobalVirtualImageLists: Boolean read FHandleGlobalVirtualImageLists write FHandleGlobalVirtualImageLists;
   end;
 
 type
@@ -109,6 +159,12 @@ begin
   FHandledReferences.Free;
 end;
 
+class function TCommonForm.NewInstance: TObject;
+begin
+  Result := inherited;
+  TCommonForm(Result).FAutoDataStorage := DefaultAutoDataStorage;
+end;
+
 procedure TCommonForm.AfterConstruction;
 begin
   RedirectReferences;
@@ -117,20 +173,26 @@ end;
 
 procedure TCommonForm.DoCreate;
 begin
-  inherited;
-  if AutoDataStorage then begin
-    InitDefaults;
+  InitDefaults;
+  if AutoDataStorage = TAutoDataStorage.callOutside then
     LoadFromStorage;
-  end;
+  inherited;
+  if AutoDataStorage = TAutoDataStorage.callInside then
+    LoadFromStorage;
 end;
 
 procedure TCommonForm.DoDestroy;
 begin
-  if AutoDataStorage then begin
+  if AutoDataStorage = TAutoDataStorage.callInside then
     SaveToStorage;
-  end;
-  AutoDataStorage := False;
   inherited;
+  if AutoDataStorage = TAutoDataStorage.callOutside then
+    SaveToStorage;
+end;
+
+function TCommonForm.GetAutoDataStorage: TAutoDataStorage;
+begin
+  Result := FAutoDataStorage;
 end;
 
 function TCommonForm.GetDefaultDataStorage: TDataStorage;
@@ -188,14 +250,6 @@ begin
   InitDefaults(DefaultDataStorage);
 end;
 
-procedure TCommonForm.InitDefaults(Storage: TDataStorage);
-begin
-  Storage.InitDefaults(Self);
-  for var frame in ComponentsOf<TCommonFrame> do
-    frame.InitDefaults(Storage);
-  InternalInitDefaults(Storage);
-end;
-
 procedure TCommonForm.InitDefaults(AFrame: TCommonFrame);
 begin
   InitDefaults(AFrame, DefaultDataStorage);
@@ -204,6 +258,14 @@ end;
 procedure TCommonForm.InitDefaults(AFrame: TCommonFrame; Storage: TDataStorage);
 begin
   AFrame.InitDefaults(Storage);
+end;
+
+procedure TCommonForm.InitDefaults(Storage: TDataStorage);
+begin
+  Storage.InitDefaults(Self);
+  for var frame in ComponentsOf<TCommonFrame> do
+    frame.InitDefaults(Storage);
+  InternalInitDefaults(Storage);
 end;
 
 procedure TCommonForm.InternalInitDefaults(Storage: TDataStorage);
@@ -227,18 +289,9 @@ begin
   LoadFromStorage(DefaultDataStorage);
 end;
 
-procedure TCommonForm.LoadFromStorage(Storage: TDataStorage);
+procedure TCommonForm.LoadFromStorage(const AFileName: string);
 begin
-  Storage.PushStorageKey;
-  try
-    PrepareStorage(Storage);
-    Storage.LoadFromStorage(Self);
-    for var frame in ComponentsOf<TCommonFrame> do
-      frame.LoadFromStorage(Storage);
-    InternalLoadFromStorage(Storage);
-  finally
-    Storage.PopStorageKey;
-  end;
+  LoadFromStorage(TDataStorage.CreateStorageTarget(Self, AFileName));
 end;
 
 procedure TCommonForm.LoadFromStorage(ATarget: IStorageTarget);
@@ -252,11 +305,6 @@ begin
   finally
     tmpStorage.Free;
   end;
-end;
-
-procedure TCommonForm.LoadFromStorage(const AFileName: string);
-begin
-  LoadFromStorage(TDataStorage.CreateStorageTarget(Self, AFileName));
 end;
 
 procedure TCommonForm.LoadFromStorage(AFrame: TCommonFrame);
@@ -275,6 +323,20 @@ begin
   end;
 end;
 
+procedure TCommonForm.LoadFromStorage(Storage: TDataStorage);
+begin
+  Storage.PushStorageKey;
+  try
+    PrepareStorage(Storage);
+    Storage.LoadFromStorage(Self);
+    for var frame in ComponentsOf<TCommonFrame> do
+      frame.LoadFromStorage(Storage);
+    InternalLoadFromStorage(Storage);
+  finally
+    Storage.PopStorageKey;
+  end;
+end;
+
 procedure TCommonForm.Notification(AComponent: TComponent; Operation: TOperation);
 begin
   inherited;
@@ -286,7 +348,7 @@ begin
           We have to wait for the frame to notify us when loaded. }
       end;
       opRemove: begin
-        if AutoDataStorage then
+        if (AutoDataStorage <> TAutoDataStorage.none) and not (csDestroying in frame.ComponentState) then
           SaveToStorage(frame);
       end;
     end;
@@ -295,7 +357,7 @@ end;
 
 procedure TCommonForm.NotifyLoaded(Sender: TCommonFrame);
 begin
-  if AutoDataStorage then begin
+  if AutoDataStorage <> TAutoDataStorage.none then begin
     InitDefaults(Sender);
     LoadFromStorage(Sender);
   end;
@@ -310,8 +372,10 @@ end;
 procedure TCommonForm.RedirectReferences;
 { static frames call this when their parent is set during loading }
 begin
+  if not HandleGlobalVirtualImageLists then Exit;
+
   { first resolve all existing references }
-  for var reference in FHandledReferences do
+  for var reference in HandledReferences do
     RedirectFixupReferences(nil, reference, Name);
   { now resolve any remaining references by cloning the necessary image lists }
   ResolveReferences;
@@ -339,18 +403,9 @@ begin
   SaveToStorage(DefaultDataStorage);
 end;
 
-procedure TCommonForm.SaveToStorage(Storage: TDataStorage);
+procedure TCommonForm.SaveToStorage(const AFileName: string);
 begin
-  Storage.PushStorageKey;
-  try
-    PrepareStorage(Storage);
-    Storage.SaveToStorage(Self);
-    for var frame in ComponentsOf<TCommonFrame> do
-      frame.SaveToStorage(Storage);
-    InternalSaveToStorage(Storage);
-  finally
-    Storage.PopStorageKey;
-  end;
+  SaveToStorage(TDataStorage.CreateStorageTarget(Self, AFileName));
 end;
 
 procedure TCommonForm.SaveToStorage(ATarget: IStorageTarget);
@@ -366,11 +421,6 @@ begin
   end;
 end;
 
-procedure TCommonForm.SaveToStorage(const AFileName: string);
-begin
-  SaveToStorage(TDataStorage.CreateStorageTarget(Self, AFileName));
-end;
-
 procedure TCommonForm.SaveToStorage(AFrame: TCommonFrame);
 begin
   SaveToStorage(AFrame, DefaultDataStorage);
@@ -382,6 +432,20 @@ begin
   try
     PrepareStorage(Storage);
     AFrame.SaveToStorage(Storage);
+  finally
+    Storage.PopStorageKey;
+  end;
+end;
+
+procedure TCommonForm.SaveToStorage(Storage: TDataStorage);
+begin
+  Storage.PushStorageKey;
+  try
+    PrepareStorage(Storage);
+    Storage.SaveToStorage(Self);
+    for var frame in ComponentsOf<TCommonFrame> do
+      frame.SaveToStorage(Storage);
+    InternalSaveToStorage(Storage);
   finally
     Storage.PopStorageKey;
   end;

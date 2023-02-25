@@ -2,6 +2,7 @@ program ImageListsDemo;
 
 uses
   Vcl.Forms,
+  Cmon.Vcl.Forms,
   Images.DM in 'Images.DM.pas' {dmImages: TDataModule},
   DesignImages.DM in 'DesignImages.DM.pas' {dmDesignImages: TDataModule},
   Main.Frame in 'Main.Frame.pas' {MainFrame: TFrame},
@@ -12,7 +13,13 @@ uses
 
 {$R *.res}
 
+procedure PreInitialize;
 begin
+  TCommonForm.DefaultHandleGlobalVirtualImageLists := True;
+end;
+
+begin
+  PreInitialize;
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   Application.CreateForm(TdmImages, dmImages);

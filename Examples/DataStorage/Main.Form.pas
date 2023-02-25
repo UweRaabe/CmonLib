@@ -215,8 +215,6 @@ begin
   UpdateTitle;
   for var frame in ComponentsOf<TDemoFrame> do
     frame.UpdateTitle;
-
-  AutoDataStorage := True;
 end;
 
 function TDemoMainForm.GetLayoutFileName: string;

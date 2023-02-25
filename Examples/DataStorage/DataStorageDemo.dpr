@@ -5,6 +5,7 @@ uses
   Cmon.DataStorage.Target,
   Cmon.DataStorage.Inifile,
   Cmon.DataStorage.JSON,
+  Cmon.Vcl.Forms,
   Main.Data.Types in 'Main.Data.Types.pas',
   Main.Frame in 'Main.Frame.pas' {DemoFrame: TFrame},
   Main.Form in 'Main.Form.pas' {DemoMainForm};
@@ -28,6 +29,13 @@ begin
   TCustomStorageTarget.DefaultFileExtension := TIniStorageTarget.FileExtension;
   { This sets the default extension for the settings file used for manual Load and Save of storage data in DemoMainForm }
   TDemoMainForm.SettingsFileExtension := TJSONStorageTarget.FileExtension;
+
+  { Here we activate the DataStorage for all TCommonForm descendants.
+
+    TAutoDataStorage.callOutside loads from the storage before any OnCreate events and stores to storage after all OnDestroy events.
+    TAutoDataStorage.callInside loads from the storage after all OnCreate events and stores to storage before any OnDestroy event.
+  }
+  TCommonForm.DefaultAutoDataStorage := TAutoDataStorage.callInside;
 end;
 
 begin
