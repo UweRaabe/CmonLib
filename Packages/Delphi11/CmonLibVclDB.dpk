@@ -32,10 +32,11 @@ package CmonLibVclDB;
 
 requires
   vclwinx,
-  vcldb;
+  vcldb,
+  CmonLibDB;
 
 contains
-  Cmon.DbAware.Components in '..\..\source\Cmon.DbAware.Components.pas',
-  Cmon.DbAware.ObserverLink in '..\..\source\Cmon.DbAware.ObserverLink.pas';
+  Cmon.Vcl.DbAware.Components in '..\..\source\Cmon.Vcl.DbAware.Components.pas',
+  Cmon.Vcl.DbAware.ObserverLink in '..\..\source\Cmon.Vcl.DbAware.ObserverLink.pas';
 
 end.

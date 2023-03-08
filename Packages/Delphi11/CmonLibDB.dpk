@@ -34,6 +34,7 @@ requires
   dbrtl;
 
 contains
-  Cmon.DataSetHelper in '..\..\source\Cmon.DataSetHelper.pas';
+  Cmon.DataSetHelper in '..\..\source\Cmon.DataSetHelper.pas',
+  Cmon.DbAware.ObserverLink in '..\..\source\Cmon.DbAware.ObserverLink.pas';
 
 end.

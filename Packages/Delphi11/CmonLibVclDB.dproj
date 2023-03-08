@@ -78,8 +78,9 @@
         </DelphiCompile>
         <DCCReference Include="vclwinx.dcp"/>
         <DCCReference Include="vcldb.dcp"/>
-        <DCCReference Include="..\..\source\Cmon.DbAware.Components.pas"/>
-        <DCCReference Include="..\..\source\Cmon.DbAware.ObserverLink.pas"/>
+        <DCCReference Include="CmonLibDB.dcp"/>
+        <DCCReference Include="..\..\source\Cmon.Vcl.DbAware.Components.pas"/>
+        <DCCReference Include="..\..\source\Cmon.Vcl.DbAware.ObserverLink.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

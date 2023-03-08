@@ -58,8 +58,8 @@ type
   public
     class function Execute(Sender: TObject; const ATitle, AMessageText: string; AMsgDlgType: TMsgDlgType; AButtons: TMsgDlgButtons;
         ADefault: TModalResult; AHelpContext: Integer): TModalResult;
-    property Answer: TModalResult read FAnswer write FAnswer;
     class property AutoRegisterHandler: Boolean read FAutoRegisterHandler write FAutoRegisterHandler;
+    property Answer: TModalResult read FAnswer write FAnswer;
     property Buttons: TMsgDlgButtons read FButtons write FButtons;
     property HelpContext: Integer read FHelpContext write FHelpContext;
     property MessageText: string read GetMessageText;

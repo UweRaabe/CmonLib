@@ -1,4 +1,4 @@
-unit Cmon.DbAware.Components;
+unit Cmon.Vcl.DbAware.Components;
 
 interface
 
@@ -6,7 +6,7 @@ uses
   System.Classes,
   Data.DB,
   Vcl.Controls,
-  Cmon.DbAware.ObserverLink;
+  Cmon.Vcl.DbAware.ObserverLink;
 
 type
   TDataComponent = class(TComponent)
@@ -22,8 +22,7 @@ type
     function CreateDataLink(AControl: TWinControl): TObserverDataLink;
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
   public
-    class function CreateInstance(AOwner: TComponent; AControl: TWinControl; ADataSource: TDataSource; const ADataField:
-        string): TDataComponent;
+    class function CreateInstance(AOwner: TComponent; AControl: TWinControl; ADataSource: TDataSource; const ADataField: string): TDataComponent;
   published
     property Control: TWinControl read GetControl write SetControl;
     property DataField: string read FDataField write SetDataField;
@@ -54,15 +53,14 @@ type
 function TDataComponent.CreateDataLink(AControl: TWinControl): TObserverDataLink;
 begin
   if AControl.InheritsFrom(TDateTimePicker) then
-    Result := TDateTimePickerDataLink.Create(AControl)
+    Result := TDateTimePickerDataLink.Create(TDateTimePicker(AControl))
   else if AControl.InheritsFrom(TCustomEdit) then
-    Result := TCustomEditDataLink.Create(AControl)
+    Result := TCustomEditDataLink.Create(TCustomEdit(AControl))
   else
     Result := TObserverDataLink<TWinControl>.Create(AControl);
 end;
 
-class function TDataComponent.CreateInstance(AOwner: TComponent; AControl: TWinControl; ADataSource: TDataSource; const
-    ADataField: string): TDataComponent;
+class function TDataComponent.CreateInstance(AOwner: TComponent; AControl: TWinControl; ADataSource: TDataSource; const ADataField: string): TDataComponent;
 begin
   Result := Self.Create(AOwner);
   Result.Control := AControl;

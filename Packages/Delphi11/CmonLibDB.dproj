@@ -87,6 +87,7 @@
         </DelphiCompile>
         <DCCReference Include="dbrtl.dcp"/>
         <DCCReference Include="..\..\source\Cmon.DataSetHelper.pas"/>
+        <DCCReference Include="..\..\source\Cmon.DbAware.ObserverLink.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

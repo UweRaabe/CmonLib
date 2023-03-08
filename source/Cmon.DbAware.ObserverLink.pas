@@ -4,13 +4,12 @@ interface
 
 uses
   System.Classes,
-  Data.DB,
-  Vcl.Controls;
+  Data.DB;
 
 type
-  TObserverDataLink = class(TDataLink, IInterface, IObserver, IObserverTrack, ISingleCastObserver, IEditLinkObserver)
+  TCustomObserverDataLink = class(TDataLink, IInterface, IObserver, IObserverTrack, ISingleCastObserver, IEditLinkObserver)
   private
-    FControl: TWinControl;
+    FControl: TComponent;
     FField: TField;
     FFieldName: string;
     FObserverActive: Boolean;
@@ -19,7 +18,6 @@ type
     FUpdateCnt: Integer;
     procedure SetField(Value: TField);
     procedure UpdateField;
-    procedure UpdateRightToLeft;
     function GetCanModify: Boolean;
     procedure SetFieldName(const Value: string);
   strict protected
@@ -34,7 +32,6 @@ type
     function Edit: Boolean;
     procedure EditingChanged; override;
     procedure EndUpdate;
-    procedure FocusControl(Field: TFieldRef); override;
     function GetActive: Boolean;
     function GetIsEditing: Boolean;
     function GetIsReadOnly: Boolean;
@@ -59,34 +56,23 @@ type
     procedure Toggle(Value: Boolean); virtual;
     procedure Update;
     procedure UpdateData; override;
+    procedure UpdateRightToLeft; virtual;
     function _AddRef: Integer; stdcall;
     function _Release: Integer; stdcall;
   public
-    constructor Create(AControl: TWinControl);
+    constructor Create(AControl: TComponent);
     destructor Destroy; override;
     property CanModify: Boolean read GetCanModify;
-    property Control: TWinControl read FControl;
+    property Control: TComponent read FControl;
     property Field: TField read FField;
     property FieldName: string read FFieldName write SetFieldName;
   end;
 
-  TObserverDataLink<T:TWinControl> = class(TObserverDataLink)
-  private
-    function GetControl: T;
-  public
-    property Control: T read GetControl;
-  end;
-
 implementation
 
-uses
-  Winapi.Windows,
-  Vcl.DBCtrls;
-
-constructor TObserverDataLink.Create(AControl: TWinControl);
+constructor TCustomObserverDataLink.Create(AControl: TComponent);
 begin
   inherited Create;
-  VisualControl := True;
   FControl := AControl;
   if FControl <> nil then begin
     FControl.Observers.AddObserver(TObserverMapping.EditLinkID, Self);
@@ -94,7 +80,7 @@ begin
   end;
 end;
 
-destructor TObserverDataLink.Destroy;
+destructor TCustomObserverDataLink.Destroy;
 begin
   if FControl <> nil then begin
     FControl.Observers.RemoveObserver(TObserverMapping.EditLinkID, Self);
@@ -102,18 +88,18 @@ begin
   inherited;
 end;
 
-procedure TObserverDataLink.ActiveChanged;
+procedure TCustomObserverDataLink.ActiveChanged;
 begin
   UpdateField;
   DoActiveChanged(Active);
 end;
 
-procedure TObserverDataLink.BeginUpdate;
+procedure TCustomObserverDataLink.BeginUpdate;
 begin
   Inc(FUpdateCnt);
 end;
 
-procedure TObserverDataLink.DataEvent(Event: TDataEvent; Info: NativeInt);
+procedure TCustomObserverDataLink.DataEvent(Event: TDataEvent; Info: NativeInt);
 begin
   inherited;
   if Event = deDisabledStateChange then begin
@@ -124,102 +110,91 @@ begin
   end;
 end;
 
-procedure TObserverDataLink.DoActiveChanged(Value: Boolean);
+procedure TCustomObserverDataLink.DoActiveChanged(Value: Boolean);
 begin
 end;
 
-procedure TObserverDataLink.DoEditingChanged(Value: Boolean);
+procedure TCustomObserverDataLink.DoEditingChanged(Value: Boolean);
 begin
 end;
 
-procedure TObserverDataLink.DoLoadData;
+procedure TCustomObserverDataLink.DoLoadData;
 begin
 end;
 
-procedure TObserverDataLink.DoSaveData;
+procedure TCustomObserverDataLink.DoSaveData;
 begin
 end;
 
-function TObserverDataLink.Edit: Boolean;
+function TCustomObserverDataLink.Edit: Boolean;
 begin
   if CanModify then
     inherited Edit;
   Result := Editing;
 end;
 
-procedure TObserverDataLink.EditingChanged;
+procedure TCustomObserverDataLink.EditingChanged;
 begin
   FObserverModified := False;
   DoEditingChanged(Editing);
 end;
 
-procedure TObserverDataLink.EndUpdate;
+procedure TCustomObserverDataLink.EndUpdate;
 begin
   Dec(FUpdateCnt);
 end;
 
-procedure TObserverDataLink.FocusControl(Field: TFieldRef);
-begin
-  if (Field^ <> nil) and (Field^ = FField) and (FControl <> nil) then
-    if FControl.CanFocus then begin
-      Field^ := nil;
-      FControl.SetFocus;
-    end;
-end;
-
-function TObserverDataLink.GetActive: Boolean;
+function TCustomObserverDataLink.GetActive: Boolean;
 begin
   Result := FObserverActive;
 end;
 
-function TObserverDataLink.GetCanModify: Boolean;
+function TCustomObserverDataLink.GetCanModify: Boolean;
 begin
   Result := not ReadOnly and (Field <> nil) and Field.CanModify;
 end;
 
-{$IF CompilerVersion >= 34.0 Delphi 10.4 Sydney }
-function TObserverDataLink.GetFormatLink: IEditFormatLink;
+function TCustomObserverDataLink.GetFormatLink: IEditFormatLink;
 begin
   Result := nil;
 end;
-{$ENDIF}
 
-function TObserverDataLink.GetIsEditing: Boolean;
+function TCustomObserverDataLink.GetIsEditing: Boolean;
 begin
   Result := Editing;
 end;
 
-function TObserverDataLink.GetIsReadOnly: Boolean;
+function TCustomObserverDataLink.GetIsReadOnly: Boolean;
 begin
   Result := ReadOnly;
 end;
 
-function TObserverDataLink.GetOnObserverToggle: TObserverToggleEvent;
+function TCustomObserverDataLink.GetOnObserverToggle: TObserverToggleEvent;
 begin
   Result := FOnToggle;
 end;
 
-function TObserverDataLink.GetTrack: Boolean;
+function TCustomObserverDataLink.GetTrack: Boolean;
 begin
   Result := Active and Editing;
 end;
 
-function TObserverDataLink.GetUpdating: Boolean;
+function TCustomObserverDataLink.GetUpdating: Boolean;
 begin
   Result := FUpdateCnt > 0;
 end;
 
-function TObserverDataLink.IsModified: Boolean;
+function TCustomObserverDataLink.IsModified: Boolean;
 begin
   Result := FObserverModified;
 end;
 
-function TObserverDataLink.IsRequired: Boolean;
+function TCustomObserverDataLink.IsRequired: Boolean;
 begin
   Result := (Field <> nil) and Field.Required;
 end;
 
-function TObserverDataLink.IsValidChar(AKey: Char): Boolean;
+function TCustomObserverDataLink.IsValidChar(AKey: Char): Boolean;
 begin
   Result := True;
   if Field <> nil then begin
@@ -227,17 +202,17 @@ begin
   end;
 end;
 
-procedure TObserverDataLink.LayoutChanged;
+procedure TCustomObserverDataLink.LayoutChanged;
 begin
   UpdateField;
 end;
 
-procedure TObserverDataLink.Modified;
+procedure TCustomObserverDataLink.Modified;
 begin
   FObserverModified := True;
 end;
 
-function TObserverDataLink.QueryInterface(const IID: TGUID; out Obj): HRESULT;
+function TCustomObserverDataLink.QueryInterface(const IID: TGUID; out Obj): HRESULT;
 begin
   if GetInterface(IID, Obj) then
     Result := S_OK
@@ -245,7 +220,7 @@ begin
     Result := E_NOINTERFACE
 end;
 
-procedure TObserverDataLink.RecordChanged(Field: TField);
+procedure TCustomObserverDataLink.RecordChanged(Field: TField);
 begin
   if (Field = nil) or (Field = FField) then begin
     DoLoadData;
@@ -253,24 +228,24 @@ begin
   end;
 end;
 
-procedure TObserverDataLink.Removed;
+procedure TCustomObserverDataLink.Removed;
 begin
 
 end;
 
-procedure TObserverDataLink.Reset;
+procedure TCustomObserverDataLink.Reset;
 begin
   RecordChanged(nil);
 end;
 
-procedure TObserverDataLink.SetActive(Value: Boolean);
+procedure TCustomObserverDataLink.SetActive(Value: Boolean);
 begin
   FObserverActive := Value;
   if Assigned(FOnToggle) then
     FOnToggle(Self, Value);
 end;
 
-procedure TObserverDataLink.SetField(Value: TField);
+procedure TCustomObserverDataLink.SetField(Value: TField);
 begin
   if FField <> Value then begin
     FField := Value;
@@ -282,7 +257,7 @@ begin
   end;
 end;
 
-procedure TObserverDataLink.SetFieldName(const Value: string);
+procedure TCustomObserverDataLink.SetFieldName(const Value: string);
 begin
   if FFieldName <> Value then begin
     FFieldName := Value;
@@ -290,28 +265,28 @@ begin
   end;
 end;
 
-procedure TObserverDataLink.SetIsReadOnly(Value: Boolean);
+procedure TCustomObserverDataLink.SetIsReadOnly(Value: Boolean);
 begin
   ReadOnly := Value;
 end;
 
-procedure TObserverDataLink.SetOnObserverToggle(AEvent: TObserverToggleEvent);
+procedure TCustomObserverDataLink.SetOnObserverToggle(AEvent: TObserverToggleEvent);
 begin
   FOnToggle := AEvent;
 end;
 
-procedure TObserverDataLink.Toggle(Value: Boolean);
+procedure TCustomObserverDataLink.Toggle(Value: Boolean);
 begin
   if Assigned(FOnToggle) then FOnToggle(Self, Value);
 end;
 
-procedure TObserverDataLink.Update;
+procedure TCustomObserverDataLink.Update;
 begin
   UpdateData;
   FObserverModified := False;
 end;
 
-procedure TObserverDataLink.UpdateData;
+procedure TCustomObserverDataLink.UpdateData;
 begin
   if FObserverModified then begin
     if (Field <> nil) then
@@ -320,7 +295,7 @@ begin
   end;
 end;
 
-procedure TObserverDataLink.UpdateField;
+procedure TCustomObserverDataLink.UpdateField;
 begin
   if Active and (FFieldName <> '') then begin
     FField := nil;
@@ -333,34 +308,18 @@ begin
     SetField(nil);
 end;
 
-procedure TObserverDataLink.UpdateRightToLeft;
-var
-  isRightAligned: Boolean;
-  useRightToLeftAlignment: Boolean;
+procedure TCustomObserverDataLink.UpdateRightToLeft;
 begin
-  if Assigned(FControl) then
-    if FControl.IsRightToLeft then begin
-      isRightAligned := (GetWindowLong(FControl.Handle, GWL_EXSTYLE) and WS_EX_RIGHT) = WS_EX_RIGHT;
-      useRightToLeftAlignment := DBUseRightToLeftAlignment(FControl, Field);
-      if isRightAligned xor useRightToLeftAlignment then begin
-        FControl.Perform(CM_RECREATEWND, 0, 0);
-      end;
-    end;
 end;
 
-function TObserverDataLink._AddRef: Integer;
+function TCustomObserverDataLink._AddRef: Integer;
 begin
   Result := -1; // -1 indicates no reference counting is taking place
 end;
 
-function TObserverDataLink._Release: Integer;
+function TCustomObserverDataLink._Release: Integer;
 begin
   Result := -1; // -1 indicates no reference counting is taking place
-end;
-
-function TObserverDataLink<T>.GetControl: T;
-begin
-  Result := inherited Control as T;
 end;
 
 end.
