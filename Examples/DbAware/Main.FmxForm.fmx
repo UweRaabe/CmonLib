@@ -49,7 +49,7 @@ object MainForm: TMainForm
   object BindNavigator1: TBindNavigator
     Position.X = 32.000000000000000000
     Position.Y = 384.000000000000000000
-    Size.Width = 241.000000000000000000
+    Size.Width = 240.000000000000000000
     Size.Height = 25.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 9
@@ -363,21 +363,6 @@ object MainForm: TMainForm
     object QuCustomerLastInvoiceDate: TDateTimeField
       FieldName = 'LastInvoiceDate'
     end
-  end
-  object DataLinkContainer1: TDataLinkContainer
-    DataLinks = <
-      item
-        DataField = 'City'
-        DataSource = DsCustomer
-        Target = edtCity
-      end
-      item
-        DataField = 'Company'
-        DataSource = DsCustomer
-        Target = edtCompany
-      end>
-    Left = 264
-    Top = 224
   end
   object BindSourceDB1: TBindSourceDB
     DataSource = DsCustomer

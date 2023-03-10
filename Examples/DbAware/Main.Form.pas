@@ -36,7 +36,6 @@ type
     edtCompany: TDBEdit;
     lblCompany: TLabel;
     lblCity: TLabel;
-    DataLinkContainer1: TDataLinkContainer;
     procedure edtCityRightButtonClick(Sender: TObject);
   private
   public

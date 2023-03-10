@@ -462,14 +462,4 @@ object MainForm: TMainForm
     Left = 390
     Top = 330
   end
-  object DataLinkContainer1: TDataLinkContainer
-    DataLinks = <
-      item
-        DataField = 'City'
-        DataSource = DsCustomer
-        Target = edtCity
-      end>
-    Left = 416
-    Top = 152
-  end
 end

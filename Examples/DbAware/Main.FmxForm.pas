@@ -31,7 +31,6 @@ type
     edtCity: TEdit;
     lblCompany: TLabel;
     lblCity: TLabel;
-    DataLinkContainer1: TDataLinkContainer;
     BindNavigator1: TBindNavigator;
     BindSourceDB1: TBindSourceDB;
     StringGrid1: TStringGrid;
