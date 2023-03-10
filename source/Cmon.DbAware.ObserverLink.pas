@@ -3,13 +3,14 @@ unit Cmon.DbAware.ObserverLink;
 interface
 
 uses
-  System.Classes,
+  System.Classes, System.Generics.Collections,
   Data.DB;
 
 type
+  TCustomObserverDataLinkClass = class of TCustomObserverDataLink;
   TCustomObserverDataLink = class(TDataLink, IInterface, IObserver, IObserverTrack, ISingleCastObserver, IEditLinkObserver)
   private
-    FControl: TComponent;
+    FTarget: TComponent;
     FField: TField;
     FFieldName: string;
     FObserverActive: Boolean;
@@ -40,7 +41,7 @@ type
     function GetUpdating: Boolean;
     {$IF CompilerVersion >= 34.0 Delphi 10.4 Sydney }
     function GetFormatLink: IEditFormatLink;
-    {$ENDIF}
+    {$IFEND}
     function IsModified: Boolean;
     function IsRequired: Boolean;
     function IsValidChar(AKey: Char): Boolean;
@@ -60,30 +61,101 @@ type
     function _AddRef: Integer; stdcall;
     function _Release: Integer; stdcall;
   public
-    constructor Create(AControl: TComponent);
+    constructor Create(ATarget: TComponent);
     destructor Destroy; override;
     property CanModify: Boolean read GetCanModify;
-    property Control: TComponent read FControl;
+    property Target: TComponent read FTarget;
     property Field: TField read FField;
     property FieldName: string read FFieldName write SetFieldName;
   end;
 
+type
+  TDataLinkSupport = class
+  strict private
+  type
+    TDataLinkRegistry = TDictionary<TClass, TCustomObserverDataLinkClass>;
+  class var
+    FRegistry: TDataLinkRegistry;
+    class constructor CreateClass;
+    class destructor DestroyClass;
+  public
+    class function CreateDataLink(ATarget: TComponent): TCustomObserverDataLink;
+    class procedure RegisterLinkClass(AClass: TComponentClass; ALinkClass: TCustomObserverDataLinkClass);
+    class function SupportsLinking(ATarget: TComponent): Boolean;
+    class procedure UnregisterLinkClass(AClass: TComponentClass; ALinkClass: TCustomObserverDataLinkClass);
+  end;
+
+type
+  TDataLinkItem = class(TCollectionItem)
+  type
+    TNexus = class(TComponent)
+    private
+      FItem: TDataLinkItem;
+    protected
+      procedure Notification(AComponent: TComponent; Operation: TOperation); override;
+    public
+      constructor Create(AItem: TDataLinkItem); reintroduce;
+    end;
+  private
+    FDataField: string;
+    FDataLink: TCustomObserverDataLink;
+    FNexus: TNexus;
+    FDataSource: TDataSource;
+    function GetLinkedTo: string;
+    function GetTarget: TComponent;
+    procedure SetDataField(const Value: string);
+    procedure SetDataSource(Value: TDataSource);
+    procedure SetTarget(const Value: TComponent);
+  public
+    constructor Create(Collection: TCollection); override;
+    destructor Destroy; override;
+  published
+    property DataField: string read FDataField write SetDataField;
+    property DataSource: TDataSource read FDataSource write SetDataSource;
+    property LinkedTo: string read GetLinkedTo;
+    property Target: TComponent read GetTarget write SetTarget;
+  end;
+
+  TDataLinkCollection = class(TOwnedCollection)
+  public
+    constructor Create(AOwner: TComponent);
+  end;
+
+  TDataLinkContainer = class(TComponent)
+  private
+    FDataLinks: TDataLinkCollection;
+    function FindDataLink(ATarget: TComponent): TDataLinkItem;
+    procedure SetDataLinks(const Value: TDataLinkCollection);
+  protected
+    procedure Notification(AComponent: TComponent; Operation: TOperation); override;
+  public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+    function FindOrCreateDataLink(ATarget: TComponent; ADataSource: TDataSource = nil; const ADataField: string = ''): TDataLinkItem;
+  published
+    property DataLinks: TDataLinkCollection read FDataLinks write SetDataLinks;
+  end;
+
 implementation
 
-constructor TCustomObserverDataLink.Create(AControl: TComponent);
+uses
+  System.SysUtils,
+  Cmon.Utilities;
+
+constructor TCustomObserverDataLink.Create(ATarget: TComponent);
 begin
   inherited Create;
-  FControl := AControl;
-  if FControl <> nil then begin
-    FControl.Observers.AddObserver(TObserverMapping.EditLinkID, Self);
+  FTarget := ATarget;
+  if FTarget <> nil then begin
+    FTarget.Observers.AddObserver(TObserverMapping.EditLinkID, Self);
     FObserverActive := True;
   end;
 end;
 
 destructor TCustomObserverDataLink.Destroy;
 begin
-  if FControl <> nil then begin
-    FControl.Observers.RemoveObserver(TObserverMapping.EditLinkID, Self);
+  if FTarget <> nil then begin
+    FTarget.Observers.RemoveObserver(TObserverMapping.EditLinkID, Self);
   end;
   inherited;
 end;
@@ -154,10 +226,12 @@ begin
   Result := not ReadOnly and (Field <> nil) and Field.CanModify;
 end;
 
+{$IF CompilerVersion >= 34.0 Delphi 10.4 Sydney }
 function TCustomObserverDataLink.GetFormatLink: IEditFormatLink;
 begin
   Result := nil;
 end;
+{$IFEND}
 
 function TCustomObserverDataLink.GetIsEditing: Boolean;
 begin
@@ -299,8 +373,8 @@ procedure TCustomObserverDataLink.UpdateField;
 begin
   if Active and (FFieldName <> '') then begin
     FField := nil;
-    if Assigned(FControl) then
-      SetField(GetFieldProperty(DataSource.Dataset, FControl, FFieldName))
+    if Assigned(FTarget) then
+      SetField(GetFieldProperty(DataSource.Dataset, FTarget, FFieldName))
     else
       SetField(DataSource.Dataset.FieldByName(FFieldName));
   end
@@ -322,4 +396,194 @@ begin
   Result := -1; // -1 indicates no reference counting is taking place
 end;
 
+constructor TDataLinkContainer.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FDataLinks := TDataLinkCollection.Create(Self);
+end;
+
+destructor TDataLinkContainer.Destroy;
+begin
+  FDataLinks.Free;
+  inherited Destroy;
+end;
+
+function TDataLinkContainer.FindDataLink(ATarget: TComponent): TDataLinkItem;
+begin
+  Result := nil;
+  if ATarget = nil then Exit;
+
+  for var item in DataLinks.ItemsOf<TDataLinkItem> do begin
+    if item.Target = ATarget then
+      Exit(item);
+  end;
+end;
+
+function TDataLinkContainer.FindOrCreateDataLink(ATarget: TComponent; ADataSource: TDataSource = nil; const ADataField: string = ''): TDataLinkItem;
+begin
+  Result := FindDataLink(ATarget);
+  if Result = nil then begin
+    Result := DataLinks.Add as TDataLinkItem;
+    Result.Target := ATarget;
+    Result.DataSource := ADataSource;
+    Result.DataField := ADataField;
+    ATarget.FreeNotification(Self);
+  end;
+end;
+
+procedure TDataLinkContainer.Notification(AComponent: TComponent; Operation: TOperation);
+begin
+  inherited Notification(AComponent, Operation);
+  if (Operation = opRemove) then begin
+    var link := FindDataLink(AComponent);
+    link.Free;
+  end
+end;
+
+procedure TDataLinkContainer.SetDataLinks(const Value: TDataLinkCollection);
+begin
+  FDataLinks.Assign(Value);
+end;
+
+constructor TDataLinkItem.Create(Collection: TCollection);
+begin
+  inherited Create(Collection);
+  FNexus := TNexus.Create(Self);
+end;
+
+destructor TDataLinkItem.Destroy;
+begin
+  DataSource := nil;
+  Target := nil;
+  FNexus.Free;
+  inherited Destroy;
+end;
+
+function TDataLinkItem.GetLinkedTo: string;
+begin
+  Result := '';
+  if Target <> nil then
+    Result := Target.Name;
+end;
+
+function TDataLinkItem.GetTarget: TComponent;
+begin
+  Result := nil;
+  if FDataLink <> nil then begin
+    Result := FDataLink.Target;
+  end;
+end;
+
+procedure TDataLinkItem.SetDataField(const Value: string);
+begin
+  if FDataField <> Value then
+  begin
+    FDataField := Value;
+    if FDataLink <> nil then
+      FDataLink.FieldName := FDataField;
+  end;
+end;
+
+procedure TDataLinkItem.SetDataSource(Value: TDataSource);
+begin
+  if FDataSource <> Value then
+  begin
+    if FDataSource <> nil then FDataSource.RemoveFreeNotification(FNexus);
+    FDataSource := Value;
+    if FDataSource <> nil then FDataSource.FreeNotification(FNexus);
+    if FDataLink <> nil then
+      FDataLink.DataSource := FDataSource;
+  end;
+end;
+
+procedure TDataLinkItem.SetTarget(const Value: TComponent);
+begin
+  if (FDataLink <> nil) and (FDataLink.Target <> Value) then begin
+    FDataLink.Free;
+    FDataLink := nil;
+  end;
+  if (Value <> nil) and (FDataLink = nil) then begin
+    FDataLink := TDataLinkSupport.CreateDataLink(Value);
+    if FDataLink = nil then
+      raise Exception.CreateFmt('Cannot creare DataLink for component of type %s', [Value.ClassName]);
+    FDataLink.DataSource := FDataSource;
+    FDataLink.FieldName := FDataField;
+  end;
+end;
+
+constructor TDataLinkCollection.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner, TDataLinkItem);
+end;
+
+class constructor TDataLinkSupport.CreateClass;
+begin
+  FRegistry := TDataLinkRegistry.Create;
+end;
+
+class destructor TDataLinkSupport.DestroyClass;
+begin
+  FRegistry.Free;
+end;
+
+class function TDataLinkSupport.CreateDataLink(ATarget: TComponent): TCustomObserverDataLink;
+var
+  linkClass: TCustomObserverDataLinkClass;
+begin
+  Result := nil;
+  var cls := ATarget.ClassType;
+  while not cls.ClassNameIs(TComponent.ClassName) do begin
+    if FRegistry.TryGetValue(cls, linkClass) then
+      Exit(linkClass.Create(ATarget));
+    cls := cls.ClassParent;
+  end;
+end;
+
+class procedure TDataLinkSupport.RegisterLinkClass(AClass: TComponentClass; ALinkClass: TCustomObserverDataLinkClass);
+begin
+  FRegistry.AddOrSetValue(AClass, ALinkClass);
+end;
+
+class function TDataLinkSupport.SupportsLinking(ATarget: TComponent): Boolean;
+begin
+  Result := True;
+  var cls := ATarget.ClassType;
+  while not cls.ClassNameIs(TComponent.ClassName) do begin
+    if FRegistry.ContainsKey(cls) then
+      Exit;
+    cls := cls.ClassParent;
+  end;
+  Result := False;
+end;
+
+class procedure TDataLinkSupport.UnregisterLinkClass(AClass: TComponentClass; ALinkClass: TCustomObserverDataLinkClass);
+var
+  linkClass: TCustomObserverDataLinkClass;
+begin
+  if FRegistry.TryGetValue(AClass, linkClass) then begin
+    if linkClass = ALinkClass then
+      FRegistry.Remove(AClass);
+  end;
+end;
+
+constructor TDataLinkItem.TNexus.Create(AItem: TDataLinkItem);
+begin
+  inherited Create(nil);
+  FItem := AItem;
+end;
+
+procedure TDataLinkItem.TNexus.Notification(AComponent: TComponent; Operation: TOperation);
+begin
+  inherited Notification(AComponent, Operation);
+  if (Operation = opRemove) then begin
+    if (AComponent = FItem.DataSource) then begin
+      FItem.DataSource := nil;
+    end;
+  end
+end;
+
+initialization
+  RegisterClasses([TDataLinkContainer]);
+finalization
+  UnRegisterClasses([TDataLinkContainer]);
 end.

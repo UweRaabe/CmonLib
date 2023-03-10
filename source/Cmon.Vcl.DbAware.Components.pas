@@ -5,128 +5,51 @@ interface
 uses
   System.Classes,
   Data.DB,
-  Vcl.Controls,
-  Cmon.Vcl.DbAware.ObserverLink;
+  Vcl.ComCtrls, Vcl.StdCtrls, Vcl.Controls,
+  Cmon.DbAware.ObserverLink;
 
 type
-  TDataComponent = class(TComponent)
+  TObserverDataLinkVCL = class(TCustomObserverDataLink)
   private
-    FDataField: string;
-    FDataLink: TObserverDataLink;
-    FDataSource: TDataSource;
     function GetControl: TWinControl;
-    procedure SetControl(const Value: TWinControl);
-    procedure SetDataField(const Value: string);
-    procedure SetDataSource(Value: TDataSource);
   protected
-    function CreateDataLink(AControl: TWinControl): TObserverDataLink;
-    procedure Notification(AComponent: TComponent; Operation: TOperation); override;
+    procedure FocusControl(Field: TFieldRef); override;
+    procedure UpdateRightToLeft; override;
   public
-    class function CreateInstance(AOwner: TComponent; AControl: TWinControl; ADataSource: TDataSource; const ADataField: string): TDataComponent;
-  published
-    property Control: TWinControl read GetControl write SetControl;
-    property DataField: string read FDataField write SetDataField;
-    property DataSource: TDataSource read FDataSource write SetDataSource;
+    constructor Create(AControl: TWinControl);
+    property Control: TWinControl read GetControl;
   end;
 
-implementation
-
-uses
-  System.StrUtils,
-  Vcl.ComCtrls, Vcl.StdCtrls;
+type
+  TObserverDataLinkVCL<T: TWinControl> = class(TObserverDataLinkVCL)
+  private
+    function GetControl: T;
+  public
+    constructor Create(AControl: T);
+    property Control: T read GetControl;
+  end;
 
 type
-  TDateTimePickerDataLink = class(TObserverDataLink<TDateTimePicker>)
+  TDateTimePickerDataLink = class(TObserverDataLinkVCL<TDateTimePicker>)
   protected
     procedure DoActiveChanged(Value: Boolean); override;
     procedure DoLoadData; override;
     procedure DoSaveData; override;
   end;
 
-  TCustomEditDataLink = class(TObserverDataLink<TCustomEdit>)
+type
+  TCustomEditDataLink = class(TObserverDataLinkVCL<TCustomEdit>)
   protected
     procedure DoLoadData; override;
     procedure DoSaveData; override;
   end;
 
+implementation
 
-function TDataComponent.CreateDataLink(AControl: TWinControl): TObserverDataLink;
-begin
-  if AControl.InheritsFrom(TDateTimePicker) then
-    Result := TDateTimePickerDataLink.Create(TDateTimePicker(AControl))
-  else if AControl.InheritsFrom(TCustomEdit) then
-    Result := TCustomEditDataLink.Create(TCustomEdit(AControl))
-  else
-    Result := TObserverDataLink<TWinControl>.Create(AControl);
-end;
-
-class function TDataComponent.CreateInstance(AOwner: TComponent; AControl: TWinControl; ADataSource: TDataSource; const ADataField: string): TDataComponent;
-begin
-  Result := Self.Create(AOwner);
-  Result.Control := AControl;
-  Result.DataSource := ADataSource;
-  Result.DataField := ADataField;
-end;
-
-function TDataComponent.GetControl: TWinControl;
-begin
-  Result := nil;
-  if FDataLink <> nil then begin
-    Result := FDataLink.Control;
-  end;
-end;
-
-procedure TDataComponent.Notification(AComponent: TComponent; Operation: TOperation);
-begin
-  inherited Notification(AComponent, Operation);
-  if (Operation = opRemove) then begin
-    if (AComponent = DataSource) then begin
-      DataSource := nil;
-    end
-    else if AComponent = Control then begin
-      Control := nil;
-    end;
-  end
-end;
-
-procedure TDataComponent.SetControl(const Value: TWinControl);
-begin
-  if (FDataLink <> nil) and (FDataLink.Control <> Value) then begin
-    if FDataLink.Control <> nil then FDataLink.Control.RemoveFreeNotification(Self);
-    FDataLink.Free;
-    FDataLink := nil;
-  end;
-  if (Value <> nil) and (FDataLink = nil) then begin
-    FDataLink := CreateDataLink(Value);
-    if FDataLink.Control <> nil then FDataLink.Control.FreeNotification(Self);
-    FDataLink.DataSource := FDataSource;
-    FDataLink.FieldName := FDataField;
-  end;
-end;
-
-procedure TDataComponent.SetDataField(const Value: string);
-begin
-  if FDataField <> Value then
-  begin
-    FDataField := Value;
-    if FDataLink <> nil then begin
-      FDataLink.FieldName := FDataField;
-    end;
-  end;
-end;
-
-procedure TDataComponent.SetDataSource(Value: TDataSource);
-begin
-  if FDataSource <> Value then
-  begin
-    if FDataSource <> nil then FDataSource.RemoveFreeNotification(Self);
-    FDataSource := Value;
-    if FDataSource <> nil then FDataSource.FreeNotification(Self);
-    if FDataLink <> nil then begin
-      FDataLink.DataSource := FDataSource;
-    end;
-  end;
-end;
+uses
+  Winapi.Windows,
+  System.StrUtils,
+  Vcl.DBCtrls;
 
 procedure TDateTimePickerDataLink.DoActiveChanged(Value: Boolean);
 begin
@@ -170,4 +93,55 @@ begin
   end;
 end;
 
+constructor TObserverDataLinkVCL<T>.Create(AControl: T);
+begin
+  inherited Create(AControl);
+end;
+
+function TObserverDataLinkVCL<T>.GetControl: T;
+begin
+  Result := inherited Control as T;
+end;
+
+constructor TObserverDataLinkVCL.Create(AControl: TWinControl);
+begin
+  inherited Create(AControl);
+  VisualControl := True;
+end;
+
+procedure TObserverDataLinkVCL.FocusControl(Field: TFieldRef);
+begin
+  if (Field^ <> nil) and (Field^ = Self.Field) and (Control <> nil) then
+    if Control.CanFocus then begin
+      Field^ := nil;
+      Control.SetFocus;
+    end;
+end;
+
+function TObserverDataLinkVCL.GetControl: TWinControl;
+begin
+  Result := Target as TWinControl;
+end;
+
+procedure TObserverDataLinkVCL.UpdateRightToLeft;
+var
+  isRightAligned: Boolean;
+  useRightToLeftAlignment: Boolean;
+begin
+  if Assigned(Control) then
+    if Control.IsRightToLeft then begin
+      isRightAligned := (GetWindowLong(Control.Handle, GWL_EXSTYLE) and WS_EX_RIGHT) = WS_EX_RIGHT;
+      useRightToLeftAlignment := DBUseRightToLeftAlignment(Control, Field);
+      if isRightAligned xor useRightToLeftAlignment then begin
+        Control.Perform(CM_RECREATEWND, 0, 0);
+      end;
+    end;
+end;
+
+initialization
+  TDataLinkSupport.RegisterLinkClass(TCustomEdit, TCustomEditDataLink);
+  TDataLinkSupport.RegisterLinkClass(TDateTimePicker, TDateTimePickerDataLink);
+finalization
+  TDataLinkSupport.UnregisterLinkClass(TCustomEdit, TCustomEditDataLink);
+  TDataLinkSupport.UnregisterLinkClass(TDateTimePicker, TDateTimePickerDataLink);
 end.

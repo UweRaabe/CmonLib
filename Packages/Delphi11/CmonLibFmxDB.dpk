@@ -1,4 +1,4 @@
-package CmonLibDB;
+package CmonLibFmxDB;
 
 {$R *.res}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
@@ -25,17 +25,14 @@ package CmonLibDB;
 {$IMAGEBASE $400000}
 {$DEFINE RELEASE}
 {$ENDIF IMPLICITBUILDING}
-{$DESCRIPTION 'CmonLibDB - Common Library Database Support'}
 {$LIBSUFFIX '280'}
-{$RUNONLY}
-{$IMPLICITBUILD OFF}
+{$IMPLICITBUILD ON}
 
 requires
-  dbrtl,
-  CmonLib;
+  CmonLibDB,
+  fmx;
 
 contains
-  Cmon.DataSetHelper in '..\..\source\Cmon.DataSetHelper.pas',
-  Cmon.DbAware.ObserverLink in '..\..\source\Cmon.DbAware.ObserverLink.pas';
+  Cmon.Fmx.DbAware.Components in '..\..\source\Cmon.Fmx.DbAware.Components.pas';
 
 end.
