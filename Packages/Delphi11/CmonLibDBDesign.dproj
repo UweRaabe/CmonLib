@@ -76,7 +76,7 @@
         <DCCReference Include="DesignIDE.dcp"/>
         <DCCReference Include="dcldb.dcp"/>
         <DCCReference Include="CmonLibFmxDB.dcp"/>
-        <DCCReference Include="..\..\source\Cmon.DbAware.Design.pas"/>
+        <DCCReference Include="..\..\source\Cmon.DataSense.Design.pas"/>
         <RcItem Include="..\..\Icons\TDataLinkContainer128.png">
             <ResourceType>RCDATA</ResourceType>
             <ResourceId>TDataLinkContainer128_PNG</ResourceId>

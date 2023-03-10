@@ -33,6 +33,6 @@ requires
   fmx;
 
 contains
-  Cmon.Fmx.DbAware.Components in '..\..\source\Cmon.Fmx.DbAware.Components.pas';
+  Cmon.DataSense.FMX in '..\..\source\Cmon.DataSense.FMX.pas';
 
 end.

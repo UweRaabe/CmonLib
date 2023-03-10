@@ -36,6 +36,6 @@ requires
   CmonLibFmxDB;
 
 contains
-  Cmon.DbAware.Design in '..\..\source\Cmon.DbAware.Design.pas';
+  Cmon.DataSense.Design in '..\..\source\Cmon.DataSense.Design.pas';
 
 end.

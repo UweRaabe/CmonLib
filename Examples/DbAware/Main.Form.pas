@@ -6,7 +6,7 @@ uses
   System.ImageList, System.Classes,
   Data.DB,
   Vcl.Forms, Vcl.ImgList, Vcl.VirtualImageList, Vcl.ExtCtrls, Vcl.Controls, Vcl.StdCtrls, Vcl.Mask, Vcl.DBCtrls, Vcl.Grids, Vcl.DBGrids,
-  Datasnap.DBClient, Cmon.DbAware.ObserverLink, Cmon.Vcl.DbAware.Components;
+  Datasnap.DBClient, Cmon.DataSense, Cmon.DataSense.VCL;
 
 type
   TMainForm = class(TForm)

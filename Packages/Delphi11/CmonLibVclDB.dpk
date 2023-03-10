@@ -36,6 +36,6 @@ requires
   CmonLibDB;
 
 contains
-  Cmon.Vcl.DbAware.Components in '..\..\source\Cmon.Vcl.DbAware.Components.pas';
+  Cmon.DataSense.VCL in '..\..\source\Cmon.DataSense.VCL.pas';
 
 end.

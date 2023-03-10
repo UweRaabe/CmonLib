@@ -79,7 +79,7 @@
         <DCCReference Include="vclwinx.dcp"/>
         <DCCReference Include="vcldb.dcp"/>
         <DCCReference Include="CmonLibDB.dcp"/>
-        <DCCReference Include="..\..\source\Cmon.Vcl.DbAware.Components.pas"/>
+        <DCCReference Include="..\..\source\Cmon.DataSense.VCL.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

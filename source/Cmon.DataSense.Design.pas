@@ -1,4 +1,4 @@
-unit Cmon.DbAware.Design;
+unit Cmon.DataSense.Design;
 
 interface
 
@@ -37,7 +37,7 @@ uses
   System.SysUtils, System.TypInfo,
   Vcl.Controls,
   FMX.Controls,
-  Cmon.Utilities, Cmon.DbAware.ObserverLink, Cmon.Vcl.DbAware.Components, Cmon.Fmx.DbAware.Components,
+  Cmon.Utilities, Cmon.DataSense, Cmon.DataSense.VCL, Cmon.DataSense.FMX,
   DsnDBCst, DBReg;
 
 procedure Register;

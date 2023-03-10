@@ -1,4 +1,4 @@
-unit Cmon.Fmx.DbAware.Components;
+unit Cmon.DataSense.FMX;
 
 interface
 
@@ -6,7 +6,7 @@ uses
   System.Classes,
   Data.DB,
   FMX.Controls, FMX.Edit, FMX.Memo,
-  Cmon.DbAware.ObserverLink;
+  Cmon.DataSense;
 
 type
   TObserverDataLinkFMX = class(TCustomObserverDataLink)

@@ -73,7 +73,7 @@
         </DelphiCompile>
         <DCCReference Include="CmonLibDB.dcp"/>
         <DCCReference Include="fmx.dcp"/>
-        <DCCReference Include="..\..\source\Cmon.Fmx.DbAware.Components.pas"/>
+        <DCCReference Include="..\..\source\Cmon.DataSense.FMX.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

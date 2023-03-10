@@ -36,6 +36,6 @@ requires
 
 contains
   Cmon.DataSetHelper in '..\..\source\Cmon.DataSetHelper.pas',
-  Cmon.DbAware.ObserverLink in '..\..\source\Cmon.DbAware.ObserverLink.pas';
+  Cmon.DataSense in '..\..\source\Cmon.DataSense.pas';
 
 end.

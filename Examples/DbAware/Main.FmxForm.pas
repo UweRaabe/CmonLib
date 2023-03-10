@@ -3,11 +3,12 @@ unit Main.FmxForm;
 interface
 
 uses
-  System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
-  FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, Data.DB, Datasnap.DBClient, FMX.Controls.Presentation, FMX.Edit, FMX.StdCtrls,
-  Cmon.DbAware.ObserverLink, Cmon.Fmx.DbAware.Components, Data.Bind.Controls, FMX.Layouts, Fmx.Bind.Navigator, Data.Bind.Components, Data.Bind.DBScope,
-  System.Actions, FMX.ActnList, System.ImageList, FMX.ImgList, System.Rtti, FMX.Grid.Style, Data.Bind.EngExt, Fmx.Bind.DBEngExt, Fmx.Bind.Grid,
-  System.Bindings.Outputs, Fmx.Bind.Editors, Data.Bind.Grid, FMX.ScrollBox, FMX.Grid;
+  System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants, System.Actions, System.ImageList, System.Rtti, System.Bindings.Outputs,
+  Data.DB, Data.Bind.Controls, Data.Bind.Components, Data.Bind.DBScope, Data.Bind.EngExt, Data.Bind.Grid,
+  Datasnap.DBClient,
+  FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.Controls.Presentation, FMX.Edit, FMX.StdCtrls, FMX.Layouts, Fmx.Bind.Navigator,
+  FMX.ActnList, FMX.ImgList, FMX.Grid.Style, Fmx.Bind.DBEngExt, Fmx.Bind.Grid, Fmx.Bind.Editors, FMX.ScrollBox, FMX.Grid,
+  Cmon.DataSense, Cmon.DataSense.FMX;
 
 type
   TMainForm = class(TForm)

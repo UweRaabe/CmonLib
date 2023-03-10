@@ -1,4 +1,4 @@
-unit Cmon.Vcl.DbAware.Components;
+unit Cmon.DataSense.VCL;
 
 interface
 
@@ -6,7 +6,7 @@ uses
   System.Classes,
   Data.DB,
   Vcl.ComCtrls, Vcl.StdCtrls, Vcl.Controls,
-  Cmon.DbAware.ObserverLink;
+  Cmon.DataSense;
 
 type
   TObserverDataLinkVCL = class(TCustomObserverDataLink)
