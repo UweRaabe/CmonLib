@@ -1,4 +1,4 @@
-package CmonLibDB;
+package CmonLibDataVCL;
 
 {$R *.res}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
@@ -25,17 +25,17 @@ package CmonLibDB;
 {$IMAGEBASE $400000}
 {$DEFINE RELEASE}
 {$ENDIF IMPLICITBUILDING}
-{$DESCRIPTION 'CmonLibDB - Common Library Database Support'}
+{$DESCRIPTION 'CmonLibVclDB - Common Library VCL DB aware'}
 {$LIBSUFFIX '280'}
 {$RUNONLY}
 {$IMPLICITBUILD OFF}
 
 requires
-  dbrtl,
-  CmonLib;
+  vclwinx,
+  vcldb,
+  CmonLibData;
 
 contains
-  Cmon.DataSetHelper in '..\..\source\Cmon.DataSetHelper.pas',
-  Cmon.DataSense in '..\..\source\Cmon.DataSense.pas';
+  Cmon.DataSense.VCL in '..\..\source\Cmon.DataSense.VCL.pas';
 
 end.

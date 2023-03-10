@@ -2,24 +2,19 @@
     <PropertyGroup>
         <Base>True</Base>
         <AppType>Package</AppType>
-        <Config Condition="'$(Config)'==''">Release</Config>
+        <Config Condition="'$(Config)'==''">Debug</Config>
         <FrameworkType>None</FrameworkType>
-        <MainSource>CmonLibDB.dpk</MainSource>
+        <MainSource>CmonLibDataDesign.dpk</MainSource>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
-        <ProjectGuid>{CF3ABDE7-6534-4C97-88D9-5D87AB9A8451}</ProjectGuid>
+        <ProjectGuid>{6A73F0E1-227D-478F-9880-2057527BB206}</ProjectGuid>
         <ProjectVersion>19.5</ProjectVersion>
-        <TargetedPlatforms>3</TargetedPlatforms>
+        <TargetedPlatforms>1</TargetedPlatforms>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Base)'=='true') or '$(Base_Win32)'!=''">
         <Base_Win32>true</Base_Win32>
-        <CfgParent>Base</CfgParent>
-        <Base>true</Base>
-    </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='Win64' and '$(Base)'=='true') or '$(Base_Win64)'!=''">
-        <Base_Win64>true</Base_Win64>
         <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
@@ -40,27 +35,19 @@
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
-        <SanitizedProjectName>CmonLibDB</SanitizedProjectName>
+        <SanitizedProjectName>CmonLibDataDesign</SanitizedProjectName>
         <DCC_CBuilderOutput>All</DCC_CBuilderOutput>
         <DCC_DcuOutput>.\$(Platform)\$(Config)</DCC_DcuOutput>
-        <DCC_Description>CmonLibDB - Common Library Database Support</DCC_Description>
         <DCC_ExeOutput>.\$(Platform)\$(Config)</DCC_ExeOutput>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
-        <DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
         <DllSuffix>280</DllSuffix>
         <GenDll>true</GenDll>
         <GenPackage>true</GenPackage>
-        <RuntimeOnlyPackage>true</RuntimeOnlyPackage>
-        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
-        <VerInfo_Locale>1031</VerInfo_Locale>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <BT_BuildType>Debug</BT_BuildType>
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Base_Win64)'!=''">
-        <BT_BuildType>Debug</BT_BuildType>
-        <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;$(DCC_Namespace)</DCC_Namespace>
+        <DCC_UsePackage>rtl;CmonLibVclDB;CmonLib;CmonLibFmxDB;$(DCC_UsePackage)</DCC_UsePackage>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_DebugDCUs>true</DCC_DebugDCUs>
@@ -85,10 +72,27 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="dbrtl.dcp"/>
-        <DCCReference Include="CmonLib.dcp"/>
-        <DCCReference Include="..\..\source\Cmon.DataSetHelper.pas"/>
-        <DCCReference Include="..\..\source\Cmon.DataSense.pas"/>
+        <DCCReference Include="DesignIDE.dcp"/>
+        <DCCReference Include="dcldb.dcp"/>
+        <DCCReference Include="CmonLibDataVCL.dcp"/>
+        <DCCReference Include="CmonLibDataFMX.dcp"/>
+        <DCCReference Include="..\..\source\Cmon.DataSense.Design.pas"/>
+        <RcItem Include="..\..\Icons\TDataLinkContainer128.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>TDataLinkContainer128_PNG</ResourceId>
+        </RcItem>
+        <RcItem Include="..\..\Icons\TDataLinkContainer16.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>TDataLinkContainer16_PNG</ResourceId>
+        </RcItem>
+        <RcItem Include="..\..\Icons\TDataLinkContainer24.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>TDataLinkContainer24_PNG</ResourceId>
+        </RcItem>
+        <RcItem Include="..\..\Icons\TDataLinkContainer32.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>TDataLinkContainer32_PNG</ResourceId>
+        </RcItem>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -107,18 +111,21 @@
         <BorlandProject>
             <Delphi.Personality>
                 <Source>
-                    <Source Name="MainSource">CmonLibDB.dpk</Source>
+                    <Source Name="MainSource">CmonLibDataDesign.dpk</Source>
                 </Source>
-                <Excluded_Packages/>
             </Delphi.Personality>
             <Platforms>
                 <Platform value="Win32">True</Platform>
-                <Platform value="Win64">True</Platform>
+                <Platform value="Win64">False</Platform>
             </Platforms>
             <MMX>
                 <UsesClauseFormatter AutoFormat="1">
-                    <GroupNames>WinApi;System.Win;System;Data;FireDAC;Vcl;Cmon</GroupNames>
+                    <GroupNames>Winapi;System.Win;System;Data;REST;Xml;Vcl;FMX;Cmon</GroupNames>
                 </UsesClauseFormatter>
+                <Parser>
+                    <Defines/>
+                    <IfExpressions/>
+                </Parser>
             </MMX>
         </BorlandProject>
         <ProjectFileVersion>12</ProjectFileVersion>

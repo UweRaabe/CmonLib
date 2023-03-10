@@ -4,9 +4,9 @@
         <AppType>Package</AppType>
         <Config Condition="'$(Config)'==''">Release</Config>
         <FrameworkType>None</FrameworkType>
-        <MainSource>CmonLibVclDB.dpk</MainSource>
+        <MainSource>CmonLibDataFMX.dpk</MainSource>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
-        <ProjectGuid>{52D9DCA0-2762-40EA-B4CA-9C2B6FE7ECAA}</ProjectGuid>
+        <ProjectGuid>{D170521D-4946-4C3D-9F61-D60A1A0FDC06}</ProjectGuid>
         <ProjectVersion>19.5</ProjectVersion>
         <TargetedPlatforms>1</TargetedPlatforms>
     </PropertyGroup>
@@ -35,10 +35,9 @@
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
-        <SanitizedProjectName>CmonLibVclDB</SanitizedProjectName>
+        <SanitizedProjectName>CmonLibDataFMX</SanitizedProjectName>
         <DCC_CBuilderOutput>All</DCC_CBuilderOutput>
         <DCC_DcuOutput>.\$(Platform)\$(Config)</DCC_DcuOutput>
-        <DCC_Description>CmonLibVclDB - Common Library VCL DB aware</DCC_Description>
         <DCC_ExeOutput>.\$(Platform)\$(Config)</DCC_ExeOutput>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
         <DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
@@ -51,7 +50,6 @@
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <BT_BuildType>Debug</BT_BuildType>
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
-        <DCC_UsePackage>vclwinx;vcldb;$(DCC_UsePackage)</DCC_UsePackage>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_DebugDCUs>true</DCC_DebugDCUs>
@@ -76,10 +74,9 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="vclwinx.dcp"/>
-        <DCCReference Include="vcldb.dcp"/>
-        <DCCReference Include="CmonLibDB.dcp"/>
-        <DCCReference Include="..\..\source\Cmon.DataSense.VCL.pas"/>
+        <DCCReference Include="fmx.dcp"/>
+        <DCCReference Include="CmonLibData.dcp"/>
+        <DCCReference Include="..\..\source\Cmon.DataSense.FMX.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -98,7 +95,7 @@
         <BorlandProject>
             <Delphi.Personality>
                 <Source>
-                    <Source Name="MainSource">CmonLibVclDB.dpk</Source>
+                    <Source Name="MainSource">CmonLibDataFMX.dpk</Source>
                 </Source>
                 <Excluded_Packages/>
             </Delphi.Personality>
