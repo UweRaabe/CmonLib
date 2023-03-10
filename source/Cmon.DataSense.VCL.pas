@@ -5,23 +5,25 @@ interface
 uses
   System.Classes,
   Data.DB,
-  Vcl.ComCtrls, Vcl.StdCtrls, Vcl.Controls,
+  Vcl.ComCtrls, Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls,
   Cmon.DataSense;
 
 type
-  TObserverDataLinkVCL = class(TCustomObserverDataLink)
+  TDataSenseLinkVCL = class(TDataSenseLink);
+
+  TControlDataSenseEditLink = class(TDataSenseEditLink)
   private
-    function GetControl: TWinControl;
+    function GetControl: TControl;
   protected
-    procedure FocusControl(Field: TFieldRef); override;
-    procedure UpdateRightToLeft; override;
+    procedure DoLoadData; override;
+    procedure DoSaveData; override;
   public
-    constructor Create(AControl: TWinControl);
-    property Control: TWinControl read GetControl;
+    constructor Create(AControl: TControl);
+  published
+    property Control: TControl read GetControl;
   end;
 
-type
-  TObserverDataLinkVCL<T: TWinControl> = class(TObserverDataLinkVCL)
+  TControlDataSenseEditLink<T: TControl> = class(TControlDataSenseEditLink)
   private
     function GetControl: T;
   public
@@ -29,17 +31,48 @@ type
     property Control: T read GetControl;
   end;
 
-type
-  TDateTimePickerDataLink = class(TObserverDataLinkVCL<TDateTimePicker>)
+  TControlDataSenseLink = class(TDataSenseDisplayLink)
+  private
+    function GetControl: TControl;
   protected
-    procedure DoActiveChanged(Value: Boolean); override;
     procedure DoLoadData; override;
-    procedure DoSaveData; override;
+  public
+    constructor Create(AControl: TControl);
+    property Control: TControl read GetControl;
+  end;
+
+  TControlDataSenseLink<T: TControl> = class(TControlDataSenseLink)
+  private
+    function GetControl: T;
+  protected
+  public
+    constructor Create(AControl: T);
+    property Control: T read GetControl;
   end;
 
 type
-  TCustomEditDataLink = class(TObserverDataLinkVCL<TCustomEdit>)
+  TWinControlDataSenseLink<T: TWinControl> = class(TControlDataSenseLink<T>)
   protected
+    procedure FocusControl(Field: TFieldRef); override;
+    procedure UpdateRightToLeft; override;
+  end;
+
+  TWinControlDataSenseEditLink<T: TWinControl> = class(TControlDataSenseEditLink<T>)
+  protected
+    procedure FocusControl(Field: TFieldRef); override;
+    procedure UpdateRightToLeft; override;
+  end;
+
+type
+  TCustomLabeledEditDataSenseLink = class(TWinControlDataSenseEditLink<TCustomLabeledEdit>)
+  protected
+    procedure DoLoadData; override;
+  end;
+
+type
+  TDateTimePickerDataSenseLink = class(TWinControlDataSenseEditLink<TDateTimePicker>)
+  protected
+    procedure DoActiveChanged(Value: Boolean); override;
     procedure DoLoadData; override;
     procedure DoSaveData; override;
   end;
@@ -51,65 +84,37 @@ uses
   System.StrUtils,
   Vcl.DBCtrls;
 
-procedure TDateTimePickerDataLink.DoActiveChanged(Value: Boolean);
-begin
-  if Control <> nil then begin
-    Control.Format := IfThen(Value, '', ' ');
+type
+  TControlHelper = class helper for TControl
+  public
+    function GetText: string;
+    procedure SetText(const Value: string);
+    property Text: string read GetText write SetText;
   end;
-end;
 
-procedure TDateTimePickerDataLink.DoLoadData;
-begin
-  inherited;
-  if (Control <> nil) and (Field <> nil) then begin
-    { Hide Null }
-    Control.Format := IfThen(Field.IsNull, ' ', '');
-    if not Field.IsNull then
-      Control.DateTime := Field.AsDateTime;
-  end;
-end;
-
-procedure TDateTimePickerDataLink.DoSaveData;
-begin
-  inherited;
-  if (Control <> nil) and (Field <> nil) then begin
-    Field.AsDateTime := Control.DateTime;
-  end;
-end;
-
-procedure TCustomEditDataLink.DoLoadData;
-begin
-  inherited;
-  if (Control <> nil) and (Field <> nil) then begin
-    Control.Text := Field.AsString;
-  end;
-end;
-
-procedure TCustomEditDataLink.DoSaveData;
-begin
-  inherited;
-  if (Control <> nil) and (Field <> nil) then begin
-    Field.AsString := Control.Text;
-  end;
-end;
-
-constructor TObserverDataLinkVCL<T>.Create(AControl: T);
-begin
-  inherited Create(AControl);
-end;
-
-function TObserverDataLinkVCL<T>.GetControl: T;
-begin
-  Result := inherited Control as T;
-end;
-
-constructor TObserverDataLinkVCL.Create(AControl: TWinControl);
+constructor TControlDataSenseLink<T>.Create(AControl: T);
 begin
   inherited Create(AControl);
   VisualControl := True;
 end;
 
-procedure TObserverDataLinkVCL.FocusControl(Field: TFieldRef);
+function TControlDataSenseLink<T>.GetControl: T;
+begin
+  Result := Target as T;
+end;
+
+constructor TControlDataSenseEditLink<T>.Create(AControl: T);
+begin
+  inherited Create(AControl);
+  VisualControl := True;
+end;
+
+function TControlDataSenseEditLink<T>.GetControl: T;
+begin
+  Result := Target as T;
+end;
+
+procedure TWinControlDataSenseEditLink<T>.FocusControl(Field: TFieldRef);
 begin
   if (Field^ <> nil) and (Field^ = Self.Field) and (Control <> nil) then
     if Control.CanFocus then begin
@@ -118,12 +123,7 @@ begin
     end;
 end;
 
-function TObserverDataLinkVCL.GetControl: TWinControl;
-begin
-  Result := Target as TWinControl;
-end;
-
-procedure TObserverDataLinkVCL.UpdateRightToLeft;
+procedure TWinControlDataSenseEditLink<T>.UpdateRightToLeft;
 var
   isRightAligned: Boolean;
   useRightToLeftAlignment: Boolean;
@@ -138,10 +138,135 @@ begin
     end;
 end;
 
+procedure TCustomLabeledEditDataSenseLink.DoLoadData;
+begin
+  inherited;
+  var EditLabel := Control.EditLabel;
+  if not EditLabel.IsLabelModified or (EditLabel.GetTextLen = 0) then
+  begin
+    if Field <> nil then
+      EditLabel.Caption := Field.DisplayLabel
+    else if csDesigning in Control.ComponentState then
+      EditLabel.Caption := Control.Name
+    else
+      EditLabel.Caption := '';
+    EditLabel.IsLabelModified := False;
+  end;
+end;
+
+procedure TDateTimePickerDataSenseLink.DoActiveChanged(Value: Boolean);
+begin
+  if Control <> nil then begin
+    { To clear the entry when inactive use a Format that produces an empty string. The same is used for a NULL value. }
+    Control.Format := IfThen(Value, '', ' ');
+  end;
+end;
+
+procedure TDateTimePickerDataSenseLink.DoLoadData;
+begin
+  inherited;
+  if (Control <> nil) and (Field <> nil) then begin
+    { Hide Null }
+    Control.Format := IfThen(Field.IsNull, ' ', '');
+    if not Field.IsNull then
+      Control.DateTime := Field.AsDateTime;
+  end;
+end;
+
+procedure TDateTimePickerDataSenseLink.DoSaveData;
+begin
+  inherited;
+  if (Control <> nil) and (Field <> nil) then begin
+    Field.AsDateTime := Control.DateTime;
+  end;
+end;
+
+procedure TWinControlDataSenseLink<T>.FocusControl(Field: TFieldRef);
+begin
+  if (Field^ <> nil) and (Field^ = Self.Field) and (Control <> nil) then
+    if Control.CanFocus then begin
+      Field^ := nil;
+      Control.SetFocus;
+    end;
+end;
+
+procedure TWinControlDataSenseLink<T>.UpdateRightToLeft;
+var
+  isRightAligned: Boolean;
+  useRightToLeftAlignment: Boolean;
+begin
+  if Assigned(Control) then
+    if Control.IsRightToLeft then begin
+      isRightAligned := (GetWindowLong(Control.Handle, GWL_EXSTYLE) and WS_EX_RIGHT) = WS_EX_RIGHT;
+      useRightToLeftAlignment := DBUseRightToLeftAlignment(Control, Field);
+      if isRightAligned xor useRightToLeftAlignment then begin
+        Control.Perform(CM_RECREATEWND, 0, 0);
+      end;
+    end;
+end;
+
+function TControlHelper.GetText: string;
+begin
+  Result := inherited Text;
+end;
+
+procedure TControlHelper.SetText(const Value: string);
+begin
+  inherited Text := Value;
+end;
+
+constructor TControlDataSenseEditLink.Create(AControl: TControl);
+begin
+  inherited Create(AControl);
+end;
+
+procedure TControlDataSenseEditLink.DoLoadData;
+begin
+  inherited;
+  if (Control <> nil) and (Field <> nil) then begin
+    Control.Text := Field.AsString;
+  end;
+end;
+
+procedure TControlDataSenseEditLink.DoSaveData;
+begin
+  inherited;
+  if (Control <> nil) and (Field <> nil) then begin
+    Field.AsString := Control.Text;
+  end;
+end;
+
+function TControlDataSenseEditLink.GetControl: TControl;
+begin
+  Result := Target as TControl;
+end;
+
+constructor TControlDataSenseLink.Create(AControl: TControl);
+begin
+  inherited Create(AControl);
+end;
+
+procedure TControlDataSenseLink.DoLoadData;
+begin
+  inherited;
+  if (Control <> nil) and (Field <> nil) then begin
+    Control.Text := Field.AsString;
+  end;
+end;
+
+function TControlDataSenseLink.GetControl: TControl;
+begin
+  Result := Target as TControl;
+end;
+
 initialization
-  TDataLinkSupport.RegisterLinkClass(TCustomEdit, TCustomEditDataLink);
-  TDataLinkSupport.RegisterLinkClass(TDateTimePicker, TDateTimePickerDataLink);
+  TDataSense.RegisterLinkClass(TControl, TControlDataSenseLink);
+  TDataSense.RegisterLinkClass(TWinControl, TWinControlDataSenseLink<TWinControl>);
+  TDataSense.RegisterLinkClass(TCustomLabeledEdit, TCustomLabeledEditDataSenseLink);
+  TDataSense.RegisterLinkClass(TDateTimePicker, TDateTimePickerDataSenseLink);
 finalization
-  TDataLinkSupport.UnregisterLinkClass(TCustomEdit, TCustomEditDataLink);
-  TDataLinkSupport.UnregisterLinkClass(TDateTimePicker, TDateTimePickerDataLink);
+  TDataSense.UnregisterLinkClass(TControl, TControlDataSenseLink);
+  TDataSense.UnregisterLinkClass(TWinControl, TWinControlDataSenseLink<TWinControl>);
+  TDataSense.UnregisterLinkClass(TCustomLabeledEdit, TCustomLabeledEditDataSenseLink);
+  TDataSense.UnregisterLinkClass(TDateTimePicker, TDateTimePickerDataSenseLink);
 end.

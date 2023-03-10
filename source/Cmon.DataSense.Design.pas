@@ -42,14 +42,14 @@ uses
 
 procedure Register;
 begin
-  RegisterComponents(srDControls, [TDataLinkContainer]);
+  RegisterComponents(srDControls, [TDataSense]);
 
   RegisterSelectionEditor(TComponent, TLinkedPropertyFilter);
   RegisterSelectionEditor(Vcl.Controls.TControl, TLinkedPropertyFilterVCL);
   RegisterSelectionEditor(FMX.Controls.TControl, TLinkedPropertyFilterFMX);
 
   { we won't this to be editable in the Object Inspector, but we need the streaming }
-  UnlistPublishedProperty(TDataLinkItem, 'Target');
+  UnlistPublishedProperty(TDataSenseItem, 'Target');
 end;
 
 type
@@ -65,12 +65,11 @@ end;
 
 procedure TLinkedPropertyFilter.FilterProperties(const ASelection: IDesignerSelections; const ASelectionProperties: IInterfaceList);
 
-  function FindContainer: TDataLinkContainer;
+  function FindContainer: TDataSense;
   begin
-    for var cmp in Designer.Root.ComponentsOf<TDataLinkContainer> do
+    for var cmp in Designer.Root.ComponentsOf<TDataSense> do
       Exit(cmp);
-    Result := nil;
-//    Result := Designer.CreateComponent(TDataLinkContainer, Designer.Root, 0, 0, 48, 48) as TDataLinkContainer;
+    Result := Designer.CreateComponent(TDataSense, Designer.Root, 0, 0, 0, 0) as TDataSense;
   end;
 
   function HasDataSourceProp(Target: TComponent): Boolean;
@@ -90,10 +89,6 @@ procedure TLinkedPropertyFilter.FilterProperties(const ASelection: IDesignerSele
   end;
 
 begin
-  { check if we can find a TDataLinkContainer }
-  var container := FindContainer;
-  if (container = nil) then Exit;
-
   { if we already have a DataSource property there is nothing to do for us here }
   for var idx := 0 to ASelectionProperties.Count - 1 do begin
     var prop := ASelectionProperties[idx] as IProperty;
@@ -110,8 +105,12 @@ begin
     { only components support the observer pattern }
     if not item.InheritsFrom(TComponent) then Exit;
     var target := item as TComponent;
-    if not (TDataLinkSupport.SupportsLinking(target) or HasDataSourceProp(target)) then Exit;
+    if not (TDataSense.SupportsLinking(target) or HasDataSourceProp(target)) then Exit;
   end;
+
+  { check if we can find a TDataLinkContainer }
+  var container := FindContainer;
+  if (container = nil) then Exit;
 
   for var I := 0 to ASelection.Count - 1 do
   begin
@@ -139,19 +138,19 @@ end;
 procedure TLinkedPropertyFilter.RequiresUnits(Proc: TGetStrProc);
 begin
   inherited;
-  Proc(TDataLinkSupport.UnitName);
+  Proc(TDataSense.UnitName);
 end;
 
 procedure TLinkedPropertyFilterFMX.RequiresUnits(Proc: TGetStrProc);
 begin
   inherited;
-  Proc(TObserverDataLinkFMX.UnitName);
+  Proc(TDataSenseLinkFMX.UnitName);
 end;
 
 procedure TLinkedPropertyFilterVCL.RequiresUnits(Proc: TGetStrProc);
 begin
   inherited;
-  Proc(TObserverDataLinkVCL.UnitName);
+  Proc(TDataSenseLinkVCL.UnitName);
 end;
 
 end.

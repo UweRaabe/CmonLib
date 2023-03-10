@@ -9,35 +9,36 @@ uses
   Cmon.DataSense;
 
 type
-  TObserverDataLinkFMX = class(TCustomObserverDataLink)
+  TDataSenseLinkFMX = class(TDataSenseLink);
+
+  TControlDataSenseEditLink = class(TDataSenseEditLink)
   private
     function GetControl: TControl;
-  protected
-    procedure FocusControl(Field: TFieldRef); override;
-    procedure UpdateRightToLeft; override;
   public
     constructor Create(AControl: TControl);
     property Control: TControl read GetControl;
   end;
 
-type
-  TObserverDataLinkFMX<T: TControl> = class(TObserverDataLinkFMX)
+  TControlDataSenseEditLink<T: TControl> = class(TControlDataSenseEditLink)
   private
     function GetControl: T;
+  protected
+    procedure FocusControl(Field: TFieldRef); override;
+    procedure UpdateRightToLeft; override;
   public
     constructor Create(AControl: T);
     property Control: T read GetControl;
   end;
 
 type
-  TCustomEditDataLink = class(TObserverDataLinkFMX<TCustomEdit>)
+  TCustomEditDataSenseLink = class(TControlDataSenseEditLink<TCustomEdit>)
   protected
     procedure DoLoadData; override;
     procedure DoSaveData; override;
   end;
 
 type
-  TCustomMemoDataLink = class(TObserverDataLinkFMX<TCustomMemo>)
+  TCustomMemoDataSenseLink = class(TControlDataSenseEditLink<TCustomMemo>)
   protected
     procedure DoLoadData; override;
     procedure DoSaveData; override;
@@ -45,7 +46,7 @@ type
 
 implementation
 
-procedure TCustomEditDataLink.DoLoadData;
+procedure TCustomEditDataSenseLink.DoLoadData;
 begin
   inherited;
   if (Control <> nil) and (Field <> nil) then begin
@@ -53,7 +54,7 @@ begin
   end;
 end;
 
-procedure TCustomEditDataLink.DoSaveData;
+procedure TCustomEditDataSenseLink.DoSaveData;
 begin
   inherited;
   if (Control <> nil) and (Field <> nil) then begin
@@ -61,7 +62,7 @@ begin
   end;
 end;
 
-procedure TCustomMemoDataLink.DoLoadData;
+procedure TCustomMemoDataSenseLink.DoLoadData;
 begin
   inherited;
   if (Control <> nil) and (Field <> nil) then begin
@@ -69,7 +70,7 @@ begin
   end;
 end;
 
-procedure TCustomMemoDataLink.DoSaveData;
+procedure TCustomMemoDataSenseLink.DoSaveData;
 begin
   inherited;
   if (Control <> nil) and (Field <> nil) then begin
@@ -77,23 +78,13 @@ begin
   end;
 end;
 
-constructor TObserverDataLinkFMX<T>.Create(AControl: T);
-begin
-  inherited Create(AControl);
-end;
-
-function TObserverDataLinkFMX<T>.GetControl: T;
-begin
-  Result := inherited Control as T;
-end;
-
-constructor TObserverDataLinkFMX.Create(AControl: TControl);
+constructor TControlDataSenseEditLink<T>.Create(AControl: T);
 begin
   inherited Create(AControl);
   VisualControl := True;
 end;
 
-procedure TObserverDataLinkFMX.FocusControl(Field: TFieldRef);
+procedure TControlDataSenseEditLink<T>.FocusControl(Field: TFieldRef);
 begin
   if (Field^ <> nil) and (Field^ = Self.Field) and (Control <> nil) then
     if Control.CanFocus then begin
@@ -102,12 +93,14 @@ begin
     end;
 end;
 
-function TObserverDataLinkFMX.GetControl: TControl;
+function TControlDataSenseEditLink<T>.GetControl: T;
 begin
-  Result := Target as TControl;
+  Result := Target as T;
 end;
 
-procedure TObserverDataLinkFMX.UpdateRightToLeft;
+procedure TControlDataSenseEditLink<T>.UpdateRightToLeft;
+{ I haven't yet found out how this is handled in FMX - if it is even supported at all. }
+
 //var
 //  isRightAligned: Boolean;
 //  useRightToLeftAlignment: Boolean;
@@ -122,10 +115,21 @@ begin
 //    end;
 end;
 
+constructor TControlDataSenseEditLink.Create(AControl: TControl);
+begin
+  inherited Create(AControl);
+  VisualControl := True;
+end;
+
+function TControlDataSenseEditLink.GetControl: TControl;
+begin
+  Result := Target as TControl;
+end;
+
 initialization
-  TDataLinkSupport.RegisterLinkClass(TCustomEdit, TCustomEditDataLink);
-  TDataLinkSupport.RegisterLinkClass(TCustomMemo, TCustomMemoDataLink);
+  TDataSense.RegisterLinkClass(TCustomEdit, TCustomEditDataSenseLink);
+  TDataSense.RegisterLinkClass(TCustomMemo, TCustomMemoDataSenseLink);
 finalization
-  TDataLinkSupport.UnregisterLinkClass(TCustomEdit, TCustomEditDataLink);
-  TDataLinkSupport.UnregisterLinkClass(TCustomMemo, TCustomMemoDataLink);
+  TDataSense.UnregisterLinkClass(TCustomEdit, TCustomEditDataSenseLink);
+  TDataSense.UnregisterLinkClass(TCustomMemo, TCustomMemoDataSenseLink);
 end.
