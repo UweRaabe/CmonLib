@@ -25,9 +25,9 @@ object MainForm: TMainForm
     object dspCity: TLabel
       Left = 264
       Top = 56
-      Width = 40
+      Width = 109
       Height = 15
-      Caption = 'dspCity'
+      Caption = '4-976 Sugarloaf Hwy'
     end
     object lblCompany: TLabel
       Left = 11
@@ -64,6 +64,21 @@ object MainForm: TMainForm
       DataField = 'Company'
       DataSource = DsCustomer
       TabOrder = 1
+    end
+    object LabeledEdit1: TLabeledEdit
+      Left = 416
+      Top = 24
+      Width = 121
+      Height = 23
+      EditLabel.Width = 32
+      EditLabel.Height = 15
+      EditLabel.Margins.Left = 5
+      EditLabel.Margins.Top = 5
+      EditLabel.Margins.Right = 5
+      EditLabel.Margins.Bottom = 5
+      EditLabel.Caption = 'Addr1'
+      TabOrder = 2
+      Text = '4-976 Sugarloaf Hwy'
     end
   end
   object pnlBottom: TPanel

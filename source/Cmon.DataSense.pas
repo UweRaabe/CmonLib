@@ -8,84 +8,104 @@ uses
 
 type
   TDataSenseLinkClass = class of TDataSenseLink;
-  TDataSenseLink = class(TDataLink, IInterface, IObserver)
+  TDataSenseLink = class(TDataLink)
   private
     FFieldName: string;
     FTarget: TComponent;
-    FOnToggle: TObserverToggleEvent;
     procedure SetFieldName(const Value: string);
   strict protected
-    FObserverActive: Boolean;
-    FObserverModified: Boolean;
     procedure DoActiveChanged(Value: Boolean); virtual;
     procedure DoEditingChanged(Value: Boolean); virtual;
     procedure DoLoadData; virtual;
     procedure DoSaveData; virtual;
+    function GetEditable: Boolean; virtual;
+    procedure SetEditable(const Value: Boolean); virtual;
   protected
     procedure ActiveChanged; override;
-    procedure AddObserver; virtual;
+    procedure AssertTargetType<T: TComponent>(AClass: TClass);
     procedure EditingChanged; override;
-    function GetActive: Boolean;
-    function GetOnObserverToggle: TObserverToggleEvent;
-    function GetTrack: Boolean;
-    function QueryInterface(const IID: TGUID; out Obj): HRESULT; stdcall;
-    procedure Removed;
-    procedure RemoveObserver; virtual;
-    procedure SetActive(Value: Boolean);
-    procedure SetOnObserverToggle(AEvent: TObserverToggleEvent);
+    procedure LayoutChanged; override;
     procedure Toggle(Value: Boolean); virtual;
     procedure UpdateField; virtual;
-    function _AddRef: Integer; stdcall;
-    function _Release: Integer; stdcall;
+    procedure UpdateRightToLeft; virtual;
   public
-    constructor Create(ATarget: TComponent);
-    destructor Destroy; override;
+    constructor Create(ATarget: TComponent); virtual;
+    procedure RemoveTarget;
+    property Editable: Boolean read GetEditable write SetEditable;
     property FieldName: string read FFieldName write SetFieldName;
     property Target: TComponent read FTarget;
   end;
 
-  TDataSenseFieldLink = class(TDataSenseLink)
+type
+  TDataSenseFieldLink = class;
+  TDataSenseObserver = class(TInterfacedPersistent, IObserver, IObserverTrack, ISingleCastObserver, IEditLinkObserver)
+    procedure IEditLinkObserver.Modified = ModifiedImpl;
   private
-    FField: TField;
-    function GetCanModify: Boolean;
-    procedure SetField(Value: TField);
-  protected
-    procedure ActiveChanged; override;
-    procedure DataEvent(Event: TDataEvent; Info: NativeInt); override;
-    procedure LayoutChanged; override;
-    procedure RecordChanged(Field: TField); override;
-    procedure UpdateData; override;
-    procedure UpdateField; override;
-    procedure UpdateRightToLeft; virtual;
-  public
-    property CanModify: Boolean read GetCanModify;
-    property Field: TField read FField;
-  end;
-
-  TDataSenseDisplayLink = class(TDataSenseFieldLink);
-
-  TDataSenseEditLink = class(TDataSenseFieldLink, IInterface, IObserver, IObserverTrack, ISingleCastObserver, IEditLinkObserver)
-  private
+    FLink: TDataSenseFieldLink;
+    FModified: Boolean;
+    FOnToggle: TObserverToggleEvent;
     FUpdateCnt: Integer;
+  strict protected
+    FActive: Boolean;
   protected
-    procedure AddObserver; override;
     procedure BeginUpdate;
     function Edit: Boolean;
     procedure EndUpdate;
-    {$IF CompilerVersion >= 34.0 Delphi 10.4 Sydney }
+    function GetActive: Boolean;
+{$IF CompilerVersion >= 34.0 Delphi 10.4 Sydney }
     function GetFormatLink: IEditFormatLink;
-    {$IFEND}
+{$IFEND}
     function GetIsEditing: Boolean;
     function GetIsReadOnly: Boolean;
+    function GetOnObserverToggle: TObserverToggleEvent;
+    function GetTrack: Boolean;
     function GetUpdating: Boolean;
     function IsModified: Boolean;
     function IsRequired: Boolean;
     function IsValidChar(AKey: Char): Boolean;
-    procedure Modified;
-    procedure RemoveObserver; override;
+    procedure ModifiedImpl;
+    procedure Removed;
     procedure Reset;
+    procedure SetActive(Value: Boolean);
     procedure SetIsReadOnly(Value: Boolean);
+    procedure SetOnObserverToggle(AEvent: TObserverToggleEvent);
+    procedure Toggle(Value: Boolean);
     procedure Update;
+  public
+    constructor Create(ALink: TDataSenseFieldLink);
+    property Active: Boolean read FActive write FActive;
+    property Modified: Boolean read FModified write FModified;
+  end;
+
+  TDataSenseFieldLink = class(TDataSenseLink)
+  private
+    FEditable: Boolean;
+    FField: TField;
+    FObserver: TDataSenseObserver;
+    function GetCanModify: Boolean;
+    function GetModified: Boolean;
+    function GetObserver: TDataSenseObserver;
+    procedure SetField(Value: TField);
+    procedure SetModified(const Value: Boolean);
+  strict protected
+    function GetEditable: Boolean; override;
+    procedure SetEditable(const Value: Boolean); override;
+  protected
+    procedure DataEvent(Event: TDataEvent; Info: NativeInt); override;
+    procedure EditingChanged; override;
+    function IsRequired: Boolean;
+    function IsValidChar(AKey: Char): Boolean;
+    procedure RecordChanged(Field: TField); override;
+    procedure Reset;
+    procedure Toggle(Value: Boolean); override;
+    procedure UpdateData; override;
+    procedure UpdateField; override;
+    property CanModify: Boolean read GetCanModify;
+    property Field: TField read FField;
+  public
+    destructor Destroy; override;
+    property Modified: Boolean read GetModified write SetModified;
+    property Observer: TDataSenseObserver read GetObserver;
   end;
 
 type
@@ -112,6 +132,7 @@ type
   public
     constructor Create(Collection: TCollection); override;
     destructor Destroy; override;
+    procedure RemoveTarget;
   published
     property DataField: string read FDataField write SetDataField;
     property DataSource: TDataSource read FDataSource write SetDataSource;
@@ -135,7 +156,6 @@ type
     class destructor DestroyClass;
   private
     FDataLinks: TDataSenseCollection;
-    function FindDataLink(ATarget: TComponent): TDataSenseItem;
     procedure SetDataLinks(const Value: TDataSenseCollection);
   protected
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
@@ -143,7 +163,9 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     class function CreateDataLink(ATarget: TComponent): TDataSenseLink;
-    function FindOrCreateDataLink(ATarget: TComponent; ADataSource: TDataSource = nil; const ADataField: string = ''): TDataSenseItem;
+    function FindDataSenseItem(ATarget: TComponent): TDataSenseItem;
+    class function FindLinkClass(ATarget: TComponent): TDataSenseLinkClass;
+    function AddDataSenseItem(ATarget: TComponent): TDataSenseItem;
     class procedure RegisterLinkClass(AClass: TComponentClass; ALinkClass: TDataSenseLinkClass);
     class function SupportsLinking(ATarget: TComponent): Boolean;
     class procedure UnregisterLinkClass(AClass: TComponentClass; ALinkClass: TDataSenseLinkClass);
@@ -161,28 +183,20 @@ constructor TDataSenseLink.Create(ATarget: TComponent);
 begin
   inherited Create;
   FTarget := ATarget;
-  if FTarget <> nil then begin
-    AddObserver;
-    FObserverActive := True;
-  end;
-end;
-
-destructor TDataSenseLink.Destroy;
-begin
-  if FTarget <> nil then begin
-    RemoveObserver;
-  end;
-  inherited;
+  { Try to add an Observer to Control. If it fails, Editable stays False. }
+  Editable := True;
 end;
 
 procedure TDataSenseLink.ActiveChanged;
 begin
   inherited;
+  UpdateField;
   DoActiveChanged(Active);
 end;
 
-procedure TDataSenseLink.AddObserver;
+procedure TDataSenseLink.AssertTargetType<T>(AClass: TClass);
 begin
+  Assert(AClass.InheritsFrom(T), Format('Target must be %s', [T.ClassName]));
 end;
 
 procedure TDataSenseLink.DoActiveChanged(Value: Boolean);
@@ -203,46 +217,26 @@ end;
 
 procedure TDataSenseLink.EditingChanged;
 begin
-  FObserverModified := False;
   DoEditingChanged(Editing);
 end;
 
-function TDataSenseLink.GetActive: Boolean;
+procedure TDataSenseLink.RemoveTarget;
 begin
-  Result := FObserverActive;
+  FTarget := nil;
 end;
 
-function TDataSenseLink.GetOnObserverToggle: TObserverToggleEvent;
+function TDataSenseLink.GetEditable: Boolean;
 begin
-  Result := FOnToggle;
+  Result := False;
 end;
 
-function TDataSenseLink.GetTrack: Boolean;
+procedure TDataSenseLink.LayoutChanged;
 begin
-  Result := Active and Editing;
+  UpdateField;
 end;
 
-function TDataSenseLink.QueryInterface(const IID: TGUID; out Obj): HRESULT;
+procedure TDataSenseLink.SetEditable(const Value: Boolean);
 begin
-  if GetInterface(IID, Obj) then
-    Result := S_OK
-  else
-    Result := E_NOINTERFACE
-end;
-
-procedure TDataSenseLink.Removed;
-begin
-end;
-
-procedure TDataSenseLink.RemoveObserver;
-begin
-end;
-
-procedure TDataSenseLink.SetActive(Value: Boolean);
-begin
-  FObserverActive := Value;
-  if Assigned(FOnToggle) then
-    FOnToggle(Self, Value);
 end;
 
 procedure TDataSenseLink.SetFieldName(const Value: string);
@@ -253,28 +247,16 @@ begin
   end;
 end;
 
-procedure TDataSenseLink.SetOnObserverToggle(AEvent: TObserverToggleEvent);
-begin
-  FOnToggle := AEvent;
-end;
-
 procedure TDataSenseLink.Toggle(Value: Boolean);
 begin
-  if Assigned(FOnToggle) then FOnToggle(Self, Value);
 end;
 
 procedure TDataSenseLink.UpdateField;
 begin
 end;
 
-function TDataSenseLink._AddRef: Integer;
+procedure TDataSenseLink.UpdateRightToLeft;
 begin
-  Result := -1; // -1 indicates no reference counting is taking place
-end;
-
-function TDataSenseLink._Release: Integer;
-begin
-  Result := -1; // -1 indicates no reference counting is taking place
 end;
 
 constructor TDataSenseItem.Create(Collection: TCollection);
@@ -285,10 +267,15 @@ end;
 
 destructor TDataSenseItem.Destroy;
 begin
-  DataSource := nil;
-  Target := nil;
+  FDataLink.Free;
   FNexus.Free;
   inherited Destroy;
+end;
+
+procedure TDataSenseItem.RemoveTarget;
+begin
+  if FDataLink <> nil then
+    FDataLink.RemoveTarget;
 end;
 
 function TDataSenseItem.GetLinkedTo: string;
@@ -375,15 +362,12 @@ var
   linkClass: TDataSenseLinkClass;
 begin
   Result := nil;
-  var cls := ATarget.ClassType;
-  while not cls.ClassNameIs(TComponent.ClassName) do begin
-    if FRegistry.TryGetValue(cls, linkClass) then
-      Exit(linkClass.Create(ATarget));
-    cls := cls.ClassParent;
-  end;
+  linkClass := FindLinkClass(ATarget);
+  if linkClass <> nil then
+    Result := linkClass.Create(ATarget);
 end;
 
-function TDataSense.FindDataLink(ATarget: TComponent): TDataSenseItem;
+function TDataSense.FindDataSenseItem(ATarget: TComponent): TDataSenseItem;
 begin
   Result := nil;
   if ATarget = nil then Exit;
@@ -394,14 +378,25 @@ begin
   end;
 end;
 
-function TDataSense.FindOrCreateDataLink(ATarget: TComponent; ADataSource: TDataSource = nil; const ADataField: string = ''): TDataSenseItem;
+class function TDataSense.FindLinkClass(ATarget: TComponent): TDataSenseLinkClass;
+var
+  linkClass: TDataSenseLinkClass;
 begin
-  Result := FindDataLink(ATarget);
+  Result := nil;
+  var cls := ATarget.ClassType;
+  while not cls.ClassNameIs(TComponent.ClassName) do begin
+    if FRegistry.TryGetValue(cls, linkClass) then
+      Exit(linkClass);
+    cls := cls.ClassParent;
+  end;
+end;
+
+function TDataSense.AddDataSenseItem(ATarget: TComponent): TDataSenseItem;
+begin
+  Result := FindDataSenseItem(ATarget);
   if Result = nil then begin
     Result := DataLinks.Add as TDataSenseItem;
     Result.Target := ATarget;
-    Result.DataSource := ADataSource;
-    Result.DataField := ADataField;
     ATarget.FreeNotification(Self);
   end;
 end;
@@ -409,9 +404,12 @@ end;
 procedure TDataSense.Notification(AComponent: TComponent; Operation: TOperation);
 begin
   inherited Notification(AComponent, Operation);
-  if (Operation = opRemove) then begin
-    var link := FindDataLink(AComponent);
-    link.Free;
+  if (Operation = opRemove) and not (csDestroying in ComponentState) then begin
+    var link := FindDataSenseItem(AComponent);
+    if link <> nil then begin
+      link.RemoveTarget;
+      link.Free;
+    end;
   end
 end;
 
@@ -427,14 +425,7 @@ end;
 
 class function TDataSense.SupportsLinking(ATarget: TComponent): Boolean;
 begin
-  Result := True;
-  var cls := ATarget.ClassType;
-  while not cls.ClassNameIs(TComponent.ClassName) do begin
-    if FRegistry.ContainsKey(cls) then
-      Exit;
-    cls := cls.ClassParent;
-  end;
-  Result := False;
+  Result := FindLinkClass(ATarget) <> nil;
 end;
 
 class procedure TDataSense.UnregisterLinkClass(AClass: TComponentClass; ALinkClass: TDataSenseLinkClass);
@@ -463,97 +454,10 @@ begin
   end
 end;
 
-procedure TDataSenseEditLink.AddObserver;
+destructor TDataSenseFieldLink.Destroy;
 begin
-  Target.Observers.AddObserver(TObserverMapping.EditLinkID, Self);
-end;
-
-procedure TDataSenseEditLink.BeginUpdate;
-begin
-  Inc(FUpdateCnt);
-end;
-
-function TDataSenseEditLink.Edit: Boolean;
-begin
-  if CanModify then
-    inherited Edit;
-  Result := Editing;
-end;
-
-procedure TDataSenseEditLink.EndUpdate;
-begin
-  Dec(FUpdateCnt);
-end;
-
-{$IF CompilerVersion >= 34.0 Delphi 10.4 Sydney }
-function TDataSenseEditLink.GetFormatLink: IEditFormatLink;
-begin
-  Result := nil;
-end;
-{$IFEND}
-
-function TDataSenseEditLink.GetIsEditing: Boolean;
-begin
-  Result := Editing;
-end;
-
-function TDataSenseEditLink.GetIsReadOnly: Boolean;
-begin
-  Result := ReadOnly;
-end;
-
-function TDataSenseEditLink.GetUpdating: Boolean;
-begin
-  Result := FUpdateCnt > 0;
-end;
-
-function TDataSenseEditLink.IsModified: Boolean;
-begin
-  Result := FObserverModified;
-end;
-
-function TDataSenseEditLink.IsRequired: Boolean;
-begin
-  Result := (Field <> nil) and Field.Required;
-end;
-
-function TDataSenseEditLink.IsValidChar(AKey: Char): Boolean;
-begin
-  Result := True;
-  if Field <> nil then begin
-    Result := Field.IsValidChar(AKey);
-  end;
-end;
-
-procedure TDataSenseEditLink.Modified;
-begin
-  FObserverModified := True;
-end;
-
-procedure TDataSenseEditLink.RemoveObserver;
-begin
-  Target.Observers.RemoveObserver(TObserverMapping.EditLinkID, Self);
-end;
-
-procedure TDataSenseEditLink.Reset;
-begin
-  RecordChanged(nil);
-end;
-
-procedure TDataSenseEditLink.SetIsReadOnly(Value: Boolean);
-begin
-  ReadOnly := Value;
-end;
-
-procedure TDataSenseEditLink.Update;
-begin
-  UpdateData;
-  FObserverModified := False;
-end;
-
-procedure TDataSenseFieldLink.ActiveChanged;
-begin
-  UpdateField;
+  SetEditable(False);
+  FObserver.Free;
   inherited;
 end;
 
@@ -568,14 +472,45 @@ begin
   end;
 end;
 
+procedure TDataSenseFieldLink.EditingChanged;
+begin
+  Observer.Modified := False;
+  inherited;
+end;
+
 function TDataSenseFieldLink.GetCanModify: Boolean;
 begin
   Result := not ReadOnly and (Field <> nil) and Field.CanModify;
 end;
 
-procedure TDataSenseFieldLink.LayoutChanged;
+function TDataSenseFieldLink.GetEditable: Boolean;
 begin
-  UpdateField;
+  Result := FEditable;
+end;
+
+function TDataSenseFieldLink.GetModified: Boolean;
+begin
+  Result := Observer.Modified;
+end;
+
+function TDataSenseFieldLink.GetObserver: TDataSenseObserver;
+begin
+  if FObserver = nil then
+    FObserver := TDataSenseObserver.Create(Self);
+  Result := FObserver;
+end;
+
+function TDataSenseFieldLink.IsRequired: Boolean;
+begin
+  Result := (Field <> nil) and Field.Required;
+end;
+
+function TDataSenseFieldLink.IsValidChar(AKey: Char): Boolean;
+begin
+  Result := True;
+  if Field <> nil then begin
+    Result := Field.IsValidChar(AKey);
+  end;
 end;
 
 procedure TDataSenseFieldLink.RecordChanged(Field: TField);
@@ -583,7 +518,36 @@ begin
   inherited;
   if (Field = nil) or (Field = FField) then begin
     DoLoadData;
-    FObserverModified := False;
+    Observer.Modified := False;
+  end;
+end;
+
+procedure TDataSenseFieldLink.Reset;
+begin
+  RecordChanged(nil);
+end;
+
+procedure TDataSenseFieldLink.SetEditable(const Value: Boolean);
+begin
+  if (Target = nil) or (csDestroying in Target.ComponentState) then begin
+    Observer.Active := False;
+    FEditable := False;
+    Exit;
+  end;
+
+  if Value <> FEditable then begin
+    if Value then begin
+      if Target.Observers.CanObserve(TObserverMapping.EditLinkID) then begin
+        Target.Observers.AddObserver(TObserverMapping.EditLinkID, Observer);
+        Observer.Active := True;
+        FEditable := True;
+      end;
+    end
+    else begin
+      Target.Observers.RemoveObserver(TObserverMapping.EditLinkID, Observer);
+      Observer.Active := False;
+      FEditable := False;
+    end;
   end;
 end;
 
@@ -599,12 +563,21 @@ begin
   end;
 end;
 
+procedure TDataSenseFieldLink.SetModified(const Value: Boolean);
+begin
+  Observer.Modified := Value;
+end;
+
+procedure TDataSenseFieldLink.Toggle(Value: Boolean);
+begin
+  Observer.Toggle(Value);
+end;
+
 procedure TDataSenseFieldLink.UpdateData;
 begin
-  if FObserverModified then begin
-    if (Field <> nil) then
-      DoSaveData;
-    FObserverModified := False;
+  if Editable and Observer.Modified then begin
+    DoSaveData;
+    Observer.Modified := False;
   end;
 end;
 
@@ -621,8 +594,121 @@ begin
     SetField(nil);
 end;
 
-procedure TDataSenseFieldLink.UpdateRightToLeft;
+constructor TDataSenseObserver.Create(ALink: TDataSenseFieldLink);
 begin
+  inherited Create;
+  FLink := ALink;
+end;
+
+procedure TDataSenseObserver.BeginUpdate;
+begin
+  Inc(FUpdateCnt);
+end;
+
+function TDataSenseObserver.Edit: Boolean;
+begin
+  Result := False;
+  if FLink.CanModify then
+    Result := FLink.Edit;
+end;
+
+procedure TDataSenseObserver.EndUpdate;
+begin
+  Dec(FUpdateCnt);
+end;
+
+function TDataSenseObserver.GetActive: Boolean;
+begin
+  Result := FActive;
+end;
+
+{$IF CompilerVersion >= 34.0 Delphi 10.4 Sydney }
+function TDataSenseObserver.GetFormatLink: IEditFormatLink;
+begin
+  Result := nil;
+end;
+{$IFEND}
+
+function TDataSenseObserver.GetIsEditing: Boolean;
+begin
+  Result := FLink.Editing;
+end;
+
+function TDataSenseObserver.GetIsReadOnly: Boolean;
+begin
+  Result := FLink.ReadOnly;
+end;
+
+function TDataSenseObserver.GetOnObserverToggle: TObserverToggleEvent;
+begin
+  Result := FOnToggle;
+end;
+
+function TDataSenseObserver.GetTrack: Boolean;
+begin
+  Result := Active and FLink.Editing;
+end;
+
+function TDataSenseObserver.GetUpdating: Boolean;
+begin
+  Result := FUpdateCnt > 0;
+end;
+
+function TDataSenseObserver.IsModified: Boolean;
+begin
+  Result := FModified;
+end;
+
+function TDataSenseObserver.IsRequired: Boolean;
+begin
+  Result := FLink.IsRequired;
+end;
+
+function TDataSenseObserver.IsValidChar(AKey: Char): Boolean;
+begin
+  Result := FLink.IsValidChar(AKey);
+end;
+
+procedure TDataSenseObserver.ModifiedImpl;
+begin
+  FModified := True;
+end;
+
+procedure TDataSenseObserver.Removed;
+begin
+end;
+
+procedure TDataSenseObserver.Reset;
+begin
+  FLink.Reset;
+end;
+
+procedure TDataSenseObserver.SetActive(Value: Boolean);
+begin
+  FActive := Value;
+  if Assigned(FOnToggle) then
+    FOnToggle(Self, Value);
+end;
+
+procedure TDataSenseObserver.SetIsReadOnly(Value: Boolean);
+begin
+  FLink.ReadOnly := Value;
+end;
+
+procedure TDataSenseObserver.SetOnObserverToggle(AEvent: TObserverToggleEvent);
+begin
+  FOnToggle := AEvent;
+end;
+
+procedure TDataSenseObserver.Toggle(Value: Boolean);
+begin
+  if Assigned(FOnToggle) then FOnToggle(Self, Value);
+end;
+
+procedure TDataSenseObserver.Update;
+begin
+  FLink.UpdateData;
+  FModified := False;
 end;
 
 initialization

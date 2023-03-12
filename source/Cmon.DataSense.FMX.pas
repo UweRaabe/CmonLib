@@ -11,37 +11,53 @@ uses
 type
   TDataSenseLinkFMX = class(TDataSenseLink);
 
-  TControlDataSenseEditLink = class(TDataSenseEditLink)
+  TControlDataSenseLink = class(TDataSenseFieldLink)
   private
     function GetControl: TControl;
-  public
-    constructor Create(AControl: TControl);
-    property Control: TControl read GetControl;
-  end;
-
-  TControlDataSenseEditLink<T: TControl> = class(TControlDataSenseEditLink)
-  private
-    function GetControl: T;
   protected
     procedure FocusControl(Field: TFieldRef); override;
     procedure UpdateRightToLeft; override;
   public
-    constructor Create(AControl: T);
+    constructor Create(ATarget: TComponent); override;
+    property Control: TControl read GetControl;
+  end;
+
+  TControlDataSenseLink<T: TControl> = class(TControlDataSenseLink)
+  private
+    function GetControl: T;
+  public
+    constructor Create(ATarget: TComponent); override;
     property Control: T read GetControl;
   end;
 
 type
-  TCustomEditDataSenseLink = class(TControlDataSenseEditLink<TCustomEdit>)
+  TCustomEditDataSenseLink = class(TControlDataSenseLink<TCustomEdit>)
   protected
     procedure DoLoadData; override;
     procedure DoSaveData; override;
   end;
 
+  TCustomEditDataSenseLink<T: TCustomEdit> = class(TCustomEditDataSenseLink)
+  private
+    function GetControl: T;
+  public
+    constructor Create(ATarget: TComponent); override;
+    property Control: T read GetControl;
+  end;
+
 type
-  TCustomMemoDataSenseLink = class(TControlDataSenseEditLink<TCustomMemo>)
+  TCustomMemoDataSenseLink = class(TControlDataSenseLink<TCustomMemo>)
   protected
     procedure DoLoadData; override;
     procedure DoSaveData; override;
+  end;
+
+  TCustomMemoDataSenseLink<T: TCustomEdit> = class(TCustomMemoDataSenseLink)
+  private
+    function GetControl: T;
+  public
+    constructor Create(ATarget: TComponent); override;
+    property Control: T read GetControl;
   end;
 
 implementation
@@ -49,42 +65,46 @@ implementation
 procedure TCustomEditDataSenseLink.DoLoadData;
 begin
   inherited;
-  if (Control <> nil) and (Field <> nil) then begin
-    Control.Text := Field.AsString;
-  end;
+  Control.Text := Field.AsString;
 end;
 
 procedure TCustomEditDataSenseLink.DoSaveData;
 begin
   inherited;
-  if (Control <> nil) and (Field <> nil) then begin
-    Field.AsString := Control.Text;
-  end;
+  Field.AsString := Control.Text;
 end;
 
 procedure TCustomMemoDataSenseLink.DoLoadData;
 begin
   inherited;
-  if (Control <> nil) and (Field <> nil) then begin
-    Control.Text := Field.AsString;
-  end;
+  Control.Text := Field.AsString;
 end;
 
 procedure TCustomMemoDataSenseLink.DoSaveData;
 begin
   inherited;
-  if (Control <> nil) and (Field <> nil) then begin
-    Field.AsString := Control.Text;
-  end;
+  Field.AsString := Control.Lines.Text;
 end;
 
-constructor TControlDataSenseEditLink<T>.Create(AControl: T);
+constructor TControlDataSenseLink<T>.Create(ATarget: TComponent);
 begin
-  inherited Create(AControl);
+  AssertTargetType<T>(ATarget.ClassType);
+  inherited Create(ATarget);
+end;
+
+function TControlDataSenseLink<T>.GetControl: T;
+begin
+  Result := inherited Control as T;
+end;
+
+constructor TControlDataSenseLink.Create(ATarget: TComponent);
+begin
+  AssertTargetType<TControl>(ATarget.ClassType);
+  inherited Create(ATarget);
   VisualControl := True;
 end;
 
-procedure TControlDataSenseEditLink<T>.FocusControl(Field: TFieldRef);
+procedure TControlDataSenseLink.FocusControl(Field: TFieldRef);
 begin
   if (Field^ <> nil) and (Field^ = Self.Field) and (Control <> nil) then
     if Control.CanFocus then begin
@@ -93,12 +113,12 @@ begin
     end;
 end;
 
-function TControlDataSenseEditLink<T>.GetControl: T;
+function TControlDataSenseLink.GetControl: TControl;
 begin
-  Result := Target as T;
+  Result := Target as TControl;
 end;
 
-procedure TControlDataSenseEditLink<T>.UpdateRightToLeft;
+procedure TControlDataSenseLink.UpdateRightToLeft;
 { I haven't yet found out how this is handled in FMX - if it is even supported at all. }
 
 //var
@@ -115,15 +135,26 @@ begin
 //    end;
 end;
 
-constructor TControlDataSenseEditLink.Create(AControl: TControl);
+constructor TCustomEditDataSenseLink<T>.Create(ATarget: TComponent);
 begin
-  inherited Create(AControl);
-  VisualControl := True;
+  AssertTargetType<T>(ATarget.ClassType);
+  inherited Create(ATarget);
 end;
 
-function TControlDataSenseEditLink.GetControl: TControl;
+function TCustomEditDataSenseLink<T>.GetControl: T;
 begin
-  Result := Target as TControl;
+  Result := inherited Control as T;
+end;
+
+constructor TCustomMemoDataSenseLink<T>.Create(ATarget: TComponent);
+begin
+  AssertTargetType<T>(ATarget.ClassType);
+  inherited Create(ATarget);
+end;
+
+function TCustomMemoDataSenseLink<T>.GetControl: T;
+begin
+  Result := inherited Control as T;
 end;
 
 initialization

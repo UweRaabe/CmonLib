@@ -4,29 +4,49 @@ interface
 
 uses
   System.Classes,
-  DesignIntf, DesignEditors;
+  Cmon.DataSense,
+  DesignIntf, DesignEditors, DesignMenus;
+
+type
+  TDataSenseEditor = class(TComponentEditor)
+  private
+  class var
+    class function GetAutoDataSense: Boolean; static;
+    class procedure SetAutoDataSense(const Value: Boolean); static;
+  public
+    procedure ExecuteVerb(Index: Integer); override;
+    function GetVerb(Index: Integer): string; override;
+    function GetVerbCount: Integer; override;
+    procedure PrepareItem(Index: Integer; const AItem: IMenuItem); override;
+    class property AutoDataSense: Boolean read GetAutoDataSense write SetAutoDataSense;
+  end;
 
 type
   TLinkedPropertyFilter = class(TSelectionEditor, ISelectionPropertyFilter)
   const
     cDataSource = 'DataSource';
     cDataField = 'DataField';
+  private
+    function FindContainer: TDataSense;
   protected
     procedure FilterProperties(const ASelection: IDesignerSelections; const ASelectionProperties: IInterfaceList);
+    procedure InternalRequiresUnits(Proc: TGetStrProc); virtual;
   public
     procedure RequiresUnits(Proc: TGetStrProc); override;
   end;
 
 type
   TLinkedPropertyFilterVCL = class(TLinkedPropertyFilter)
+  protected
+    procedure InternalRequiresUnits(Proc: TGetStrProc); override;
   public
-    procedure RequiresUnits(Proc: TGetStrProc); override;
   end;
 
 type
   TLinkedPropertyFilterFMX = class(TLinkedPropertyFilter)
+  protected
+    procedure InternalRequiresUnits(Proc: TGetStrProc); override;
   public
-    procedure RequiresUnits(Proc: TGetStrProc); override;
   end;
 
 procedure Register;
@@ -34,15 +54,18 @@ procedure Register;
 implementation
 
 uses
+  System.Win.Registry,
   System.SysUtils, System.TypInfo,
   Vcl.Controls,
   FMX.Controls,
-  Cmon.Utilities, Cmon.DataSense, Cmon.DataSense.VCL, Cmon.DataSense.FMX,
-  DsnDBCst, DBReg;
+  Cmon.Utilities, Cmon.DataSense.VCL, Cmon.DataSense.FMX,
+  DsnDBCst, DBReg, ColnEdit, ToolsAPI;
 
 procedure Register;
 begin
   RegisterComponents(srDControls, [TDataSense]);
+
+  RegisterComponentEditor(TDataSense, TDataSenseEditor);
 
   RegisterSelectionEditor(TComponent, TLinkedPropertyFilter);
   RegisterSelectionEditor(Vcl.Controls.TControl, TLinkedPropertyFilterVCL);
@@ -64,13 +87,6 @@ begin
 end;
 
 procedure TLinkedPropertyFilter.FilterProperties(const ASelection: IDesignerSelections; const ASelectionProperties: IInterfaceList);
-
-  function FindContainer: TDataSense;
-  begin
-    for var cmp in Designer.Root.ComponentsOf<TDataSense> do
-      Exit(cmp);
-    Result := Designer.CreateComponent(TDataSense, Designer.Root, 0, 0, 0, 0) as TDataSense;
-  end;
 
   function HasDataSourceProp(Target: TComponent): Boolean;
   begin
@@ -120,7 +136,12 @@ begin
       prop.LinkProperty(target, cDataSource);
     end
     else begin
-      var data := container.FindOrCreateDataLink(target);
+      var data := container.FindDataSenseItem(target);
+      if data = nil then begin
+        container.AddDataSenseItem(target);
+        Designer.Modified;
+        Exit;
+      end;
 
       if ASelection.Count = 1 then begin
         var fldProp := TDataFieldProperty.Create(Designer, 1);
@@ -135,22 +156,102 @@ begin
   end;
 end;
 
+function TLinkedPropertyFilter.FindContainer: TDataSense;
+begin
+  Result := nil;
+  for var cmp in Designer.Root.ComponentsOf<TDataSense> do
+    Exit(cmp);
+  if TDataSenseEditor.AutoDataSense then begin
+    var list := CreateSelectionList;
+    Designer.GetSelections(list);
+    Result := Designer.CreateComponent(TDataSense, Designer.Root, 0, 0, 0, 0) as TDataSense;
+    Designer.SetSelections(list);
+  end;
+end;
+
 procedure TLinkedPropertyFilter.RequiresUnits(Proc: TGetStrProc);
+begin
+  inherited;
+  if FindContainer <> nil then
+    InternalRequiresUnits(Proc);
+end;
+
+procedure TLinkedPropertyFilter.InternalRequiresUnits(Proc: TGetStrProc);
 begin
   inherited;
   Proc(TDataSense.UnitName);
 end;
 
-procedure TLinkedPropertyFilterFMX.RequiresUnits(Proc: TGetStrProc);
+procedure TLinkedPropertyFilterFMX.InternalRequiresUnits(Proc: TGetStrProc);
 begin
   inherited;
   Proc(TDataSenseLinkFMX.UnitName);
 end;
 
-procedure TLinkedPropertyFilterVCL.RequiresUnits(Proc: TGetStrProc);
+procedure TLinkedPropertyFilterVCL.InternalRequiresUnits(Proc: TGetStrProc);
 begin
   inherited;
   Proc(TDataSenseLinkVCL.UnitName);
+end;
+
+procedure TDataSenseEditor.ExecuteVerb(Index: Integer);
+begin
+  case Index of
+    0: ShowCollectionEditor(Designer, GetComponent, TDataSense(GetComponent).DataLinks, 'TDataLinks');
+    1: AutoDataSense := not AutoDataSense;
+  end;
+end;
+
+class function TDataSenseEditor.GetAutoDataSense: Boolean;
+begin
+  Result := False;
+  var reg := TRegistry.Create;
+  try
+    var svc := BorlandIDEServices.GetService(IOTAServices) as IOTAServices;
+    var key := svc.GetBaseRegistryKey + '\DataSense';
+    if reg.OpenKeyReadOnly(key) then begin
+      if reg.ValueExists('AutoDataSense') then
+        Result := reg.ReadBool('AutoDataSense');
+    end;
+  finally
+    reg.Free;
+  end;
+end;
+
+function TDataSenseEditor.GetVerb(Index: Integer): string;
+begin
+  case Index of
+    0: Result := 'Edit DataLinks...';
+    1: Result := 'Auto DataSense';
+  else
+    Result := '';
+  end;
+end;
+
+function TDataSenseEditor.GetVerbCount: Integer;
+begin
+  Result := 2;
+end;
+
+procedure TDataSenseEditor.PrepareItem(Index: Integer; const AItem: IMenuItem);
+begin
+  case Index of
+    1: AItem.Checked := AutoDataSense;
+  end;
+end;
+
+class procedure TDataSenseEditor.SetAutoDataSense(const Value: Boolean);
+begin
+  var reg := TRegistry.Create;
+  try
+    var svc := BorlandIDEServices.GetService(IOTAServices) as IOTAServices;
+    var key := svc.GetBaseRegistryKey + '\DataSense';
+    if reg.OpenKey(key, True) then begin
+      reg.WriteBool('AutoDataSense', Value);
+    end;
+  finally
+    reg.Free;
+  end;
 end;
 
 end.

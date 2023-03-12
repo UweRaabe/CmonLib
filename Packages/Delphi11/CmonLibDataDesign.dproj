@@ -77,21 +77,21 @@
         <DCCReference Include="CmonLibDataVCL.dcp"/>
         <DCCReference Include="CmonLibDataFMX.dcp"/>
         <DCCReference Include="..\..\source\Cmon.DataSense.Design.pas"/>
-        <RcItem Include="..\..\Icons\TDataLinkContainer128.png">
+        <RcItem Include="..\..\Icons\TDataSense128.png">
             <ResourceType>RCDATA</ResourceType>
-            <ResourceId>TDataLinkContainer128_PNG</ResourceId>
+            <ResourceId>TDataSense128_PNG</ResourceId>
         </RcItem>
-        <RcItem Include="..\..\Icons\TDataLinkContainer16.png">
+        <RcItem Include="..\..\Icons\TDataSense16.png">
             <ResourceType>RCDATA</ResourceType>
-            <ResourceId>TDataLinkContainer16_PNG</ResourceId>
+            <ResourceId>TDataSense16_PNG</ResourceId>
         </RcItem>
-        <RcItem Include="..\..\Icons\TDataLinkContainer24.png">
+        <RcItem Include="..\..\Icons\TDataSense24.png">
             <ResourceType>RCDATA</ResourceType>
-            <ResourceId>TDataLinkContainer24_PNG</ResourceId>
+            <ResourceId>TDataSense24_PNG</ResourceId>
         </RcItem>
-        <RcItem Include="..\..\Icons\TDataLinkContainer32.png">
+        <RcItem Include="..\..\Icons\TDataSense32.png">
             <ResourceType>RCDATA</ResourceType>
-            <ResourceId>TDataLinkContainer32_PNG</ResourceId>
+            <ResourceId>TDataSense32_PNG</ResourceId>
         </RcItem>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

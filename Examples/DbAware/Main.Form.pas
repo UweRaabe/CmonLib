@@ -36,6 +36,7 @@ type
     edtCompany: TDBEdit;
     lblCompany: TLabel;
     lblCity: TLabel;
+    LabeledEdit1: TLabeledEdit;
     procedure edtCityRightButtonClick(Sender: TObject);
   private
   public
