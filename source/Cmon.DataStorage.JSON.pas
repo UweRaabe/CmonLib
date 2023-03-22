@@ -13,6 +13,7 @@ type
     FModified: Boolean;
     procedure SetJson(const Value: TJSONObject);
   strict protected
+    procedure DeleteKey(const Key, Ident: string); override;
     procedure EraseStorageKey(const Key: string); override;
     function ReadString(const Key: string; const Ident: string; const Default: string): string; override;
     procedure WriteString(const Key: string; const Ident: string; const Value: string); override;
@@ -62,6 +63,23 @@ begin
   inherited Destroy;
 end;
 
+procedure TJSONStorageTarget.DeleteKey(const Key, Ident: string);
+begin
+  var node := Json;
+  for var subKey in TDataStorage.SplitStorageKey(Key) do begin
+    node := node.FindKey(subKey);
+    if node = nil then
+      Break;
+  end;
+  if node <> nil then begin
+    var temp := node.FindIdent(Ident);
+    if temp <> nil then begin
+      temp.Free;
+      Modified := True;
+    end;
+  end;
+end;
+
 class function TJSONStorageTarget.Description: string;
 begin
   Result := SJSONFiles;
@@ -75,9 +93,10 @@ begin
     if node = nil then
       Break;
   end;
-  if node <> nil then
+  if node <> nil then begin
     node.Free;
-  Modified := True;
+    Modified := True;
+  end;
 end;
 
 class function TJSONStorageTarget.FileExtension: string;

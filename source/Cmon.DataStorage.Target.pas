@@ -16,6 +16,7 @@ type
     FDefaultFilePath: string;
   strict protected
     procedure EraseStorageKey(const Key: string); virtual; abstract;
+    procedure DeleteKey(const Key, Ident: string); virtual; abstract;
     function ReadString(const Key: string; const Ident: string; const Default: string): string; virtual; abstract;
     procedure WriteString(const Key: string; const Ident: string; const Value: string); virtual; abstract;
   public
