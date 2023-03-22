@@ -44,6 +44,8 @@ type
     procedure StorageTargetListMessage(const Sender: TObject; const M: TMessage);
     procedure Subscribe; virtual;
     procedure Unsubscribe; virtual;
+  protected
+    function CheckFileName(var AFileName: string): Boolean; virtual;
   public
     constructor Create;
     destructor Destroy; override;
@@ -105,6 +107,12 @@ begin
   inherited;
 end;
 
+function TStorageTargetHandler<T>.CheckFileName(var AFileName: string): Boolean;
+begin
+  AFileName := T.EffectiveFileName(AFileName);
+  Result := TFile.Exists(AFileName);
+end;
+
 procedure TStorageTargetHandler<T>.StorageTargetMessage(const Sender: TObject; const M: TMessage);
 begin
   var msg := M as TStorageTargetMessage;
@@ -117,8 +125,8 @@ begin
   if ext.IsEmpty then
     ext := TCustomStorageTarget.DefaultFileExtension;
   if ext.IsEmpty or SameText(ext, T.FileExtension) then begin
-    var fileName := T.EffectiveFileName(msg.Value);
-    if not TFile.Exists(fileName) then
+    var fileName := msg.Value;
+    if not CheckFileName(fileName) then
       TStorageTargetMissingMessage.SendMessage(Sender, fileName);
 
     msg.StorageTarget := T.Create(fileName);
