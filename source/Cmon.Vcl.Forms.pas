@@ -163,6 +163,7 @@ class function TCommonForm.NewInstance: TObject;
 begin
   Result := inherited;
   TCommonForm(Result).FAutoDataStorage := DefaultAutoDataStorage;
+  TCommonForm(Result).FHandleGlobalVirtualImageLists := DefaultHandleGlobalVirtualImageLists;
 end;
 
 procedure TCommonForm.AfterConstruction;
