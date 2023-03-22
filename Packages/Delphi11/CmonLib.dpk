@@ -49,6 +49,7 @@ contains
   Cmon.Utilities in '..\..\source\Cmon.Utilities.pas',
   Cmon.CmdLineHandler in '..\..\source\Cmon.CmdLineHandler.pas',
   Cmon.CmdLineFileHandler in '..\..\source\Cmon.CmdLineFileHandler.pas',
-  Cmon.Initializing in '..\..\source\Cmon.Initializing.pas';
+  Cmon.Initializing in '..\..\source\Cmon.Initializing.pas',
+  Cmon.Utilities.Win in '..\..\source\Cmon.Utilities.Win.pas';
 
 end.
