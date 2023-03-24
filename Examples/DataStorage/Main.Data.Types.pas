@@ -6,11 +6,12 @@ uses
   Cmon.DataStorage;
 
 type
+  [AutoStorageFields([vcPrivate])]
   TSubData = class
   private
-    [Storage, Default(100)]
+    [Default(100)]
     FSomeInteger: Integer;
-    [Storage, Default('Bar')]
+    [Default('Bar')]
     FSomeString: string;
   public
     property SomeInteger: Integer read FSomeInteger write FSomeInteger;
@@ -18,20 +19,24 @@ type
   end;
 
 type
-  [StorageKey('Settings')]
+  [StorageKey('Settings'), AutoStorageProperties([vcPublic])]
   TMainData = class
   private
-    [Storage, Default(10)]
+    FDontStoreMe: Integer;
+    [Default(10)]
     FSomeInteger: Integer;
-    [Storage, Default('Foo')]
+    [Default('Foo')]
     FSomeString: string;
-    [Storage('Sub'), Default]
+    [Default]
     FSubData: TSubData;
   public
     constructor Create;
     destructor Destroy; override;
+    [NoAutoStorage]
+    property DontStoreMe: Integer read FDontStoreMe write FDontStoreMe;
     property SomeInteger: Integer read FSomeInteger write FSomeInteger;
     property SomeString: string read FSomeString write FSomeString;
+    [Storage('Sub')]
     property SubData: TSubData read FSubData;
   end;
 
