@@ -267,15 +267,11 @@ function GetStorageKeyFromAttribute(AInstance: TObject; const ADefault: string =
 begin
   Result := ADefault;
   var context := TRTTIContext.Create;
-  try
-    var myType := context.GetType(AInstance.ClassType);
-    if myType <> nil then begin
-      var attr := myType.GetAttribute<StorageKeyAttribute>;
-      if attr <> nil then
-        Result := attr.Key;
-    end;
-  finally
-    context.Free;
+  var myType := context.GetType(AInstance.ClassType);
+  if myType <> nil then begin
+    var attr := myType.GetAttribute<StorageKeyAttribute>;
+    if attr <> nil then
+      Result := attr.Key;
   end;
 end;
 
@@ -396,25 +392,19 @@ begin
 end;
 
 class procedure TDataStorage.InitDefaults<T>(Instance: TObject);
-var
-  context: TRttiContext;
 begin
   if Instance = nil then Exit;
 
-  context := TRttiContext.Create;
-  try
-    var myType := context.GetType(Instance.ClassType);
-    if myType <> nil then begin
-      { initialize all fields having a Default attribute }
-      for var field in myType.GetFields do
-        InitDefaults<T>(Instance, field);
+  var context := TRttiContext.Create;
+  var myType := context.GetType(Instance.ClassType);
+  if myType <> nil then begin
+    { initialize all fields having a Default attribute }
+    for var field in myType.GetFields do
+      InitDefaults<T>(Instance, field);
 
-      { initialize all properties having a Default attribute }
-      for var prop in myType.GetProperties do
-        InitDefaults<T>(Instance, prop);
-    end;
-  finally
-    context.Free;
+    { initialize all properties having a Default attribute }
+    for var prop in myType.GetProperties do
+      InitDefaults<T>(Instance, prop);
   end;
 end;
 
@@ -492,27 +482,23 @@ begin
   PushStorageKey(RetrieveStorageKey(Instance));
   try
     var context := TRTTIContext.Create;
-    try
-      var myType := context.GetType(Instance.ClassType);
-      if myType <> nil then begin
-        attr := myType.GetAttribute<AutoStorageFieldsAttribute>;
-        if attr <> nil then begin
-          Result := True;
-          for var field in myType.GetFields do
-            if attr.CheckVisibility(field.Visibility) and not field.HasAttribute<NoAutoStorageAttribute> then
-              LoadAutoStorage(Instance, field);
-        end;
-
-        attr := myType.GetAttribute<AutoStoragePropertiesAttribute>;
-        if attr <> nil then begin
-          Result := True;
-          for var prop in myType.GetProperties do
-            if attr.CheckVisibility(prop.Visibility) and not prop.HasAttribute<NoAutoStorageAttribute> then
-              LoadAutoStorage(Instance, prop);
-        end;
+    var myType := context.GetType(Instance.ClassType);
+    if myType <> nil then begin
+      attr := myType.GetAttribute<AutoStorageFieldsAttribute>;
+      if attr <> nil then begin
+        Result := True;
+        for var field in myType.GetFields do
+          if attr.CheckVisibility(field.Visibility) and not field.HasAttribute<NoAutoStorageAttribute> then
+            LoadAutoStorage(Instance, field);
       end;
-    finally
-      context.Free;
+
+      attr := myType.GetAttribute<AutoStoragePropertiesAttribute>;
+      if attr <> nil then begin
+        Result := True;
+        for var prop in myType.GetProperties do
+          if attr.CheckVisibility(prop.Visibility) and not prop.HasAttribute<NoAutoStorageAttribute> then
+            LoadAutoStorage(Instance, prop);
+      end;
     end;
   finally
     PopStorageKey;
@@ -552,23 +538,17 @@ begin
 end;
 
 procedure TDataStorage.LoadFromStorage<T>(Instance: TObject);
-var
-  context: TRttiContext;
 begin
   PushStorageKey(RetrieveStorageKey(Instance));
   try
-    context := TRttiContext.Create;
-    try
-      var myType := context.GetType(Instance.ClassType);
-      if myType <> nil then begin
-        for var field in myType.GetFields do
-          LoadFromStorage<T>(Instance, field);
+    var context := TRttiContext.Create;
+    var myType := context.GetType(Instance.ClassType);
+    if myType <> nil then begin
+      for var field in myType.GetFields do
+        LoadFromStorage<T>(Instance, field);
 
-        for var prop in myType.GetProperties do
-          LoadFromStorage<T>(Instance, prop);
-      end;
-    finally
-      context.Free;
+      for var prop in myType.GetProperties do
+        LoadFromStorage<T>(Instance, prop);
     end;
   finally
     PopStorageKey;
@@ -737,27 +717,23 @@ begin
   PushStorageKey(RetrieveStorageKey(Instance));
   try
     var context := TRTTIContext.Create;
-    try
-      var myType := context.GetType(Instance.ClassType);
-      if myType <> nil then begin
-        attr := myType.GetAttribute<AutoStorageFieldsAttribute>;
-        if attr <> nil then begin
-          Result := True;
-          for var field in myType.GetFields do
-            if attr.CheckVisibility(field.Visibility) and not field.HasAttribute<NoAutoStorageAttribute> then
-              SaveAutoStorage(Instance, field);
-        end;
-
-        attr := myType.GetAttribute<AutoStoragePropertiesAttribute>;
-        if attr <> nil then begin
-          Result := True;
-          for var prop in myType.GetProperties do
-            if attr.CheckVisibility(prop.Visibility) and not prop.HasAttribute<NoAutoStorageAttribute> then
-              SaveAutoStorage(Instance, prop);
-        end;
+    var myType := context.GetType(Instance.ClassType);
+    if myType <> nil then begin
+      attr := myType.GetAttribute<AutoStorageFieldsAttribute>;
+      if attr <> nil then begin
+        Result := True;
+        for var field in myType.GetFields do
+          if attr.CheckVisibility(field.Visibility) and not field.HasAttribute<NoAutoStorageAttribute> then
+            SaveAutoStorage(Instance, field);
       end;
-    finally
-      context.Free;
+
+      attr := myType.GetAttribute<AutoStoragePropertiesAttribute>;
+      if attr <> nil then begin
+        Result := True;
+        for var prop in myType.GetProperties do
+          if attr.CheckVisibility(prop.Visibility) and not prop.HasAttribute<NoAutoStorageAttribute> then
+            SaveAutoStorage(Instance, prop);
+      end;
     end;
   finally
     PopStorageKey;
@@ -789,23 +765,17 @@ begin
 end;
 
 procedure TDataStorage.SaveToStorage<T>(Instance: TObject);
-var
-  context: TRttiContext;
 begin
   PushStorageKey(RetrieveStorageKey(Instance));
   try
-    context := TRttiContext.Create;
-    try
-      var myType := context.GetType(Instance.ClassType);
-      if myType <> nil then begin
-        for var field in myType.GetFields do
-          SaveToStorage<T>(Instance, field);
+    var context := TRttiContext.Create;
+    var myType := context.GetType(Instance.ClassType);
+    if myType <> nil then begin
+      for var field in myType.GetFields do
+        SaveToStorage<T>(Instance, field);
 
-        for var prop in myType.GetProperties do
-          SaveToStorage<T>(Instance, prop);
-      end;
-    finally
-      context.Free;
+      for var prop in myType.GetProperties do
+        SaveToStorage<T>(Instance, prop);
     end;
   finally
     PopStorageKey;
