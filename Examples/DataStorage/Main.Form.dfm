@@ -63,7 +63,7 @@ object DemoMainForm: TDemoMainForm
     end
     object SomeBooleanCheck: TCheckBox
       Left = 731
-      Top = 34
+      Top = 26
       Width = 97
       Height = 17
       Caption = 'Some Boolean'
@@ -98,6 +98,18 @@ object DemoMainForm: TDemoMainForm
       Style = bsCommandLink
       TabOrder = 6
       OnClick = RestoreLayoutButtonClick
+    end
+    object SomeStringEdit: TLabeledEdit
+      Left = 771
+      Top = 86
+      Width = 57
+      Height = 23
+      EditLabel.Width = 70
+      EditLabel.Height = 23
+      EditLabel.Caption = 'Some String: '
+      LabelPosition = lpLeft
+      TabOrder = 7
+      Text = ''
     end
   end
   object pnlLeft: TPanel
@@ -243,6 +255,15 @@ object DemoMainForm: TDemoMainForm
         end
       end
     end
+  end
+  object SomeIntegerEdit: TNumberBox
+    Left = 731
+    Top = 465
+    Width = 97
+    Height = 23
+    Alignment = taCenter
+    TabOrder = 3
+    SpinButtonOptions.Placement = nbspInline
   end
   object LoadSettingsDialog: TFileOpenDialog
     FavoriteLinks = <>

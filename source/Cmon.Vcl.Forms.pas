@@ -366,7 +366,7 @@ end;
 
 procedure TCommonForm.PrepareStorage(Storage: TDataStorage);
 begin
-  Storage.StorageKey := GetStorageKeyFromAttribute(Self, GetStorageKey(Storage));
+  Storage.StorageKey := TDataStorage.GetStorageKeyFromAttribute(Self, GetStorageKey(Storage));
   InternalPrepareStorage(Storage);
 end;
 
@@ -511,7 +511,7 @@ end;
 
 procedure TCommonFrame.PrepareStorage(Storage: TDataStorage);
 begin
-  Storage.StorageKey := GetStorageKeyFromAttribute(Self, GetStorageKey(Storage));
+  Storage.StorageKey := TDataStorage.GetStorageKeyFromAttribute(Self, GetStorageKey(Storage));
   InternalPrepareStorage(Storage);
 end;
 

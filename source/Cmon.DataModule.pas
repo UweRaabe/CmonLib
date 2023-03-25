@@ -133,7 +133,7 @@ end;
 
 procedure TdmCommon.PrepareStorage(DataStorage: TDataStorage);
 begin
-  DataStorage.StorageKey := GetStorageKeyFromAttribute(Self, GetStorageKey(DataStorage));
+  DataStorage.StorageKey := TDataStorage.GetStorageKeyFromAttribute(Self, GetStorageKey(DataStorage));
   InternalPrepareStorage(DataStorage);
 end;
 

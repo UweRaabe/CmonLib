@@ -40,8 +40,25 @@ type
     property SubData: TSubData read FSubData;
   end;
 
+type
+  [StorageKey('SettingsRec'), AutoStorageFields([vcPrivate])]
+  TMainDataRec = record
+  private
+    [NoAutoStorage, Default(5)]
+    FDontStoreMe: Integer;
+    [Default(10)]
+    FSomeInteger: Integer;
+    [Default('Foo')]
+    FSomeString: string;
+  public
+    property DontStoreMe: Integer read FDontStoreMe write FDontStoreMe;
+    property SomeInteger: Integer read FSomeInteger write FSomeInteger;
+    property SomeString: string read FSomeString write FSomeString;
+  end;
+
 var
   MainData: TMainData = nil;
+  MainDataRec: TMainDataRec;
 
 implementation
 

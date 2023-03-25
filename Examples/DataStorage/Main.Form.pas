@@ -7,7 +7,7 @@ uses
   System.Classes, System.IniFiles, System.Types,
   Vcl.Forms, Vcl.Controls, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Mask, Vcl.Dialogs, Vcl.ComCtrls,
   Cmon.DataStorage, Cmon.Vcl.Forms,
-  Main.Frame;
+  Main.Frame, Vcl.NumberBox;
 
 type
 {$SCOPEDENUMS ON}
@@ -49,6 +49,8 @@ type
     LoadLayoutButton: TButton;
     SaveLayoutButton: TButton;
     RestoreLayoutButton: TButton;
+    SomeStringEdit: TLabeledEdit;
+    SomeIntegerEdit: TNumberBox;
     procedure FormCreate(Sender: TObject);
     procedure LoadLayoutButtonClick(Sender: TObject);
     procedure LoadSettingsButtonClick(Sender: TObject);
@@ -78,6 +80,7 @@ type
     function GetSplitterMainData: Integer;
     procedure LoadMainData;
     procedure PrepareFileDialog(ADialog: TCustomFileDialog);
+    procedure SaveMainData;
     procedure SetLayoutRect(const Value: TRect);
     procedure SetSomeBoolean(const Value: Boolean);
     procedure SetSomeEnum(const Value: TMyEnum);
@@ -296,6 +299,7 @@ procedure TDemoMainForm.InitDefaults(Storage: TDataStorage);
 begin
   inherited;
   Storage.InitDefaults(MainData);
+  Storage.InitDefaults<TMainDataRec>(MainDataRec);
   LoadMainData;
 end;
 
@@ -303,6 +307,7 @@ procedure TDemoMainForm.LoadFromStorage(Storage: TDataStorage);
 begin
   inherited;
   Storage.LoadFromStorage(MainData);
+  Storage.LoadFromStorage<TMainDataRec>(MainDataRec);
   LoadMainData;
 end;
 
@@ -346,6 +351,9 @@ begin
   MainDataTree.Items.AddChild(subNode, MainData.SubData.SomeString);
 
   MainDataTree.FullExpand;
+
+  SomeIntegerEdit.ValueInt := MainDataRec.SomeInteger;
+  SomeStringEdit.Text  := MainDataRec.SomeString;
 end;
 
 procedure TDemoMainForm.PrepareFileDialog(ADialog: TCustomFileDialog);
@@ -480,6 +488,12 @@ begin
   SaveLayout;
 end;
 
+procedure TDemoMainForm.SaveMainData;
+begin
+  MainDataRec.SomeInteger := SomeIntegerEdit.ValueInt;
+  MainDataRec.SomeString := SomeStringEdit.Text;
+end;
+
 procedure TDemoMainForm.SaveSettings;
 begin
   SaveSettingsDialog.FileName := SettingsFileName;
@@ -490,7 +504,9 @@ end;
 procedure TDemoMainForm.SaveToStorage(Storage: TDataStorage);
 begin
   inherited;
+  SaveMainData;
   Storage.SaveToStorage(MainData);
+  Storage.SaveToStorage<TMainDataRec>(MainDataRec);
 end;
 
 procedure TDemoMainForm.SetLayoutRect(const Value: TRect);

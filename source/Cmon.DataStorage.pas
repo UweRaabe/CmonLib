@@ -109,25 +109,37 @@ type
     FStorageKey: string;
     FStorageKeyStack: TStorageKeyStack;
     FStorageTarget: IStorageTarget;
-    function LoadAutoStorage(Instance: TObject): Boolean; overload;
-    procedure LoadAutoStorage(Instance: TObject; AField: TRttiField); overload;
-    procedure LoadAutoStorage(Instance: TObject; AProp: TRttiProperty); overload;
-    function SaveAutoStorage(Instance: TObject): Boolean; overload;
-    procedure SaveAutoStorage(Instance: TObject; AField: TRttiField); overload;
-    procedure SaveAutoStorage(Instance: TObject; AProp: TRttiProperty); overload;
     procedure SetStorageTarget(const Value: IStorageTarget);
   strict protected
     class procedure ErrorNotImplemented(const ATypeName: string);
+    class procedure InitDefaults<T: record; A: TCustomDefaultAttribute>(var Instance: T; AProp: TRttiProperty); overload;
+    class procedure InitDefaults<T: record; A: TCustomDefaultAttribute>(var Instance: T; AField: TRttiField); overload;
     class procedure InitDefaults<T: TCustomDefaultAttribute>(Instance: TObject; AField: TRttiField); overload;
     class procedure InitDefaults<T: TCustomDefaultAttribute>(Instance: TObject; AProp: TRttiProperty); overload;
     procedure InternalDeleteKey(const Ident: string); virtual;
     procedure InternalEraseStorageKey; virtual;
     function InternalReadString(const Ident, Default: string): string; virtual;
     procedure InternalWriteString(const Ident, Value: string); virtual;
+    function LoadAutoStorage(Instance: TObject): Boolean; overload;
+    procedure LoadAutoStorage(Instance: TObject; AField: TRttiField); overload;
+    procedure LoadAutoStorage(Instance: TObject; AProp: TRttiProperty); overload;
+    function LoadAutoStorage<T: record>(var Instance: T): Boolean; overload;
+    procedure LoadAutoStorage<T: record>(var Instance: T; AField: TRttiField); overload;
+    procedure LoadAutoStorage<T: record>(var Instance: T; AProp: TRttiProperty); overload;
     procedure LoadFromStorage<T: TCustomStorageAttribute>(Instance: TObject; AProp: TRttiProperty); overload;
     procedure LoadFromStorage<T: TCustomStorageAttribute>(Instance: TObject; AField: TRttiField); overload;
     procedure ReadInstance(const Ident: string; Instance: TObject); overload;
     procedure ReadInstance<T: TCustomStorageAttribute>(const Ident: string; Instance: TObject); overload;
+    function SaveAutoStorage(Instance: TObject): Boolean; overload;
+    procedure SaveAutoStorage(Instance: TObject; AField: TRttiField); overload;
+    procedure SaveAutoStorage(Instance: TObject; AProp: TRttiProperty); overload;
+    procedure LoadFromStorage<T: record; A: TCustomStorageAttribute>(var Instance: T; AField: TRttiField); overload;
+    procedure LoadFromStorage<T: record; A: TCustomStorageAttribute>(var Instance: T; AProp: TRttiProperty); overload;
+    procedure SaveAutoStorage<T: record>(var Instance: T; AProp: TRttiProperty); overload;
+    procedure SaveAutoStorage<T: record>(var Instance: T; AField: TRttiField); overload;
+    function SaveAutoStorage<T: record>(var Instance: T): Boolean; overload;
+    procedure SaveToStorage<T: record; A: TCustomStorageAttribute>(var Instance: T; AProp: TRttiProperty); overload;
+    procedure SaveToStorage<T: record; A: TCustomStorageAttribute>(var Instance: T; AField: TRttiField); overload;
     procedure SaveToStorage<T: TCustomStorageAttribute>(Instance: TObject; AField: TRttiField); overload;
     procedure SaveToStorage<T: TCustomStorageAttribute>(Instance: TObject; AProp: TRttiProperty); overload;
     procedure WriteInstance(const Ident: string; Instance: TObject); overload;
@@ -137,7 +149,8 @@ type
     function GetStoredName(Attribute: TCustomStorageAttribute; const Default: string): string; overload;
     function GetStoredName(AField: TRttiField): string; overload;
     function GetStoredName(AProp: TRttiProperty): string; overload;
-    function RetrieveStorageKey(Instance: TObject): string; virtual;
+    function RetrieveStorageKey(Instance: TObject): string; overload; virtual;
+    function RetrieveStorageKey<T>: string; overload;
   public
     constructor Create;
     destructor Destroy; override;
@@ -145,11 +158,16 @@ type
     class function CreateStorageTarget(Sender: TObject; const AFileName: string = ''): IStorageTarget; overload;
     procedure EraseStorageKey;
     procedure DeleteKey(const Ident: string);
+    class function GetStorageKeyFromAttribute(AInstance: TObject; const ADefault: string = ''): string; overload;
+    class function GetStorageKeyFromAttribute<T>(const ADefault: string = ''): string; overload;
     class procedure InitDefaults(Instance: TObject); overload; static;
+    class procedure InitDefaults<T: record>(var Instance: T); overload; static;
+    class procedure InitDefaults<T: record; A: TCustomDefaultAttribute>(var Instance: T); overload; static;
     class procedure InitDefaults<T: TCustomDefaultAttribute>(Instance: TObject); overload; static;
     class function IsSupportedTargetExtension(const AExtension: string): Boolean;
     class procedure ListStorageTargets(Target: TStorageTargetDescriptorList);
     procedure LoadFromStorage(Instance: TObject); overload;
+    procedure LoadFromStorage<T: record>(var Instance: T); overload;
     procedure LoadFromStorage<T: TCustomStorageAttribute>(Instance: TObject); overload;
     function MakeStorageSubKey(const ASubKey: string): string;
     class function MakeStorageTargetFileFilter: string;
@@ -163,6 +181,9 @@ type
     procedure ReadStrings(const Ident: string; Target: TStrings);
     function ReadValue(const Ident: string; const Default: TValue): TValue;
     procedure SaveToStorage(Instance: TObject); overload;
+    procedure LoadFromStorage<T: record; A: TCustomStorageAttribute>(var Instance: T); overload;
+    procedure SaveToStorage<T: record>(var Instance: T); overload;
+    procedure SaveToStorage<T: record; A: TCustomStorageAttribute>(var Instance: T); overload;
     procedure SaveToStorage<T: TCustomStorageAttribute>(Instance: TObject); overload;
     class function SplitStorageKey(const AStorageKey: string): TArray<string>;
     class function StringToValue(const AString: string; const Default: TValue): TValue;
@@ -230,7 +251,7 @@ type
 type
   TStoredClass = class(TCustomStoredClass);
 
-function GetStorageKeyFromAttribute(AInstance: TObject; const ADefault: string = ''): string;
+function GetStorageKeyFromAttribute(AInstance: TObject; const ADefault: string = ''): string; deprecated 'Use TDataStorage.GetStorageKeyFromAttribute';
 
 implementation
 
@@ -265,14 +286,7 @@ end;
 
 function GetStorageKeyFromAttribute(AInstance: TObject; const ADefault: string = ''): string;
 begin
-  Result := ADefault;
-  var context := TRTTIContext.Create;
-  var myType := context.GetType(AInstance.ClassType);
-  if myType <> nil then begin
-    var attr := myType.GetAttribute<StorageKeyAttribute>;
-    if attr <> nil then
-      Result := attr.Key;
-  end;
+  Result := TDataStorage.GetStorageKeyFromAttribute(AInstance, ADefault);
 end;
 
 constructor TCustomDefaultAttribute.Create(AValue: Boolean);
@@ -362,6 +376,30 @@ begin
   Result := FDefaultInstance;
 end;
 
+class function TDataStorage.GetStorageKeyFromAttribute(AInstance: TObject; const ADefault: string = ''): string;
+begin
+  Result := ADefault;
+  var context := TRTTIContext.Create;
+  var myType := context.GetType(AInstance.ClassType);
+  if myType <> nil then begin
+    var attr := myType.GetAttribute<StorageKeyAttribute>;
+    if attr <> nil then
+      Result := attr.Key;
+  end;
+end;
+
+class function TDataStorage.GetStorageKeyFromAttribute<T>(const ADefault: string = ''): string;
+begin
+  Result := ADefault;
+  var context := TRTTIContext.Create;
+  var myType := context.GetType(TypeInfo(T));
+  if myType <> nil then begin
+    var attr := myType.GetAttribute<StorageKeyAttribute>;
+    if attr <> nil then
+      Result := attr.Key;
+  end;
+end;
+
 function TDataStorage.GetStoredName(const Value, Default: string): string;
 begin
   Result := Value;
@@ -389,6 +427,40 @@ end;
 class procedure TDataStorage.InitDefaults(Instance: TObject);
 begin
   InitDefaults<DefaultAttribute>(Instance);
+end;
+
+class procedure TDataStorage.InitDefaults<T>(var Instance: T);
+begin
+  InitDefaults<T, DefaultAttribute>(Instance);
+end;
+
+class procedure TDataStorage.InitDefaults<T, A>(var Instance: T);
+begin
+  var context := TRttiContext.Create;
+  var myType := context.GetType(TypeInfo(T));
+  if myType <> nil then begin
+    { initialize all fields having a Default attribute }
+    for var field in myType.GetFields do
+      InitDefaults<T, A>(Instance, field);
+
+    { initialize all properties having a Default attribute }
+    for var prop in myType.GetProperties do
+      InitDefaults<T, A>(Instance, prop);
+  end;
+end;
+
+class procedure TDataStorage.InitDefaults<T, A>(var Instance: T; AField: TRttiField);
+begin
+  var attr := AField.GetAttribute<A>;
+  if (attr = nil) or attr.Value.IsEmpty then Exit;
+  AField.SetValue(@Instance, attr.value);
+end;
+
+class procedure TDataStorage.InitDefaults<T, A>(var Instance: T; AProp: TRttiProperty);
+begin
+  var attr := AProp.GetAttribute<A>;
+  if (attr = nil) or attr.Value.IsEmpty then Exit;
+  AProp.SetValue(@Instance, attr.value);
 end;
 
 class procedure TDataStorage.InitDefaults<T>(Instance: TObject);
@@ -535,6 +607,69 @@ begin
     if not value.IsEmpty then
       AProp.SetValue(Instance, value);
   end;
+end;
+
+function TDataStorage.LoadAutoStorage<T>(var Instance: T): Boolean;
+var
+  attr: TCustomAutoStorageAttribute;
+begin
+  Result := False;
+  PushStorageKey(RetrieveStorageKey<T>);
+  try
+    var context := TRTTIContext.Create;
+    var myType := context.GetType(TypeInfo(T));
+    if myType <> nil then begin
+      attr := myType.GetAttribute<AutoStorageFieldsAttribute>;
+      if attr <> nil then begin
+        Result := True;
+        for var field in myType.GetFields do
+          if attr.CheckVisibility(field.Visibility) and not field.HasAttribute<NoAutoStorageAttribute> then
+            LoadAutoStorage<T>(Instance, field);
+      end;
+
+      attr := myType.GetAttribute<AutoStoragePropertiesAttribute>;
+      if attr <> nil then begin
+        Result := True;
+        for var prop in myType.GetProperties do
+          if attr.CheckVisibility(prop.Visibility) and not prop.HasAttribute<NoAutoStorageAttribute> then
+            LoadAutoStorage<T>(Instance, prop);
+      end;
+    end;
+  finally
+    PopStorageKey;
+  end;
+end;
+
+procedure TDataStorage.LoadAutoStorage<T>(var Instance: T; AField: TRttiField);
+begin
+  var storedName := GetStoredName(AField);
+  if AField.FieldType.IsInstance then begin
+    ReadInstance(storedName, AField.GetValue(@Instance).AsObject);
+  end
+  else begin
+    var value := ReadValue(storedName, AField.GetValue(@Instance));
+    if not value.IsEmpty then
+      AField.SetValue(@Instance, value);
+  end;
+end;
+
+procedure TDataStorage.LoadAutoStorage<T>(var Instance: T; AProp: TRttiProperty);
+begin
+  var storedName := GetStoredName(AProp);
+  if AProp.PropertyType.IsInstance then begin
+    ReadInstance(storedName, AProp.GetValue(@Instance).AsObject);
+  end
+  else begin
+    var value := ReadValue(storedName, AProp.GetValue(@Instance));
+    if not value.IsEmpty then
+      AProp.SetValue(@Instance, value);
+  end;
+end;
+
+procedure TDataStorage.LoadFromStorage<T>(var Instance: T);
+begin
+  if not LoadAutoStorage<T>(Instance) then
+    LoadFromStorage<T, StorageAttribute>(Instance);
 end;
 
 procedure TDataStorage.LoadFromStorage<T>(Instance: TObject);
@@ -708,6 +843,13 @@ begin
     Result := GetStorageKeyFromAttribute(Instance, Instance.ClassName);
 end;
 
+function TDataStorage.RetrieveStorageKey<T>: string;
+begin
+  Result := StorageKey;
+  if Result.IsEmpty then
+    Result := GetStorageKeyFromAttribute<T>(string(PTypeInfo(TypeInfo(T)).Name));
+end;
+
 function TDataStorage.SaveAutoStorage(Instance: TObject): Boolean;
 var
   attr: TCustomAutoStorageAttribute;
@@ -762,6 +904,148 @@ procedure TDataStorage.SaveToStorage(Instance: TObject);
 begin
   if not SaveAutoStorage(Instance) then
     SaveToStorage<StorageAttribute>(Instance);
+end;
+
+procedure TDataStorage.LoadFromStorage<T, A>(var Instance: T);
+begin
+  PushStorageKey(RetrieveStorageKey<T>);
+  try
+    var context := TRttiContext.Create;
+    var myType := context.GetType(TypeInfo(T));
+    if myType <> nil then begin
+      for var field in myType.GetFields do
+        LoadFromStorage<T, A>(Instance, field);
+
+      for var prop in myType.GetProperties do
+        LoadFromStorage<T, A>(Instance, prop);
+    end;
+  finally
+    PopStorageKey;
+  end;
+end;
+
+procedure TDataStorage.LoadFromStorage<T, A>(var Instance: T; AField: TRttiField);
+begin
+  var attr := AField.GetAttribute<A>;
+  if (attr = nil) then Exit;
+  var storedName := GetStoredName(attr.name, AField.Name.Substring(1));
+  if AField.FieldType.IsInstance then
+    ReadInstance<A>(storedName, AField.GetValue(@Instance).AsObject)
+  else begin
+    var value := ReadValue(storedName, AField.GetValue(@Instance));
+    if not value.IsEmpty then
+      AField.SetValue(@Instance, value);
+  end;
+end;
+
+procedure TDataStorage.LoadFromStorage<T, A>(var Instance: T; AProp: TRttiProperty);
+begin
+  var attr := AProp.GetAttribute<A>;
+  if (attr = nil) then Exit;
+  var storedName := GetStoredName(attr.name, AProp.Name);
+  if AProp.PropertyType.IsInstance then
+    ReadInstance<A>(storedName, AProp.GetValue(@Instance).AsObject)
+  else begin
+    var value := ReadValue(storedName, AProp.GetValue(@Instance));
+    if not value.IsEmpty then
+      AProp.SetValue(@Instance, value);
+  end;
+end;
+
+procedure TDataStorage.SaveAutoStorage<T>(var Instance: T; AProp: TRttiProperty);
+begin
+  var storedName := GetStoredName(AProp);
+  if AProp.PropertyType.IsInstance then
+    WriteInstance(storedName, AProp.GetValue(@Instance).AsObject)
+  else
+    WriteValue(storedName, AProp.GetValue(@Instance));
+end;
+
+procedure TDataStorage.SaveAutoStorage<T>(var Instance: T; AField: TRttiField);
+begin
+  var storedName := GetStoredName(AField);
+  if AField.FieldType.IsInstance then
+    WriteInstance(storedName, AField.GetValue(@Instance).AsObject)
+  else
+    WriteValue(storedName, AField.GetValue(@Instance));
+end;
+
+function TDataStorage.SaveAutoStorage<T>(var Instance: T): Boolean;
+var
+  attr: TCustomAutoStorageAttribute;
+begin
+  Result := False;
+
+  PushStorageKey(RetrieveStorageKey<T>);
+  try
+    var context := TRTTIContext.Create;
+    var myType := context.GetType(TypeInfo(T));
+    if myType <> nil then begin
+      attr := myType.GetAttribute<AutoStorageFieldsAttribute>;
+      if attr <> nil then begin
+        Result := True;
+        for var field in myType.GetFields do
+          if attr.CheckVisibility(field.Visibility) and not field.HasAttribute<NoAutoStorageAttribute> then
+            SaveAutoStorage(Instance, field);
+      end;
+
+      attr := myType.GetAttribute<AutoStoragePropertiesAttribute>;
+      if attr <> nil then begin
+        Result := True;
+        for var prop in myType.GetProperties do
+          if attr.CheckVisibility(prop.Visibility) and not prop.HasAttribute<NoAutoStorageAttribute> then
+            SaveAutoStorage(Instance, prop);
+      end;
+    end;
+  finally
+    PopStorageKey;
+  end;
+end;
+
+procedure TDataStorage.SaveToStorage<T>(var Instance: T);
+begin
+  if not SaveAutoStorage<T>(Instance) then
+    SaveToStorage<T, StorageAttribute>(Instance);
+end;
+
+procedure TDataStorage.SaveToStorage<T, A>(var Instance: T);
+begin
+  PushStorageKey(RetrieveStorageKey<T>);
+  try
+    var context := TRttiContext.Create;
+    var myType := context.GetType(TypeInfo(T));
+    if myType <> nil then begin
+      for var field in myType.GetFields do
+        SaveToStorage<T, A>(Instance, field);
+
+      for var prop in myType.GetProperties do
+        SaveToStorage<T, A>(Instance, prop);
+    end;
+  finally
+    PopStorageKey;
+  end;
+end;
+
+procedure TDataStorage.SaveToStorage<T, A>(var Instance: T; AProp: TRttiProperty);
+begin
+  var attr := AProp.GetAttribute<A>;
+  if (attr = nil) then Exit;
+  var storedName := GetStoredName(attr.name, AProp.Name);
+  if AProp.PropertyType.IsInstance then
+    WriteInstance<A>(storedName, AProp.GetValue(@Instance).AsObject)
+  else
+    WriteValue(storedName, AProp.GetValue(@Instance));
+end;
+
+procedure TDataStorage.SaveToStorage<T, A>(var Instance: T; AField: TRttiField);
+begin
+  var attr := AField.GetAttribute<A>;
+  if (attr = nil) then Exit;
+  var storedName := GetStoredName(attr.name, AField.Name.Substring(1));
+  if AField.FieldType.IsInstance then
+    WriteInstance<A>(storedName, AField.GetValue(@Instance).AsObject)
+  else
+    WriteValue(storedName, AField.GetValue(@Instance));
 end;
 
 procedure TDataStorage.SaveToStorage<T>(Instance: TObject);
@@ -1063,7 +1347,7 @@ var
   intf: IStorageKey;
 begin
   { do we have a StorageKey attribute? }
-  Result := GetStorageKeyFromAttribute(Target);
+  Result := TDataStorage.GetStorageKeyFromAttribute(Target);
   if Result.IsEmpty then begin
     { no, then we look for IStorageKey support }
     if Supports(Target, IStorageKey, intf) then
