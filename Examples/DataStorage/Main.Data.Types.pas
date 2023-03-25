@@ -41,18 +41,16 @@ type
   end;
 
 type
-  [StorageKey('SettingsRec'), AutoStorageFields([vcPrivate])]
+  [StorageKey('SettingsRec'), AutoStorageFields([vcPrivate, vcPublic]), SkipFieldNameF([vcPrivate])]
   TMainDataRec = record
   private
-    [NoAutoStorage, Default(5)]
-    FDontStoreMe: Integer;
-    [Default(10)]
-    FSomeInteger: Integer;
     [Default('Foo')]
     FSomeString: string;
   public
-    property DontStoreMe: Integer read FDontStoreMe write FDontStoreMe;
-    property SomeInteger: Integer read FSomeInteger write FSomeInteger;
+    [NoAutoStorage, Default(5)]
+    DontStoreMe: Integer;
+    [Default(10)]
+    SomeInteger: Integer;
     property SomeString: string read FSomeString write FSomeString;
   end;
 
