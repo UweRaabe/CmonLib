@@ -51,6 +51,7 @@ type
     DontStoreMe: Integer;
     [Default(10)]
     SomeInteger: Integer;
+    { AutoStorage for record properties will not work until RTTI supports it }
     property SomeString: string read FSomeString write FSomeString;
   end;
 
