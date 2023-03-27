@@ -35,6 +35,7 @@ requires
 
 contains
   Cmon.DataStorage in '..\..\source\Cmon.DataStorage.pas',
+  Cmon.DataStorage.Types in '..\..\source\Cmon.DataStorage.Types.pas',
   Cmon.DataStorage.Target in '..\..\source\Cmon.DataStorage.Target.pas',
   Cmon.DataStorage.Inifile in '..\..\source\Cmon.DataStorage.Inifile.pas',
   Cmon.DataStorage.JSON in '..\..\source\Cmon.DataStorage.JSON.pas',

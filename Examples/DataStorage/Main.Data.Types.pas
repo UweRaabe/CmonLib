@@ -32,7 +32,7 @@ type
   public
     constructor Create;
     destructor Destroy; override;
-    [NoAutoStorage]
+    [NoStorage]
     property DontStoreMe: Integer read FDontStoreMe write FDontStoreMe;
     property SomeInteger: Integer read FSomeInteger write FSomeInteger;
     property SomeString: string read FSomeString write FSomeString;
@@ -47,7 +47,7 @@ type
     [Default('Foo')]
     FSomeString: string;
   public
-    [NoAutoStorage, Default(5)]
+    [NoStorage, Default(5)]
     DontStoreMe: Integer;
     [Default(10)]
     SomeInteger: Integer;

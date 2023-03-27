@@ -11,20 +11,28 @@ type
   private
     FJson: TJSONObject;
     FModified: Boolean;
+    function FindOrCreateKey(const Key: string): TJSONObject;
+    function FindKey(const Key: string): TJSONObject;
+    function FindValue(const Key, Ident: string): TJSONValue;
     procedure SetJson(const Value: TJSONObject);
   strict protected
     procedure DeleteKey(const Key, Ident: string); override;
     procedure EraseStorageKey(const Key: string); override;
     function ReadString(const Key: string; const Ident: string; const Default: string): string; override;
+    function ReadBoolean(const Key: string; const Ident: string; const Default: Boolean): Boolean; override;
+    function ReadFloat(const Key: string; const Ident: string; const Default: Double): Double; override;
+    function ReadInteger(const Key: string; const Ident: string; const Default: Integer): Integer; override;
+    procedure WriteBoolean(const Key: string; const Ident: string; const Value: Boolean); override;
+    procedure WriteFloat(const Key: string; const Ident: string; const Value: Double); override;
+    procedure WriteInteger(const Key: string; const Ident: string; const Value: Integer); override;
     procedure WriteString(const Key: string; const Ident: string; const Value: string); override;
-  protected
   public
     destructor Destroy; override;
     class function Description: string; override;
     class function FileExtension: string; override;
     procedure LoadFromFile(const AFileName: string); override;
     procedure SaveToFile(const AFileName: string); override;
-    property Json: TJSONObject read FJson write SetJson;
+    property JSON: TJSONObject read FJson write SetJson;
     property Modified: Boolean read FModified write FModified;
   end;
 
@@ -49,11 +57,12 @@ resourcestring
 type
   TJsonObjectHelper = class helper for TJSONObject
   public
-    function FindIdent(const AIdent: string): TJSONString;
-    procedure WriteIdent(const AIdent, AValue: string);
-    function FindKey(const AKey: string): TJSONObject;
+    procedure WriteIdent(const AIdent, AValue: string); overload;
     function FindOrCreateKey(const AKey: string): TJSONObject;
-    function FindPair<T: class>(const AName: string): TJSONPair;
+    function FindKey(const AKey: string): TJSONObject;
+    procedure WriteIdent(const AIdent: string; const AValue: Boolean); overload;
+    procedure WriteIdent(const AIdent: string; const AValue: Integer); overload;
+    procedure WriteIdent(const AIdent: string; const AValue: Double); overload;
   end;
 
 destructor TJSONStorageTarget.Destroy;
@@ -65,14 +74,9 @@ end;
 
 procedure TJSONStorageTarget.DeleteKey(const Key, Ident: string);
 begin
-  var node := Json;
-  for var subKey in TDataStorage.SplitStorageKey(Key) do begin
-    node := node.FindKey(subKey);
-    if node = nil then
-      Break;
-  end;
+  var node := FindKey(Key);
   if node <> nil then begin
-    var temp := node.FindIdent(Ident);
+    var temp := node.Get(Ident);
     if temp <> nil then begin
       temp.Free;
       Modified := True;
@@ -87,12 +91,7 @@ end;
 
 procedure TJSONStorageTarget.EraseStorageKey(const Key: string);
 begin
-  var node := Json;
-  for var subKey in TDataStorage.SplitStorageKey(Key) do begin
-    node := node.FindKey(Key);
-    if node = nil then
-      Break;
-  end;
+  var node := FindKey(Key);
   if node <> nil then begin
     node.Free;
     Modified := True;
@@ -102,6 +101,33 @@ end;
 class function TJSONStorageTarget.FileExtension: string;
 begin
   Result := '.json';
+end;
+
+function TJSONStorageTarget.FindOrCreateKey(const Key: string): TJSONObject;
+begin
+  var node := Json;
+  for var subKey in TDataStorage.SplitStorageKey(Key) do
+    node := node.FindOrCreateKey(subKey);
+  Result := node;
+end;
+
+function TJSONStorageTarget.FindKey(const Key: string): TJSONObject;
+begin
+  Result := nil;
+  var node := Json;
+  for var subKey in TDataStorage.SplitStorageKey(Key) do begin
+    node := node.FindKey(Key);
+    if node = nil then Exit;
+  end;
+  Result := node;
+end;
+
+function TJSONStorageTarget.FindValue(const Key, Ident: string): TJSONValue;
+begin
+  Result := nil;
+  var node := FindKey(Key);
+  if node <> nil then
+    Result := node.Values[Ident];
 end;
 
 procedure TJSONStorageTarget.LoadFromFile(const AFileName: string);
@@ -114,19 +140,36 @@ begin
   inherited;
 end;
 
+function TJSONStorageTarget.ReadBoolean(const Key, Ident: string; const Default: Boolean): Boolean;
+begin
+  Result := Default;
+  var node := FindValue(Key, Ident);
+  if node <> nil then
+    Result := node.AsType<Boolean>;
+end;
+
+function TJSONStorageTarget.ReadFloat(const Key, Ident: string; const Default: Double): Double;
+begin
+  Result := Default;
+  var node := FindValue(Key, Ident);
+  if node <> nil then
+    Result := node.AsType<Double>;
+end;
+
+function TJSONStorageTarget.ReadInteger(const Key, Ident: string; const Default: Integer): Integer;
+begin
+  Result := Default;
+  var node := FindValue(Key, Ident);
+  if node <> nil then
+    Result := node.AsType<Integer>;
+end;
+
 function TJSONStorageTarget.ReadString(const Key, Ident, Default: string): string;
 begin
   Result := Default;
-  var node := Json;
-  for var subKey in TDataStorage.SplitStorageKey(Key) do begin
-    node := node.FindKey(subKey);
-    if node = nil then Exit;
-  end;
-  if node <> nil then begin
-    var temp := node.FindIdent(Ident);
-    if temp <> nil then
-      Result := temp.Value;
-  end;
+  var node := FindValue(Key, Ident);
+  if node <> nil then
+    Result := node.AsType<string>;
 end;
 
 procedure TJSONStorageTarget.SaveToFile(const AFileName: string);
@@ -145,57 +188,91 @@ begin
   end;
 end;
 
-procedure TJSONStorageTarget.WriteString(const Key, Ident, Value: string);
+procedure TJSONStorageTarget.WriteBoolean(const Key, Ident: string; const Value: Boolean);
 begin
-  var node := Json;
-  for var subKey in TDataStorage.SplitStorageKey(Key) do
-    node := node.FindOrCreateKey(subKey);
+  var node := FindOrCreateKey(Key);
   node.WriteIdent(Ident, Value);
   Modified := True;
 end;
 
-function TJsonObjectHelper.FindIdent(const AIdent: string): TJSONString;
+procedure TJSONStorageTarget.WriteFloat(const Key, Ident: string; const Value: Double);
 begin
-  Result := nil;
-  var pair := FindPair<TJSONString>(AIdent);
-  if pair <> nil then
-    Result := pair.JsonValue as TJSONString;
+  var node := FindOrCreateKey(Key);
+  node.WriteIdent(Ident, Value);
+  Modified := True;
+end;
+
+procedure TJSONStorageTarget.WriteInteger(const Key, Ident: string; const Value: Integer);
+begin
+  var node := FindOrCreateKey(Key);
+  node.WriteIdent(Ident, Value);
+  Modified := True;
+end;
+
+procedure TJSONStorageTarget.WriteString(const Key, Ident, Value: string);
+begin
+  var node := FindOrCreateKey(Key);
+  node.WriteIdent(Ident, Value);
+  Modified := True;
 end;
 
 procedure TJsonObjectHelper.WriteIdent(const AIdent, AValue: string);
 begin
-  var pair := FindPair<TJSONString>(AIdent);
+  var pair := Get(AIdent);
   if pair = nil then
     AddPair(AIdent, AValue)
   else
     pair.JsonValue := TJSONString.Create(AValue);
 end;
 
+function TJsonObjectHelper.FindOrCreateKey(const AKey: string): TJSONObject;
+begin
+  var pair := Get(AKey);
+  if pair = nil then begin
+    Result := TJSONObject.Create;
+    AddPair(AKey, Result);
+  end
+  else if not (pair.JsonValue is TJSONObject) then begin
+    Result := TJSONObject.Create;
+    pair.JsonValue := Result;
+  end
+  else
+    Result := pair.JsonValue as TJSONObject
+end;
+
 function TJsonObjectHelper.FindKey(const AKey: string): TJSONObject;
 begin
   Result := nil;
-  var pair := FindPair<TJSONObject>(AKey);
-  if pair <> nil then
+  var pair := Get(AKey);
+  if (pair <> nil) and (pair.JsonValue is TJSONObject) then
     Result := pair.JsonValue as TJSONObject;
 end;
 
-function TJsonObjectHelper.FindOrCreateKey(const AKey: string): TJSONObject;
+procedure TJsonObjectHelper.WriteIdent(const AIdent: string; const AValue: Boolean);
 begin
-  Result := FindKey(AKey);
-  if Result = nil then begin
-    Result := TJSONObject.Create;
-    AddPair(AKey, Result);
-  end;
+  var pair := Get(AIdent);
+  if pair = nil then
+    AddPair(AIdent, AValue)
+  else
+    pair.JsonValue := TJSONBool.Create(AValue);
 end;
 
-function TJsonObjectHelper.FindPair<T>(const AName: string): TJSONPair;
+procedure TJsonObjectHelper.WriteIdent(const AIdent: string; const AValue: Integer);
 begin
-  Result := nil;
-  for var I := 0 to Count - 1 do begin
-    var pair := Pairs[I];
-    if pair.JsonString.Equals(AName) and (pair.JsonValue is T) then
-      Exit(pair);
-  end;
+  var pair := Get(AIdent);
+  if pair = nil then
+    AddPair(AIdent, AValue)
+  else
+    pair.JsonValue := TJSONNumber.Create(AValue);
+end;
+
+procedure TJsonObjectHelper.WriteIdent(const AIdent: string; const AValue: Double);
+begin
+  var pair := Get(AIdent);
+  if pair = nil then
+    AddPair(AIdent, AValue)
+  else
+    pair.JsonValue := TJSONNumber.Create(AValue);
 end;
 
 var

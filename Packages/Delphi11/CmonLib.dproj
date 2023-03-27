@@ -87,6 +87,7 @@
         </DelphiCompile>
         <DCCReference Include="rtl.dcp"/>
         <DCCReference Include="..\..\source\Cmon.DataStorage.pas"/>
+        <DCCReference Include="..\..\source\Cmon.DataStorage.Types.pas"/>
         <DCCReference Include="..\..\source\Cmon.DataStorage.Target.pas"/>
         <DCCReference Include="..\..\source\Cmon.DataStorage.Inifile.pas"/>
         <DCCReference Include="..\..\source\Cmon.DataStorage.JSON.pas"/>

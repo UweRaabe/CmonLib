@@ -4,21 +4,16 @@ interface
 
 uses
   System.Messaging,
-  Cmon.DataStorage;
+  Cmon.DataStorage.Types;
 
 type
-  TCustomStorageTarget = class(TInterfacedObject, IStorageTarget)
+  TCustomStorageTarget = class(TAbstractStorageTarget)
   private
     FFileName: string;
   class var
     FDefaultFileExtension: string;
     FDefaultFileName: string;
     FDefaultFilePath: string;
-  strict protected
-    procedure EraseStorageKey(const Key: string); virtual; abstract;
-    procedure DeleteKey(const Key, Ident: string); virtual; abstract;
-    function ReadString(const Key: string; const Ident: string; const Default: string): string; virtual; abstract;
-    procedure WriteString(const Key: string; const Ident: string; const Value: string); virtual; abstract;
   public
     constructor Create(const AFileName: string = ''); virtual;
     class function Description: string; virtual; abstract;

@@ -312,12 +312,9 @@ begin
 end;
 
 procedure TDemoMainForm.LoadLayout(const AFileName: string);
-var
-  storage: TDataStorage;
 begin
-  storage := TDataStorage.Create;
+  var storage := TDataStorage.Create(AFileName);
   try
-    storage.StorageTarget := TDataStorage.CreateStorageTarget(Self, AFileName);
     storage.LoadFromStorage<LayoutAttribute>(Self);
   finally
     storage.Free;
@@ -359,25 +356,19 @@ end;
 procedure TDemoMainForm.PrepareFileDialog(ADialog: TCustomFileDialog);
 begin
   var defaultExt := SettingsFileExtension;
-  var targets := TStorageTargetDescriptorList.Create;
-  try
-    TDataStorage.ListStorageTargets(targets);
-    ADialog.FileTypes.Clear;
-    for var target in targets do begin
-      var fileType := ADialog.FileTypes.Add;
-      fileType.DisplayName := Format('%s (*%s)', [target.Description, target.FileExtension]);
-      fileType.FileMask := Format('*%s', [target.FileExtension]);
-      if SameText(defaultExt, target.FileExtension) then
-        ADialog.FileTypeIndex := ADialog.FileTypes.Count;
-    end;
-
-    var arr := SDefaultFilter.Split(['|']);
+  ADialog.FileTypes.Clear;
+  for var target in TDataStorage.StorageTargets do begin
     var fileType := ADialog.FileTypes.Add;
-    fileType.DisplayName := arr[0];
-    fileType.FileMask := arr[1];
-  finally
-    targets.Free;
+    fileType.DisplayName := Format('%s (*%s)', [target.Description, target.FileExtension]);
+    fileType.FileMask := Format('*%s', [target.FileExtension]);
+    if SameText(defaultExt, target.FileExtension) then
+      ADialog.FileTypeIndex := ADialog.FileTypes.Count;
   end;
+
+  var arr := SDefaultFilter.Split(['|']);
+  var fileType := ADialog.FileTypes.Add;
+  fileType.DisplayName := arr[0];
+  fileType.FileMask := arr[1];
   ADialog.DefaultExtension := defaultExt.Substring(1);
 end;
 
@@ -462,12 +453,9 @@ begin
 end;
 
 procedure TDemoMainForm.SaveLayout(const AFileName: string);
-var
-  storage: TDataStorage;
 begin
-  storage := TDataStorage.Create;
+  var storage := TDataStorage.Create(AFileName);
   try
-    storage.StorageTarget := TDataStorage.CreateStorageTarget(Self, AFileName);
     storage.SaveToStorage<LayoutAttribute>(Self);
   finally
     storage.Free;
