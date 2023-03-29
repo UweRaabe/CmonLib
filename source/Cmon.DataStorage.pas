@@ -94,6 +94,7 @@ type
     function ReadString(const Ident, Default: string): string;
     procedure ReadStrings(const Ident: string; Target: TStrings);
     function ReadValue(const Ident: string; const Default: TValue): TValue;
+    function ValueExists(const Key, Ident: string): Boolean;
     procedure WriteBoolean(const Ident: string; const Value: Boolean);
     procedure WriteDateTime(const Ident: string; const Value: TDateTime);
     procedure WriteFloat(const Ident: string; const Value: Double);
@@ -565,6 +566,11 @@ end;
 class function TDataStorage.SplitStorageKey(const AStorageKey: string): TArray<string>;
 begin
   Result := AStorageKey.Split([cKeySeparator]);
+end;
+
+function TDataStorage.ValueExists(const Key, Ident: string): Boolean;
+begin
+  Result := FStorageTarget.ValueExists(Key, Ident);
 end;
 
 procedure TDataStorage.WriteBoolean(const Ident: string; const Value: Boolean);

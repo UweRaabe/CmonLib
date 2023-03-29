@@ -56,6 +56,7 @@ type
     procedure EraseStorageKey(const Key: string);
     procedure DeleteKey(const Key, Ident: string);
     function ReadString(const Key, Ident, Default: string): string;
+    function ValueExists(const Key, Ident: string): Boolean;
     procedure WriteString(const Key, Ident, Value: string);
   end;
 
@@ -73,7 +74,6 @@ type
     procedure WriteInteger(const Key, Ident: string; const Value: Integer);
     procedure WriteStrings(const Key, Ident: string; Source: TStrings);
     procedure WriteValue(const Key, Ident: string; const Value: TValue);
-    function ValueExists(const Key, Ident: string): Boolean;
   end;
   TStorageTargetFactory = TFunc<IStorageTarget>;
 
