@@ -3,7 +3,7 @@ unit Cmon.DataStorage.JSON;
 interface
 
 uses
-  System.JSON,
+  System.JSON, System.Classes,
   Cmon.DataStorage, Cmon.DataStorage.Target;
 
 type
@@ -18,6 +18,7 @@ type
   strict protected
     procedure DeleteKey(const Key, Ident: string); override;
     procedure EraseStorageKey(const Key: string); override;
+    procedure ReadKey(const Key: string; Target: TStrings); override;
     function ReadString(const Key: string; const Ident: string; const Default: string): string; override;
     function ReadBoolean(const Key: string; const Ident: string; const Default: Boolean): Boolean; override;
     function ReadFloat(const Key: string; const Ident: string; const Default: Double): Double; override;
@@ -163,6 +164,16 @@ begin
   var node := FindValue(Key, Ident);
   if node <> nil then
     Result := node.AsType<Integer>;
+end;
+
+procedure TJSONStorageTarget.ReadKey(const Key: string; Target: TStrings);
+begin
+  inherited;
+  var node := FindKey(Key);
+  if node <> nil then begin
+    for var pair in node do
+      Target.AddPair(pair.JsonString.Value, pair.JsonValue.Value);
+  end;
 end;
 
 function TJSONStorageTarget.ReadString(const Key, Ident, Default: string): string;

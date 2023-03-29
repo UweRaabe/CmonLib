@@ -3,7 +3,7 @@ unit Cmon.DataStorage.Inifile;
 interface
 
 uses
-  System.IniFiles, System.Messaging,
+  System.IniFiles, System.Messaging, System.Classes,
   Cmon.DataStorage, Cmon.DataStorage.Target;
 
 type
@@ -14,6 +14,7 @@ type
   strict protected
     procedure EraseStorageKey(const Key: string); override;
     procedure DeleteKey(const Key, Ident: string); override;
+    procedure ReadKey(const Key: string; Target: TStrings); override;
     function ReadString(const Key: string; const Ident: string; const Default: string): string; override;
     procedure WriteString(const Key: string; const Ident: string; const Value: string); override;
     function ValueExists(const Key, Ident: string): Boolean; override;
@@ -73,6 +74,11 @@ procedure TIniStorageTarget.LoadFromFile(const AFileName: string);
 begin
   TDirectory.CreateDirectory(TPath.GetDirectoryName(AFileName));
   IniFile := TMemIniFile.Create(AFileName);
+end;
+
+procedure TIniStorageTarget.ReadKey(const Key: string; Target: TStrings);
+begin
+  IniFile.ReadSectionValues(Key, Target);
 end;
 
 function TIniStorageTarget.ReadString(const Key: string; const Ident: string; const Default: string): string;

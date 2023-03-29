@@ -87,6 +87,7 @@ type
     { Reading, Writing, Key and Section handling }
     procedure EraseStorageKey;
     procedure DeleteKey(const Ident: string);
+    procedure ReadKey(Target: TStrings);
     function ReadBoolean(const Ident: string; const Default: Boolean): Boolean;
     function ReadDateTime(const Ident: string; const Default: TDateTime): TDateTime;
     function ReadFloat(const Ident: string; const Default: Double): Double;
@@ -171,6 +172,7 @@ type
     procedure DeleteKey(const Key, Ident: string); override;
     procedure EraseStorageKey(const Key: string); override;
   protected
+    procedure ReadKey(const Key: string; Target: TStrings); override;
     function ReadString(const Key: string; const Ident: string; const Default: string): string; override;
     procedure WriteString(const Key: string; const Ident: string; const Value: string); override;
     function ValueExists(const Key, Ident: string): Boolean; override;
@@ -181,6 +183,10 @@ begin
 end;
 
 procedure TDefaultStorageTarget.EraseStorageKey(const Key: string);
+begin
+end;
+
+procedure TDefaultStorageTarget.ReadKey(const Key: string; Target: TStrings);
 begin
 end;
 
@@ -502,6 +508,11 @@ end;
 function TDataStorage.ReadInteger(const Ident: string; const Default: Integer): Integer;
 begin
   Result := FStorageTargetExt.ReadInteger(StorageKey, Ident, Default);
+end;
+
+procedure TDataStorage.ReadKey(Target: TStrings);
+begin
+  FStorageTarget.ReadKey(StorageKey, Target);
 end;
 
 function TDataStorage.ReadString(const Ident, Default: string): string;

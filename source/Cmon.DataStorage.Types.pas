@@ -55,6 +55,7 @@ type
   ['{13CF0202-A7DB-4452-A48C-58B1EEE804BD}']
     procedure EraseStorageKey(const Key: string);
     procedure DeleteKey(const Key, Ident: string);
+    procedure ReadKey(const Key: string; Target: TStrings);
     function ReadString(const Key, Ident, Default: string): string;
     function ValueExists(const Key, Ident: string): Boolean;
     procedure WriteString(const Key, Ident, Value: string);
@@ -118,6 +119,7 @@ type
     function CreateConverter: TValueConverter; virtual;
     procedure DeleteKey(const Key, Ident: string); virtual; abstract;
     procedure EraseStorageKey(const Key: string); virtual; abstract;
+    procedure ReadKey(const Key: string; Target: TStrings); virtual; abstract;
     function ReadBoolean(const Key, Ident: string; const Default: Boolean): Boolean; virtual;
     function ReadDateTime(const Key, Ident: string; const Default: TDateTime): TDateTime; virtual;
     function ReadFloat(const Key, Ident: string; const Default: Double): Double; virtual;
