@@ -10,6 +10,7 @@ type
   TVersionInfo = record
   private
     FBuildVersion: Integer;
+    FCompany: string;
     FCopyright: string;
     FInfo: string;
     FIsValid: Boolean;
@@ -21,6 +22,7 @@ type
     FVersionName: string;
   public
     property BuildVersion: Integer read FBuildVersion;
+    property Company: string read FCompany;
     property Copyright: string read FCopyright;
     property Info: string read FInfo;
     property IsValid: Boolean read FIsValid;
@@ -97,6 +99,7 @@ const
   CFileVers: String = '\StringFileInfo\%s\FileVersion';
   CCopyright: String = '\StringFileInfo\%s\LegalCopyright';
   CComments: String = '\StringFileInfo\%s\Comments';
+  CCompany: String = '\StringFileInfo\%s\CompanyName';
   CSlash: String = '\';
 var
   FileName: string;
@@ -150,6 +153,9 @@ begin
 
     if VerQueryValue(pBuff, PChar(Format(CCopyright, [sTranslation])), Pointer(pStr), iLen) then
       Result.FCopyright := pStr;
+
+    if VerQueryValue(pBuff, PChar(Format(CCompany, [sTranslation])), Pointer(pStr), iLen) then
+      Result.FCompany := pStr;
 
     if VerQueryValue(pBuff, PChar(Format(CComments, [sTranslation])), Pointer(pStr), iLen) then
       Result.FInfo := pStr;
