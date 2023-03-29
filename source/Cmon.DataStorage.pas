@@ -105,9 +105,9 @@ type
     class property AutoRegisterHandler: Boolean read FAutoRegisterHandler write FAutoRegisterHandler;
     class property DefaultInstance: TDataStorage read GetDefaultInstance;
     class property StorageTargetFactory: TStorageTargetFactory read FStorageTargetFactory write FStorageTargetFactory;
+    class property StorageTargets: TStorageTargets read GetStorageTargets;
     property StorageKey: string read FStorageKey write FStorageKey;
     property StorageTarget: IStorageTarget read FStorageTarget write SetStorageTarget;
-    class property StorageTargets: TStorageTargets read GetStorageTargets;
   end;
 
 type

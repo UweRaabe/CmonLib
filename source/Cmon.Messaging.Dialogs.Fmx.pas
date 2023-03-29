@@ -27,7 +27,9 @@ uses
 procedure TDlgMessageHandlerVcl.DlgMessage(const Sender: TObject; const M: TMessage);
 begin
   var msg := M as TDlgMessage;
+{$WARN SYMBOL_DEPRECATED OFF}
   msg.Answer := MessageDlg(msg.MessageText, msg.MsgDlgType, msg.Buttons, msg.HelpContext);
+{$WARN SYMBOL_DEPRECATED DEFAULT}
 end;
 
 var
