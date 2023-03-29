@@ -26,6 +26,7 @@ type
     procedure WriteFloat(const Key: string; const Ident: string; const Value: Double); override;
     procedure WriteInteger(const Key: string; const Ident: string; const Value: Integer); override;
     procedure WriteString(const Key: string; const Ident: string; const Value: string); override;
+    function ValueExists(const Key, Ident: string): Boolean; override;
   public
     destructor Destroy; override;
     class function Description: string; override;
@@ -186,6 +187,11 @@ begin
     FJson.Free;
     FJson := Value;
   end;
+end;
+
+function TJSONStorageTarget.ValueExists(const Key, Ident: string): Boolean;
+begin
+  Result := FindValue(Key, Ident) <> nil;
 end;
 
 procedure TJSONStorageTarget.WriteBoolean(const Key, Ident: string; const Value: Boolean);

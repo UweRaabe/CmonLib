@@ -16,6 +16,7 @@ type
     procedure DeleteKey(const Key, Ident: string); override;
     function ReadString(const Key: string; const Ident: string; const Default: string): string; override;
     procedure WriteString(const Key: string; const Ident: string; const Value: string); override;
+    function ValueExists(const Key, Ident: string): Boolean; override;
     property IniFile: TMemIniFile read FIniFile write SetIniFile;
   public
     destructor Destroy; override;
@@ -88,6 +89,11 @@ begin
     if FIniFile <> nil then
       FIniFile.AutoSave := True;
   end;
+end;
+
+function TIniStorageTarget.ValueExists(const Key, Ident: string): Boolean;
+begin
+  Result := IniFile.ValueExists(Key, Ident);
 end;
 
 procedure TIniStorageTarget.WriteString(const Key: string; const Ident: string; const Value: string);

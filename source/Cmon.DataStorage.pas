@@ -172,6 +172,7 @@ type
   protected
     function ReadString(const Key: string; const Ident: string; const Default: string): string; override;
     procedure WriteString(const Key: string; const Ident: string; const Value: string); override;
+    function ValueExists(const Key, Ident: string): Boolean; override;
   end;
 
 procedure TDefaultStorageTarget.DeleteKey(const Key, Ident: string);
@@ -185,6 +186,11 @@ end;
 function TDefaultStorageTarget.ReadString(const Key, Ident, Default: string): string;
 begin
   Result := Default;
+end;
+
+function TDefaultStorageTarget.ValueExists(const Key, Ident: string): Boolean;
+begin
+  Result := False;
 end;
 
 procedure TDefaultStorageTarget.WriteString(const Key, Ident, Value: string);

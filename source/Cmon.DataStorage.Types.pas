@@ -73,6 +73,7 @@ type
     procedure WriteInteger(const Key, Ident: string; const Value: Integer);
     procedure WriteStrings(const Key, Ident: string; Source: TStrings);
     procedure WriteValue(const Key, Ident: string; const Value: TValue);
+    function ValueExists(const Key, Ident: string): Boolean;
   end;
   TStorageTargetFactory = TFunc<IStorageTarget>;
 
@@ -131,6 +132,7 @@ type
     procedure WriteString(const Key, Ident, Value: string); virtual; abstract;
     procedure WriteStrings(const Key, Ident: string; Source: TStrings); virtual;
     procedure WriteValue(const Key, Ident: string; const Value: TValue); virtual;
+    function ValueExists(const Key, Ident: string): Boolean; virtual; abstract;
   protected
     property Converter: TValueConverter read GetConverter;
   public
