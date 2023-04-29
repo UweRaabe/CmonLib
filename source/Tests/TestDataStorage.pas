@@ -4,6 +4,7 @@ interface
 
 uses
   DUnitX.TestFramework,
+  Cmon.DataStorage,
   Cmon.DataStorage.Types;
 
 type
@@ -30,10 +31,19 @@ type
     procedure TestStringToSet;
   end;
 
+type
+  [TestFixture]
+  TDataStorageTest = class
+  public
+    [Test]
+    procedure TestString;
+  end;
+
 implementation
 
 uses
-  System.Rtti;
+  System.Rtti, System.IOUtils, System.SysUtils,
+  Cmon.DataStorage.Inifile;
 
 procedure TValueConverterTest.Setup;
 begin
@@ -120,7 +130,31 @@ begin
   Assert.AreEqual(target, res);
 end;
 
+procedure TDataStorageTest.TestString;
+const
+  exp = '[Test]' + sLineBreak +
+        'String=Hello World' + sLineBreak +
+        sLineBreak;
+begin
+  var FileName := TPath.ChangeExtension(TPath.GetTempFileName, '.ini');
+  try
+    var Instance := TDataStorage.Create;
+    try
+      Instance.StorageTarget := TIniStorageTarget.Create(FileName);
+      Instance.StorageKey := 'Test';
+      Instance.WriteString('String', 'Hello World');
+    finally
+      Instance.Free;
+    end;
+    var act := TFile.ReadAllText(FileName);
+    Assert.AreEqual(exp, act);
+  finally
+    TFile.Delete(FileName);
+  end;
+end;
+
 initialization
   TDUnitX.RegisterTestFixture(TValueConverterTest);
+  TDUnitX.RegisterTestFixture(TDataStorageTest);
 
 end.

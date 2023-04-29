@@ -10,11 +10,12 @@ uses
   TestInsight.DUnitX,
   {$ELSE}
   DUnitX.Loggers.Console,
-  DUnitX.Loggers.Xml.NUnit,
   {$ENDIF }
   DUnitX.TestFramework,
-  TestDataStorage in 'Tests\TestDataStorage.pas';
+  TestDataStorage in 'Tests\TestDataStorage.pas',
+  MockStorageTarget in 'Tests\MockStorageTarget.pas';
 
+{ some comment }
 {$IFNDEF TESTINSIGHT}
 var
   runner: ITestRunner;

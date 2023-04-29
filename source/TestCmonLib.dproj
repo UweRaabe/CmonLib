@@ -76,6 +76,7 @@
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="Tests\TestDataStorage.pas"/>
+        <DCCReference Include="Tests\MockStorageTarget.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
