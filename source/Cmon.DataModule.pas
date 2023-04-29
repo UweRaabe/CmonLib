@@ -8,8 +8,11 @@ uses
 
 type
   TdmCommon = class(TDataModule)
+  private
+    FAutoDataStorage: TAutoDataStorage;
+  class var
+    FDefaultAutoDataStorage: TAutoDataStorage;
   strict protected
-    function AutoDataStorage: Boolean; virtual;
     function GetDefaultDataStorage: TDataStorage; virtual;
     function GetStorageKey(DataStorage: TDataStorage): string; virtual;
     procedure InternalInitDefaults(DataStorage: TDataStorage); virtual;
@@ -21,15 +24,33 @@ type
   protected
     procedure DoCreate; override;
     procedure DoDestroy; override;
+    function GetAutoDataStorage: TAutoDataStorage; virtual;
   public
     procedure InitDefaults; overload; virtual;
     procedure InitDefaults(DataStorage: TDataStorage); overload; virtual;
     procedure LoadFromStorage; overload; virtual;
     procedure LoadFromStorage(DataStorage: TDataStorage); overload; virtual;
     procedure LoadFromStorage(ATarget: IStorageTarget); overload;
+    class function NewInstance: TObject; override;
     procedure SaveToStorage; overload; virtual;
     procedure SaveToStorage(DataStorage: TDataStorage); overload; virtual;
     procedure SaveToStorage(ATarget: IStorageTarget); overload;
+    /// <summary>
+    ///   Defines if and when loading and storing happens automatically
+    /// </summary>
+    /// <remarks>
+    ///   The value is initialized with <i>DefaultAutoDataStorage</i>, but it
+    ///   can be adjusted in the forms constructor. Note that setting it in the
+    ///   OnCreate event will have no effect if it was initialised with <i>
+    ///   TAutoDataStorage.callOutside</i> or going to be set to that value in
+    ///   the event.
+    /// </remarks>
+    property AutoDataStorage: TAutoDataStorage read GetAutoDataStorage write FAutoDataStorage;
+    /// <summary>
+    ///   The value <i>AutoDataStorage</i> is initialized with in a new form
+    ///   instance
+    /// </summary>
+    class property DefaultAutoDataStorage: TAutoDataStorage read FDefaultAutoDataStorage write FDefaultAutoDataStorage;
   end;
   
 type
@@ -42,26 +63,28 @@ implementation
 uses
   Cmon.Utilities;
 
-function TdmCommon.AutoDataStorage: Boolean;
-begin
-  Result := True;
-end;
-
 procedure TdmCommon.DoCreate;
 begin
-  if AutoDataStorage then begin
-    InitDefaults;
+  InitDefaults;
+  if AutoDataStorage = TAutoDataStorage.callOutside then
     LoadFromStorage;
-  end;
   inherited;
+  if AutoDataStorage = TAutoDataStorage.callInside then
+    LoadFromStorage;
 end;
 
 procedure TdmCommon.DoDestroy;
 begin
-  inherited;
-  if AutoDataStorage then begin
+  if AutoDataStorage = TAutoDataStorage.callInside then
     SaveToStorage;
-  end;
+  inherited;
+  if AutoDataStorage = TAutoDataStorage.callOutside then
+    SaveToStorage;
+end;
+
+function TdmCommon.GetAutoDataStorage: TAutoDataStorage;
+begin
+  Result := FAutoDataStorage;
 end;
 
 function TdmCommon.GetDefaultDataStorage: TDataStorage;
@@ -129,6 +152,12 @@ begin
   finally
     tmpStorage.Free;
   end;
+end;
+
+class function TdmCommon.NewInstance: TObject;
+begin
+  Result := inherited;
+  TdmCommon(Result).FAutoDataStorage := DefaultAutoDataStorage;
 end;
 
 procedure TdmCommon.PrepareStorage(DataStorage: TDataStorage);

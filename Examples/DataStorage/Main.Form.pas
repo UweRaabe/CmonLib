@@ -5,9 +5,9 @@ interface
 uses
   Winapi.Windows,
   System.Classes, System.IniFiles, System.Types,
-  Vcl.Forms, Vcl.Controls, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Mask, Vcl.Dialogs, Vcl.ComCtrls,
+  Vcl.Forms, Vcl.Controls, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Mask, Vcl.Dialogs, Vcl.ComCtrls, Vcl.NumberBox,
   Cmon.DataStorage, Cmon.Vcl.Forms,
-  Main.Frame, Vcl.NumberBox;
+  Main.Frame;
 
 type
 {$SCOPEDENUMS ON}

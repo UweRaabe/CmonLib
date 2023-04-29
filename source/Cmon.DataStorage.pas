@@ -25,6 +25,26 @@ type
 type
 {$SCOPEDENUMS ON}
   TStorageAction = (init, load, save);
+
+  /// <summary>
+  ///   Declares the possible values to defines if and when loading and storing
+  ///   data is executed.
+  /// </summary>
+  TAutoDataStorage = (
+    /// <summary>
+    ///   No automatic loading or storing.
+    /// </summary>
+    none,
+    /// <summary>
+    ///   Loading is done after all OnCreate events, while storing happens
+    ///   before any OnDestroy event.
+    /// </summary>
+    callInside,
+    /// <summary>
+    ///   Loading is done before any OnCreate event, while storing happens
+    ///   after all OnDestroy events. <br />
+    /// </summary>
+    callOutside);
 {$SCOPEDENUMS OFF}
 
   TDataStorage = class

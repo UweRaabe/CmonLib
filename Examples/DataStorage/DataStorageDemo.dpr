@@ -2,6 +2,7 @@
 
 uses
   Vcl.Forms,
+  Cmon.DataStorage,
   Cmon.DataStorage.Target,
   Cmon.DataStorage.Inifile,
   Cmon.DataStorage.JSON,
@@ -32,7 +33,7 @@ begin
 
   { Here we activate the DataStorage for all TCommonForm descendants.
 
-    TAutoDataStorage.callOutside loads from the storage before any OnCreate events and stores to storage after all OnDestroy events.
+    TAutoDataStorage.callOutside loads from the storage before any OnCreate event and stores to storage after all OnDestroy events.
     TAutoDataStorage.callInside loads from the storage after all OnCreate events and stores to storage before any OnDestroy event.
   }
   TCommonForm.DefaultAutoDataStorage := TAutoDataStorage.callInside;

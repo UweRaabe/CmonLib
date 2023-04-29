@@ -79,6 +79,7 @@
         <DCCReference Include="CmonLib.dcp"/>
         <DCCReference Include="fmx.dcp"/>
         <DCCReference Include="..\..\source\Cmon.Messaging.Dialogs.Fmx.pas"/>
+        <DCCReference Include="..\..\source\Cmon.Fmx.Forms.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
