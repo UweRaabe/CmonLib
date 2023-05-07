@@ -18,6 +18,15 @@ type
     class procedure Unsubscribe(const AListener: TMessageListener; Immediate: Boolean = False); overload;
   end;
 
+  TCommonMessage<T, TResult> = class(TCommonMessage<T>)
+  private
+    FResultValue: TResult;
+  public
+    class function Execute(Sender: TObject; const AValue: T; const ADefault: TResult): TResult; overload;
+    class function Execute(Sender: TObject; const AValue: T): TResult; overload;
+    property ResultValue: TResult read FResultValue write FResultValue;
+  end;
+
 type
   TLogMessage = class(TCommonMessage<string>)
   strict private
@@ -124,6 +133,23 @@ end;
 function TDlgMessage.GetMessageText: string;
 begin
   Result := Value;
+end;
+
+class function TCommonMessage<T, TResult>.Execute(Sender: TObject; const AValue: T; const ADefault: TResult): TResult;
+begin
+  var msg := Self.Create(AValue);
+  try
+    msg.ResultValue := ADefault;
+    Manager.SendMessage(Sender, msg, False);
+    Result := msg.ResultValue;
+  finally
+    msg.Free;
+  end;
+end;
+
+class function TCommonMessage<T, TResult>.Execute(Sender: TObject; const AValue: T): TResult;
+begin
+  Result := Execute(Sender, AValue, Default(TResult));
 end;
 
 initialization
