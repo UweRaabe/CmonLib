@@ -9,6 +9,8 @@ uses
   Cmon.DataStorage, Cmon.Vcl.Forms,
   Main.Frame;
 
+{ DefaultAttribute from Cmon.DataStorage supports only basic types.
+  If we have a custom enumeration like below, we need a special descendant. }
 type
 {$SCOPEDENUMS ON}
   TMyEnum = (none, enum1, enum2, enum3, enum4);
@@ -20,6 +22,7 @@ type
     constructor Create(AValue: TMyEnum); overload;
   end;
 
+{ We can make use of TDataStorage even for our own Storage and Default attributes. }
 type
   LayoutAttribute = class(TCustomStorageAttribute);
   LayoutDefaultAttribute = class(TCustomDefaultAttribute);
