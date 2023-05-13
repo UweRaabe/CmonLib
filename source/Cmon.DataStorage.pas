@@ -111,6 +111,8 @@ type
     function ReadBoolean(const Ident: string; const Default: Boolean): Boolean;
     function ReadDateTime(const Ident: string; const Default: TDateTime): TDateTime;
     function ReadFloat(const Ident: string; const Default: Double): Double;
+    procedure ReadChild(Instance: TObject; const Ident: string = ''); overload;
+    procedure ReadChild<A: TCustomStorageAttribute>(Instance: TObject; const Ident: string = ''); overload;
     function ReadInteger(const Ident: string; const Default: Integer): Integer;
     function ReadString(const Ident, Default: string): string;
     procedure ReadStrings(const Ident: string; Target: TStrings);
@@ -119,6 +121,8 @@ type
     procedure WriteBoolean(const Ident: string; const Value: Boolean);
     procedure WriteDateTime(const Ident: string; const Value: TDateTime);
     procedure WriteFloat(const Ident: string; const Value: Double);
+    procedure WriteChild(Instance: TObject; const Ident: string = ''); overload;
+    procedure WriteChild<A: TCustomStorageAttribute>(Instance: TObject; const Ident: string = ''); overload;
     procedure WriteInteger(const Ident: string; const Value: Integer);
     procedure WriteString(const Ident: string; const Value: string);
     procedure WriteStrings(const Ident: string; Source: TStrings);
@@ -148,18 +152,22 @@ type
 
 type
   TCustomStoredClass = class
+  private
+    [NoStorage]
+    FDataStorage: TDataStorage;
   strict protected
     function GetDataStorage: TDataStorage; virtual;
     function GetTarget: TObject; virtual;
     property Target: TObject read GetTarget;
   protected
-    function InternalGetStorageKey: string; virtual;
-    procedure InternalInitDefaults; virtual;
-    procedure InternalLoadFromStorage; virtual;
-    procedure InternalSaveToStorage; virtual;
-    procedure InternalPrepareStorage; virtual;
+    function InternalGetStorageKey(AStorage: TDataStorage): string; virtual;
+    procedure InternalInitDefaults(AStorage: TDataStorage); virtual;
+    procedure InternalLoadFromStorage(AStorage: TDataStorage); virtual;
+    procedure InternalSaveToStorage(AStorage: TDataStorage); virtual;
+    procedure InternalPrepareStorage(AStorage: TDataStorage); virtual;
     procedure PrepareStorage;
-    property DataStorage: TDataStorage read GetDataStorage;
+    [NoStorage]
+    property DataStorage: TDataStorage read GetDataStorage write FDataStorage;
   public
     procedure Finalize; virtual;
     procedure InitDefaults;
@@ -450,6 +458,8 @@ end;
 
 procedure TDataStorage.LoadFromStorage<A>(Instance: TObject);
 begin
+  if Instance = nil then Exit;
+
   ExecuteStorageAction(TStorageAction.load, Instance, Instance.ClassInfo, RetrieveStorageKey(Instance), A);
 end;
 
@@ -523,6 +533,24 @@ end;
 function TDataStorage.ReadFloat(const Ident: string; const Default: Double): Double;
 begin
   Result := FStorageTargetExt.ReadFloat(StorageKey, Ident, Default);
+end;
+
+procedure TDataStorage.ReadChild(Instance: TObject; const Ident: string = '');
+begin
+  ReadChild<StorageAttribute>(Instance, Ident);
+end;
+
+procedure TDataStorage.ReadChild<A>(Instance: TObject; const Ident: string = '');
+begin
+  var key := Ident;
+  if key.IsEmpty then
+    key := GetStorageKeyFromAttribute(Instance);
+  PushStorageKey(MakeStorageSubKey(key));
+  try
+    LoadFromStorage<A>(Instance);
+  finally
+    PopStorageKey;
+  end;
 end;
 
 function TDataStorage.ReadInteger(const Ident: string; const Default: Integer): Integer;
@@ -619,6 +647,24 @@ begin
   FStorageTargetExt.WriteFloat(StorageKey, Ident, Value);
 end;
 
+procedure TDataStorage.WriteChild(Instance: TObject; const Ident: string = '');
+begin
+  WriteChild<StorageAttribute>(Instance, Ident);
+end;
+
+procedure TDataStorage.WriteChild<A>(Instance: TObject; const Ident: string = '');
+begin
+  var key := Ident;
+  if key.IsEmpty then
+    key := GetStorageKeyFromAttribute(Instance);
+  PushStorageKey(MakeStorageSubKey(key));
+  try
+    SaveToStorage<A>(Instance);
+  finally
+    PopStorageKey;
+  end;
+end;
+
 procedure TDataStorage.WriteInteger(const Ident: string; const Value: Integer);
 begin
   FStorageTargetExt.WriteInteger(StorageKey, Ident, Value);
@@ -646,7 +692,9 @@ end;
 
 function TCustomStoredClass.GetDataStorage: TDataStorage;
 begin
-  Result := TDataStorage.DefaultInstance;
+  Result := FDataStorage;
+  if Result = nil then
+    Result := TDataStorage.DefaultInstance;
 end;
 
 function TCustomStoredClass.GetTarget: TObject;
@@ -656,7 +704,7 @@ end;
 
 procedure TCustomStoredClass.InitDefaults;
 begin
-  InternalInitDefaults;
+  InternalInitDefaults(DataStorage);
 end;
 
 procedure TCustomStoredClass.Initialize;
@@ -665,7 +713,7 @@ begin
   LoadFromStorage;
 end;
 
-function TCustomStoredClass.InternalGetStorageKey: string;
+function TCustomStoredClass.InternalGetStorageKey(AStorage: TDataStorage): string;
 var
   intf: IStorageKey;
 begin
@@ -674,43 +722,43 @@ begin
   if Result.IsEmpty then begin
     { no, then we look for IStorageKey support }
     if Supports(Target, IStorageKey, intf) then
-      Result := intf.GetStorageKey(DataStorage);
+      Result := intf.GetStorageKey(AStorage);
   end;
 end;
 
-procedure TCustomStoredClass.InternalInitDefaults;
+procedure TCustomStoredClass.InternalInitDefaults(AStorage: TDataStorage);
 var
   intf: IStoredData;
 begin
-  DataStorage.InitDefaults(Target);
+  AStorage.InitDefaults(Target);
   if Supports(Target, IStoredData, intf) then
-    intf.InternalInitDefaults(DataStorage);
+    intf.InternalInitDefaults(AStorage);
 end;
 
-procedure TCustomStoredClass.InternalLoadFromStorage;
+procedure TCustomStoredClass.InternalLoadFromStorage(AStorage: TDataStorage);
 var
   intf: IStoredData;
 begin
-  DataStorage.LoadFromStorage(Target);
+  AStorage.LoadFromStorage(Target);
   if Supports(Target, IStoredData, intf) then
-    intf.InternalLoadFromStorage(DataStorage);
+    intf.InternalLoadFromStorage(AStorage);
 end;
 
-procedure TCustomStoredClass.InternalPrepareStorage;
+procedure TCustomStoredClass.InternalPrepareStorage(AStorage: TDataStorage);
 var
   intf: IStoredData;
 begin
   if Supports(Target, IStoredData, intf) then
-    intf.InternalPrepareStorage(DataStorage);
+    intf.InternalPrepareStorage(AStorage);
 end;
 
-procedure TCustomStoredClass.InternalSaveToStorage;
+procedure TCustomStoredClass.InternalSaveToStorage(AStorage: TDataStorage);
 var
   intf: IStoredData;
 begin
-  DataStorage.SaveToStorage(Target);
+  AStorage.SaveToStorage(Target);
   if Supports(Target, IStoredData, intf) then
-    intf.InternalSaveToStorage(DataStorage);
+    intf.InternalSaveToStorage(AStorage);
 end;
 
 procedure TCustomStoredClass.LoadFromStorage;
@@ -718,7 +766,7 @@ begin
   DataStorage.PushStorageKey;
   try
     PrepareStorage;
-    InternalLoadFromStorage;
+    InternalLoadFromStorage(DataStorage);
   finally
     DataStorage.PopStorageKey;
   end;
@@ -728,10 +776,10 @@ procedure TCustomStoredClass.PrepareStorage;
 var
   key: string;
 begin
-  key := InternalGetStorageKey;
+  key := InternalGetStorageKey(DataStorage);
   if not key.IsEmpty then
     DataStorage.StorageKey := key;
-  InternalPrepareStorage;
+  InternalPrepareStorage(DataStorage);
 end;
 
 procedure TCustomStoredClass.SaveToStorage;
@@ -739,7 +787,7 @@ begin
   DataStorage.PushStorageKey;
   try
     PrepareStorage;
-    InternalSaveToStorage;
+    InternalSaveToStorage(DataStorage);
   finally
     DataStorage.PopStorageKey;
   end;
@@ -914,20 +962,60 @@ begin
 end;
 
 procedure TDataStorageHelper.ReadInstance(const Ident: string; Instance: TObject; AAttribute: TCustomAttributeClass);
+var
+  dataIntf: IStoredData;
+  keyIntf: IStorageKey;
+  stored: TCustomStoredClass;
 begin
-  PushStorageKey(MakeStorageSubKey(Ident));
+  Supports(Instance, IStoredData, dataIntf);
+  Supports(Instance, IStorageKey, keyIntf);
+  stored := nil;
+  if Instance is TCustomStoredClass then
+    stored := TCustomStoredClass(Instance);
+  var key := Ident;
+  if keyIntf <> nil then
+    key := keyIntf.GetStorageKey(Self);
+  PushStorageKey(MakeStorageSubKey(key));
   try
+    if Supports(Instance, IStoredData, dataIntf) then
+      dataIntf.InternalPrepareStorage(Self);
+    if stored <> nil then
+      stored.InternalPrepareStorage(Self);
     ExecuteStorageAction(TStorageAction.load, Instance, Instance.ClassInfo, StorageKey, AAttribute);
+    if stored <> nil then
+      stored.InternalLoadFromStorage(Self);
+    if dataIntf <> nil then
+      dataIntf.InternalLoadFromStorage(Self);
   finally
     PopStorageKey;
   end;
 end;
 
 procedure TDataStorageHelper.WriteInstance(const Ident: string; Instance: TObject; AAttribute: TCustomAttributeClass);
+var
+  dataIntf: IStoredData;
+  keyIntf: IStorageKey;
+  stored: TCustomStoredClass;
 begin
-  PushStorageKey(MakeStorageSubKey(Ident));
+  Supports(Instance, IStoredData, dataIntf);
+  Supports(Instance, IStorageKey, keyIntf);
+  stored := nil;
+  if Instance is TCustomStoredClass then
+    stored := TCustomStoredClass(Instance);
+  var key := Ident;
+  if keyIntf <> nil then
+    key := keyIntf.GetStorageKey(Self);
+  PushStorageKey(key);
   try
+    if dataIntf <> nil then
+      dataIntf.InternalPrepareStorage(Self);
+    if stored <> nil then
+      stored.InternalPrepareStorage(Self);
     ExecuteStorageAction(TStorageAction.save, Instance, Instance.ClassInfo, StorageKey, AAttribute);
+    if stored <> nil then
+      stored.InternalSaveToStorage(Self);
+    if dataIntf <> nil then
+      dataIntf.InternalSaveToStorage(Self);
   finally
     PopStorageKey;
   end;
