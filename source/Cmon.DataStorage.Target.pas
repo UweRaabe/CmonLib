@@ -60,7 +60,8 @@ end;
 
 procedure TCustomStorageTarget.BeforeDestruction;
 begin
-  SaveToFile(FileName);
+  if not ReadOnly then
+    SaveToFile(FileName);
   inherited;
 end;
 

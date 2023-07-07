@@ -63,18 +63,24 @@ type
 
   IStorageTargetExt = interface(IStorageTarget)
   ['{6C9F0927-5705-41FE-9992-4AD984DE42C2}']
+    function GetFormatSettings: TFormatSettings;
+    function GetReadOnly: Boolean;
     function ReadBoolean(const Key, Ident: string; const Default: Boolean): Boolean;
     function ReadDateTime(const Key, Ident: string; const Default: TDateTime): TDateTime;
     function ReadFloat(const Key, Ident: string; const Default: Double): Double;
     function ReadInteger(const Key, Ident: string; const Default: Integer): Integer;
     procedure ReadStrings(const Key, Ident: string; Target: TStrings);
     function ReadValue(const Key, Ident: string; const Default: TValue): TValue;
+    procedure SetFormatSettings(const Value: TFormatSettings);
+    procedure SetReadOnly(const Value: Boolean);
     procedure WriteBoolean(const Key, Ident: string; const Value: Boolean);
     procedure WriteDateTime(const Key, Ident: string; const Value: TDateTime);
     procedure WriteFloat(const Key, Ident: string; const Value: Double);
     procedure WriteInteger(const Key, Ident: string; const Value: Integer);
     procedure WriteStrings(const Key, Ident: string; Source: TStrings);
     procedure WriteValue(const Key, Ident: string; const Value: TValue);
+    property FormatSettings: TFormatSettings read GetFormatSettings write SetFormatSettings;
+    property ReadOnly: Boolean read GetReadOnly write SetReadOnly;
   end;
   TStorageTargetFactory = TFunc<IStorageTarget>;
 
@@ -101,11 +107,14 @@ type
 type
   { TValue <-> string conversion }
   TValueConverter = class
+  private
+    FFormatSettings: TFormatSettings;
   strict protected
     procedure ErrorNotImplemented(const ATypeName: string); virtual;
   public
     function StringToValue(const AString: string; const Default: TValue): TValue; virtual;
     function ValueToString(const Value: TValue): string; virtual;
+    property FormatSettings: TFormatSettings read FFormatSettings write FFormatSettings;
   end;
 
 type
@@ -114,11 +123,18 @@ type
     cBool: array[Boolean] of Integer = (0, 1);
   private
     FConverter: TValueConverter;
+    FFormatSettings: TFormatSettings;
+    FReadOnly: Boolean;
     function GetConverter: TValueConverter;
+    function GetFormatSettings: TFormatSettings;
+    function GetReadOnly: Boolean;
+    procedure SetFormatSettings(const Value: TFormatSettings);
+    procedure SetReadOnly(const Value: Boolean);
   strict protected
     function CreateConverter: TValueConverter; virtual;
     procedure DeleteKey(const Key, Ident: string); virtual; abstract;
     procedure EraseStorageKey(const Key: string); virtual; abstract;
+    procedure ReadOnlyChanged; virtual;
     procedure ReadKey(const Key: string; Target: TStrings); virtual; abstract;
     function ReadBoolean(const Key, Ident: string; const Default: Boolean): Boolean; virtual;
     function ReadDateTime(const Key, Ident: string; const Default: TDateTime): TDateTime; virtual;
@@ -138,7 +154,10 @@ type
   protected
     property Converter: TValueConverter read GetConverter;
   public
+    constructor Create;
     destructor Destroy; override;
+    property FormatSettings: TFormatSettings read GetFormatSettings write SetFormatSettings;
+    property ReadOnly: Boolean read GetReadOnly write SetReadOnly;
   end;
 
 implementation
@@ -255,6 +274,12 @@ begin
   FileExtension := AFileExtension;
 end;
 
+constructor TAbstractStorageTarget.Create;
+begin
+  inherited Create;
+  FFormatSettings := TFormatSettings.Invariant;
+end;
+
 destructor TAbstractStorageTarget.Destroy;
 begin
   FConverter.Free;
@@ -268,9 +293,25 @@ end;
 
 function TAbstractStorageTarget.GetConverter: TValueConverter;
 begin
-  if FConverter = nil then
+  if FConverter = nil then begin
     FConverter := CreateConverter;
+    FConverter.FormatSettings := FormatSettings;
+  end;
   Result := FConverter;
+end;
+
+function TAbstractStorageTarget.GetFormatSettings: TFormatSettings;
+begin
+  Result := FFormatSettings;
+end;
+
+function TAbstractStorageTarget.GetReadOnly: Boolean;
+begin
+  Result := FReadOnly;
+end;
+
+procedure TAbstractStorageTarget.ReadOnlyChanged;
+begin
 end;
 
 function TAbstractStorageTarget.ReadBoolean(const Key, Ident: string; const Default: Boolean): Boolean;
@@ -284,7 +325,7 @@ begin
   Result := Default;
   var S := ReadString(Key, Ident, '');
   if not S.IsEmpty then
-    Result := StrToDateTimeDef(S, Default, TFormatSettings.Invariant);
+    Result := StrToDateTimeDef(S, Default, FormatSettings);
 end;
 
 function TAbstractStorageTarget.ReadFloat(const Key, Ident: string; const Default: Double): Double;
@@ -292,7 +333,7 @@ begin
   Result := Default;
   var S := ReadString(Key, Ident, '');
   if not S.IsEmpty then
-    Result := StrToFloatDef(S, Default, TFormatSettings.Invariant);
+    Result := StrToFloatDef(S, Default, FormatSettings);
 end;
 
 function TAbstractStorageTarget.ReadInteger(const Key, Ident: string; const Default: Integer): Integer;
@@ -350,6 +391,22 @@ begin
   Result := Converter.StringToValue(S, Default);
 end;
 
+procedure TAbstractStorageTarget.SetFormatSettings(const Value: TFormatSettings);
+begin
+  FFormatSettings := Value;
+  if FConverter <> nil then
+    FConverter.FormatSettings := FFormatSettings;
+end;
+
+procedure TAbstractStorageTarget.SetReadOnly(const Value: Boolean);
+begin
+  if FReadOnly <> Value then
+  begin
+    FReadOnly := Value;
+    ReadOnlyChanged;
+  end;
+end;
+
 procedure TAbstractStorageTarget.WriteBoolean(const Key, Ident: string; const Value: Boolean);
 begin
   WriteInteger(Key, Ident, cBool[Value]);
@@ -357,12 +414,12 @@ end;
 
 procedure TAbstractStorageTarget.WriteDateTime(const Key, Ident: string; const Value: TDateTime);
 begin
-  WriteString(Key, Ident, DateTimeToStr(Value, TFormatSettings.Invariant));
+  WriteString(Key, Ident, DateTimeToStr(Value, FormatSettings));
 end;
 
 procedure TAbstractStorageTarget.WriteFloat(const Key, Ident: string; const Value: Double);
 begin
-  WriteString(Key, Ident, FloatToStr(Value, TFormatSettings.Invariant));
+  WriteString(Key, Ident, FloatToStr(Value, FormatSettings));
 end;
 
 procedure TAbstractStorageTarget.WriteInteger(const Key, Ident: string; const Value: Integer);
@@ -443,18 +500,18 @@ begin
       case Default.TypeData.FloatType of
         ftDouble: begin { handle special Double cases }
           if Default.TypeInfo = TypeInfo(TDate) then
-            Result := TValue.From<TDate>(StrToDateDef(AString, Default.AsType<TDate>, TFormatSettings.Invariant))
+            Result := TValue.From<TDate>(StrToDateDef(AString, Default.AsType<TDate>, FormatSettings))
           else if Default.TypeInfo = TypeInfo(TTime) then
-            Result := TValue.From<TTime>(StrToTimeDef(AString, Default.AsType<TTime>, TFormatSettings.Invariant))
+            Result := TValue.From<TTime>(StrToTimeDef(AString, Default.AsType<TTime>, FormatSettings))
           else if Default.TypeInfo = TypeInfo(TDateTime) then
-            Result := TValue.From<TDateTime>(StrToDateTimeDef(AString, Default.AsType<TDateTime>, TFormatSettings.Invariant))
+            Result := TValue.From<TDateTime>(StrToDateTimeDef(AString, Default.AsType<TDateTime>, FormatSettings))
           else
-            Result := TValue.From<Double>(StrToFloatDef(AString, Default.AsType<Double>, TFormatSettings.Invariant));
+            Result := TValue.From<Double>(StrToFloatDef(AString, Default.AsType<Double>, FormatSettings));
         end;
-        ftSingle: Result := TValue.From<Single>(StrToFloatDef(AString, Default.AsType<Single>, TFormatSettings.Invariant));
-        ftExtended: Result := TValue.From<Extended>(StrToFloatDef(AString, Default.AsType<Extended>, TFormatSettings.Invariant));
+        ftSingle: Result := TValue.From<Single>(StrToFloatDef(AString, Default.AsType<Single>, FormatSettings));
+        ftExtended: Result := TValue.From<Extended>(StrToFloatDef(AString, Default.AsType<Extended>, FormatSettings));
         ftComp: Result := TValue.From<Comp>(StrToInt64Def(AString, Default.AsInt64));
-        ftCurr: Result := TValue.From<Currency>(StrToCurrDef(AString, Default.AsCurrency, TFormatSettings.Invariant));
+        ftCurr: Result := TValue.From<Currency>(StrToCurrDef(AString, Default.AsCurrency, FormatSettings));
       end;
     end;
     tkInteger: Result := StrToIntDef(AString, Default.AsInteger);
@@ -508,7 +565,7 @@ begin
     tkWString,
     tkUString: Result := AString;
   else
-    { tkClass, tkMethod, tkVariant, tkRecord, tkInterface, tkClassRef, tkPointer, tkProcedure }
+    { tkClass, tkMethod, tkVariant, tkInterface, tkClassRef, tkPointer, tkProcedure }
     ErrorNotImplemented(GetTypeName(Default.TypeInfo));
   end;
 end;
@@ -521,20 +578,20 @@ begin
       case Value.TypeData.FloatType of
         ftDouble: begin { handle special Double cases }
           if Value.TypeInfo = TypeInfo(TDate) then
-            Result := DateToStr(Value.AsType<TDate>, TFormatSettings.Invariant)
+            Result := DateToStr(Value.AsType<TDate>, FormatSettings)
           else if Value.TypeInfo = TypeInfo(TTime) then
-            Result := TimeToStr(Value.AsType<TTime>, TFormatSettings.Invariant)
+            Result := TimeToStr(Value.AsType<TTime>, FormatSettings)
           else if Value.TypeInfo = TypeInfo(TDateTime) then
-            Result := DateTimeToStr(Value.AsType<TDateTime>, TFormatSettings.Invariant)
+            Result := DateTimeToStr(Value.AsType<TDateTime>, FormatSettings)
           else
-            Result := FloatToStr(Value.AsType<Double>, TFormatSettings.Invariant);
+            Result := FloatToStr(Value.AsType<Double>, FormatSettings);
         end;
         ftSingle,
         ftExtended: begin
-          Result := FloatToStr(Value.AsExtended, TFormatSettings.Invariant);
+          Result := FloatToStr(Value.AsExtended, FormatSettings);
         end;
         ftComp: Result := IntToStr(Value.AsInt64);
-        ftCurr: Result := CurrToStr(Value.AsCurrency, TFormatSettings.Invariant);
+        ftCurr: Result := CurrToStr(Value.AsCurrency, FormatSettings);
       end;
     end;
     tkArray,
@@ -578,7 +635,7 @@ begin
     tkWString,
     tkUString: ; { Value.ToString already did the job }
   else
-    { tkClass, tkMethod, tkVariant, tkRecord, tkInterface, tkClassRef, tkPointer, tkProcedure }
+    { tkClass, tkMethod, tkVariant, tkInterface, tkClassRef, tkPointer, tkProcedure }
     ErrorNotImplemented(GetTypeName(Value.TypeInfo));
   end;
 end;

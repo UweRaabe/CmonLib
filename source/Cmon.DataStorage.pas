@@ -21,6 +21,11 @@ type
   AutoStorageFieldsAttribute = class(TCustomVisibilitiesAttribute);
   AutoStoragePropertiesAttribute = class(TCustomVisibilitiesAttribute);
   SkipFieldNameFAttribute = class(TCustomVisibilitiesAttribute);
+  SkipStorageAttribute = class(TCustomDefaultAttribute);
+  SkipNullDateAttribute = class(SkipStorageAttribute)
+  public
+    constructor Create;
+  end;
 
 type
 {$SCOPEDENUMS ON}
@@ -60,11 +65,14 @@ type
   private type
     TStorageKeyStack = TStack<string>;
   private
+    FDefaultStorageKey: string;
     FStorageKey: string;
     FStorageKeyStack: TStorageKeyStack;
     FStorageTarget: IStorageTarget;
     FStorageTargetExt: IStorageTargetExt;
+    function GetFormatSettings: TFormatSettings;
     class function GetStorageTargets: TStorageTargets; static;
+    procedure SetFormatSettings(const Value: TFormatSettings);
     procedure SetStorageTarget(const Value: IStorageTarget);
   protected
     class procedure ExecuteInit(AInstance, ATypeInfo: Pointer; AAttribute: TCustomAttributeClass);
@@ -73,7 +81,7 @@ type
     function RetrieveStorageKey<T>: string; overload;
   public
     constructor Create; overload;
-    constructor Create(const AFileName: string); overload;
+    constructor Create(const AFileName: string; AReadOnly: Boolean = False); overload;
     destructor Destroy; override;
     { StorageTargets }
     function CreateStorageTarget(const AFileName: string = ''): IStorageTarget; overload;
@@ -130,6 +138,8 @@ type
     { Properties }
     class property AutoRegisterHandler: Boolean read FAutoRegisterHandler write FAutoRegisterHandler;
     class property DefaultInstance: TDataStorage read GetDefaultInstance;
+    property DefaultStorageKey: string read FDefaultStorageKey write FDefaultStorageKey;
+    property FormatSettings: TFormatSettings read GetFormatSettings write SetFormatSettings;
     class property StorageTargetFactory: TStorageTargetFactory read FStorageTargetFactory write FStorageTargetFactory;
     class property StorageTargets: TStorageTargets read GetStorageTargets;
     property StorageKey: string read FStorageKey write FStorageKey;
@@ -172,8 +182,10 @@ type
     procedure Finalize; virtual;
     procedure InitDefaults;
     procedure Initialize; virtual;
-    procedure LoadFromStorage;
-    procedure SaveToStorage;
+    procedure LoadFromStorage; overload;
+    procedure LoadFromStorage(const AFileName: string); overload;
+    procedure SaveToStorage; overload;
+    procedure SaveToStorage(const AFileName: string); overload;
   end;
 
 type
@@ -196,6 +208,8 @@ implementation
 
 type
   TDefaultStorageTarget = class(TAbstractStorageTarget)
+  private
+    FStorageTarget: IStorageTarget;
   strict protected
     procedure DeleteKey(const Key, Ident: string); override;
     procedure EraseStorageKey(const Key: string); override;
@@ -204,32 +218,52 @@ type
     function ReadString(const Key: string; const Ident: string; const Default: string): string; override;
     procedure WriteString(const Key: string; const Ident: string; const Value: string); override;
     function ValueExists(const Key, Ident: string): Boolean; override;
+  public
+    constructor Create(AStorageTarget: IStorageTarget = nil);
   end;
+
+constructor TDefaultStorageTarget.Create(AStorageTarget: IStorageTarget = nil);
+begin
+  inherited Create;
+  FStorageTarget := AStorageTarget;
+end;
 
 procedure TDefaultStorageTarget.DeleteKey(const Key, Ident: string);
 begin
+  if FStorageTarget <> nil then
+    FStorageTarget.DeleteKey(Key, Ident);
 end;
 
 procedure TDefaultStorageTarget.EraseStorageKey(const Key: string);
 begin
+  if FStorageTarget <> nil then
+    FStorageTarget.EraseStorageKey(Key);
 end;
 
 procedure TDefaultStorageTarget.ReadKey(const Key: string; Target: TStrings);
 begin
+  if FStorageTarget <> nil then
+    FStorageTarget.ReadKey(Key, Target);
 end;
 
 function TDefaultStorageTarget.ReadString(const Key, Ident, Default: string): string;
 begin
   Result := Default;
+  if FStorageTarget <> nil then
+    Result := FStorageTarget.ReadString(Key, Ident, Default);
 end;
 
 function TDefaultStorageTarget.ValueExists(const Key, Ident: string): Boolean;
 begin
   Result := False;
+  if FStorageTarget <> nil then
+    Result := FStorageTarget.ValueExists(Key, Ident);
 end;
 
 procedure TDefaultStorageTarget.WriteString(const Key, Ident, Value: string);
 begin
+  if FStorageTarget <> nil then
+    FStorageTarget.WriteString(Key, Ident, Value);
 end;
 
 function GetStorageKeyFromAttribute(AInstance: TObject; const ADefault: string = ''): string;
@@ -313,10 +347,11 @@ begin
   SetStorageTarget(nil); // initialize with default target
 end;
 
-constructor TDataStorage.Create(const AFileName: string);
+constructor TDataStorage.Create(const AFileName: string; AReadOnly: Boolean = False);
 begin
   Create;
   StorageTarget := CreateStorageTarget(AFileName);
+  FStorageTargetExt.ReadOnly := AReadOnly;
 end;
 
 destructor TDataStorage.Destroy;
@@ -373,6 +408,11 @@ begin
     FDefaultInstance.StorageTarget := FDefaultInstance.CreateStorageTarget();
   end;
   Result := FDefaultInstance;
+end;
+
+function TDataStorage.GetFormatSettings: TFormatSettings;
+begin
+  Result := FStorageTargetExt.FormatSettings;
 end;
 
 class function TDataStorage.GetStorageKeyFromAttribute(AInstance: TObject; const ADefault: string = ''): string;
@@ -475,7 +515,7 @@ end;
 
 function TDataStorage.MakeStorageSubKey(const ASubKey: string): string;
 begin
-  if StorageKey.IsEmpty then
+  if StorageKey.IsEmpty or StorageKey.Equals(DefaultStorageKey) then
     Result := ASubKey
   else
     Result := StorageKey + cKeySeparator + ASubKey;
@@ -612,14 +652,19 @@ begin
   ExecuteStorageAction(TStorageAction.save, @Instance, TypeInfo(T), RetrieveStorageKey<T>, A);
 end;
 
+procedure TDataStorage.SetFormatSettings(const Value: TFormatSettings);
+begin
+  FStorageTargetExt.FormatSettings := Value;
+end;
+
 procedure TDataStorage.SetStorageTarget(const Value: IStorageTarget);
 begin
   FStorageTargetExt := nil;
   FStorageTarget := Value;
   if FStorageTarget = nil then
     FStorageTarget := TDefaultStorageTarget.Create;
-  if not Supports(Value, IStorageTargetExt, FStorageTargetExt) then
-    FStorageTargetExt := TDefaultStorageTarget.Create;
+  if not Supports(FStorageTarget, IStorageTargetExt, FStorageTargetExt) then
+    FStorageTargetExt := TDefaultStorageTarget.Create(FStorageTarget);
 end;
 
 class function TDataStorage.SplitStorageKey(const AStorageKey: string): TArray<string>;
@@ -772,6 +817,18 @@ begin
   end;
 end;
 
+procedure TCustomStoredClass.LoadFromStorage(const AFileName: string);
+begin
+  var storage := TDataStorage.Create(AFileName, True); // ReadOnly
+  try
+    DataStorage := storage;
+    LoadFromStorage;
+  finally
+    DataStorage := nil;
+    storage.Free;
+  end;
+end;
+
 procedure TCustomStoredClass.PrepareStorage;
 var
   key: string;
@@ -790,6 +847,18 @@ begin
     InternalSaveToStorage(DataStorage);
   finally
     DataStorage.PopStorageKey;
+  end;
+end;
+
+procedure TCustomStoredClass.SaveToStorage(const AFileName: string);
+begin
+  var storage := TDataStorage.Create(AFileName);
+  try
+    DataStorage := storage;
+    SaveToStorage;
+  finally
+    DataStorage := nil;
+    storage.Free;
   end;
 end;
 
@@ -907,12 +976,26 @@ begin
 end;
 
 procedure TSaveHandler.HandleMember(AField: TRttiField);
+
+  function SameValue(const A, B: TValue): Boolean;
+  begin
+    Result := False;
+    if A.DataSize = B.DataSize then begin
+      Result := CompareMem(A.GetReferenceToRawData, B.GetReferenceToRawData, A.DataSize);
+    end;
+  end;
+
 begin
   var storedName := GetStoredName(AField);
-  if AField.FieldType.IsInstance then
-    Storage.WriteInstance(storedName, AField.GetValue(Instance).AsObject, AttributeClass)
-  else
-    Storage.WriteValue(storedName, AField.GetValue(Instance));
+  if AField.FieldType.IsInstance then begin
+    Storage.WriteInstance(storedName, AField.GetValue(Instance).AsObject, AttributeClass);
+  end
+  else begin
+    var value := AField.GetValue(Instance);
+    var attr := AField.GetAttribute<SkipStorageAttribute>;
+    if (attr = nil) or not SameValue(attr.Value, value) then
+      Storage.WriteValue(storedName, value);
+  end;
 end;
 
 procedure TSaveHandler.HandleMember(AProp: TRttiProperty);
@@ -1005,7 +1088,7 @@ begin
   var key := Ident;
   if keyIntf <> nil then
     key := keyIntf.GetStorageKey(Self);
-  PushStorageKey(key);
+  PushStorageKey(MakeStorageSubKey(key));
   try
     if dataIntf <> nil then
       dataIntf.InternalPrepareStorage(Self);
@@ -1019,6 +1102,11 @@ begin
   finally
     PopStorageKey;
   end;
+end;
+
+constructor SkipNullDateAttribute.Create;
+begin
+  inherited Create(TDateTime(0));
 end;
 
 initialization
