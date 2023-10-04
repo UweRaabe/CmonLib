@@ -206,7 +206,8 @@ begin
           { Moving the component to Self will keep all references intact.
             That is why a clone won't work here. }
           InsertComponent(cmp);
-          if CurrentPPI <> dmPPI then begin
+          { Don't use CurrentPPI as it may return a misleading value when the form has created a handle during loading }
+          if PixelsPerInch <> dmPPI then begin
             var img := TVirtualImageList(cmp);
             var W := MulDiv(img.Width, CurrentPPI, dmPPI);
             var H := MulDiv(img.Height, CurrentPPI, dmPPI);
