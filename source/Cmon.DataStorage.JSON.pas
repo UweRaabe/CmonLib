@@ -107,6 +107,8 @@ end;
 
 function TJSONStorageTarget.FindOrCreateKey(const Key: string): TJSONObject;
 begin
+  if Json = nil then
+    Json := TJSONObject.Create;
   var node := Json;
   for var subKey in TDataStorage.SplitStorageKey(Key) do
     node := node.FindOrCreateKey(subKey);
@@ -117,6 +119,7 @@ function TJSONStorageTarget.FindKey(const Key: string): TJSONObject;
 begin
   Result := nil;
   var node := Json;
+  if node = nil then Exit;
   for var subKey in TDataStorage.SplitStorageKey(Key) do begin
     node := node.FindKey(subKey);
     if node = nil then Exit;
