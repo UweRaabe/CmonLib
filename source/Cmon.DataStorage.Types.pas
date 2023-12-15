@@ -430,6 +430,11 @@ begin
         end;
       end;
     end;
+    tkRecord: begin
+      if Default.TypeInfo = TypeInfo(TValue) then begin
+        Exit(ReadValue(Key, Ident, Default.AsType<TValue>));
+      end;
+    end;
   end;
   S := ReadString(Key, Ident, '');
   if S = '' then
@@ -506,6 +511,12 @@ begin
       end
       else if Value.TypeData.FloatType in [ftSingle, ftExtended] then begin
         WriteFloat(Key, Ident, Value.AsExtended);
+        Exit;
+      end;
+    end;
+    tkRecord: begin
+      if Value.TypeInfo = TypeInfo(TValue) then begin
+        WriteValue(Key, Ident, Value.AsType<TValue>);
         Exit;
       end;
     end;
