@@ -118,7 +118,7 @@ begin
   Result := nil;
   var node := Json;
   for var subKey in TDataStorage.SplitStorageKey(Key) do begin
-    node := node.FindKey(Key);
+    node := node.FindKey(subKey);
     if node = nil then Exit;
   end;
   Result := node;
