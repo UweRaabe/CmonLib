@@ -11,6 +11,7 @@ type
     class function Manager: TMessageManager; virtual;
   public
     class procedure SendMessage(Sender: TObject; const AValue: T);
+    procedure SetValue(const AValue: T);
     class function Subscribe(const AListener: TMessageListener): Integer; overload;
     class function Subscribe(const AListenerMethod: TMessageListenerMethod): Integer; overload;
     class procedure Unsubscribe(const AListenerMethod: TMessageListenerMethod; Immediate: Boolean = False); overload;
@@ -24,6 +25,8 @@ type
   public
     class function Execute(Sender: TObject; const AValue: T; const ADefault: TResult): TResult; overload;
     class function Execute(Sender: TObject; const AValue: T): TResult; overload;
+    class function Query(Sender: TObject; var AValue: T): TResult; overload;
+    class function Query(Sender: TObject; var AValue: T; const ADefault: TResult): TResult; overload;
     property ResultValue: TResult read FResultValue write FResultValue;
   end;
 
@@ -76,6 +79,11 @@ begin
   Manager.SendMessage(Sender, Self.Create(AValue));
 end;
 
+procedure TCommonMessage<T>.SetValue(const AValue: T);
+begin
+  FValue := AValue;
+end;
+
 class function TCommonMessage<T>.Subscribe(const AListener: TMessageListener): Integer;
 begin
   Result := Manager.SubscribeToMessage(Self, AListener);
@@ -99,6 +107,37 @@ end;
 class procedure TCommonMessage<T>.Unsubscribe(const AListener: TMessageListener; Immediate: Boolean);
 begin
   Manager.Unsubscribe(Self, AListener, Immediate);
+end;
+
+class function TCommonMessage<T, TResult>.Execute(Sender: TObject; const AValue: T; const ADefault: TResult): TResult;
+var
+  dummy: T;
+begin
+  dummy := AValue;
+  Result := Query(Sender, dummy, ADefault);
+end;
+
+class function TCommonMessage<T, TResult>.Execute(Sender: TObject; const AValue: T): TResult;
+begin
+  Result := Execute(Sender, AValue, Default(TResult));
+end;
+
+class function TCommonMessage<T, TResult>.Query(Sender: TObject; var AValue: T): TResult;
+begin
+  Result := Query(Sender, AValue, Default(TResult));
+end;
+
+class function TCommonMessage<T, TResult>.Query(Sender: TObject; var AValue: T; const ADefault: TResult): TResult;
+begin
+  var msg := Self.Create(AValue);
+  try
+    msg.ResultValue := ADefault;
+    Manager.SendMessage(Sender, msg, False);
+    AValue := msg.Value;
+    Result := msg.ResultValue;
+  finally
+    msg.Free;
+  end;
 end;
 
 function TLogMessage.GetMessageText: string;
@@ -133,23 +172,6 @@ end;
 function TDlgMessage.GetMessageText: string;
 begin
   Result := Value;
-end;
-
-class function TCommonMessage<T, TResult>.Execute(Sender: TObject; const AValue: T; const ADefault: TResult): TResult;
-begin
-  var msg := Self.Create(AValue);
-  try
-    msg.ResultValue := ADefault;
-    Manager.SendMessage(Sender, msg, False);
-    Result := msg.ResultValue;
-  finally
-    msg.Free;
-  end;
-end;
-
-class function TCommonMessage<T, TResult>.Execute(Sender: TObject; const AValue: T): TResult;
-begin
-  Result := Execute(Sender, AValue, Default(TResult));
 end;
 
 initialization
