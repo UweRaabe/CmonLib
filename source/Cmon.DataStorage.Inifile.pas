@@ -76,7 +76,14 @@ end;
 
 procedure TIniStorageTarget.EraseStorageKey(const Key: string);
 begin
-  IniFile.EraseSection(Key);
+  var lst := TStringList.Create;
+  try
+    IniFile.ReadSections(Key, lst);
+    for var S in lst do
+      IniFile.EraseSection(S);
+  finally
+    lst.Free;
+  end;
 end;
 
 procedure TIniStorageTarget.DeleteKey(const Key, Ident: string);
