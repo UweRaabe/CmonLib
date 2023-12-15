@@ -111,7 +111,15 @@ type
     FFormatSettings: TFormatSettings;
   strict protected
     procedure ErrorNotImplemented(const ATypeName: string); virtual;
+  protected
+    function RemoveIsoTimePart(const AString: string): string;
   public
+    function ConvertStringToDate(const AString: string; const ADefault: TDate): TDate; virtual;
+    function ConvertStringToDateTime(const AString: string; const ADefault: TDateTime): TDateTime; virtual;
+    function ConvertStringToTime(const AString: string; const ADefault: TTime): TTime; virtual;
+    function ConvertToString(const ADate: TDate): string; overload; virtual;
+    function ConvertToString(const ADateTime: TDateTime): string; overload; virtual;
+    function ConvertToString(const ATime: TTime): string; overload; virtual;
     function StringToValue(const AString: string; const Default: TValue): TValue; virtual;
     function ValueToString(const Value: TValue): string; virtual;
     property FormatSettings: TFormatSettings read FFormatSettings write FFormatSettings;
@@ -161,6 +169,46 @@ type
   end;
 
 implementation
+
+uses
+  System.DateUtils,
+  REST.JsonReflect;
+
+function StringToDate(const AString: string; const ADefault: TDate): TDate;
+begin
+  Result := ADefault;
+  if not AString.IsEmpty then begin
+    var dt: TDateTime;
+    if TryISO8601ToDate(AString, dt) then begin
+      if not TryStrToDate(AString, dt, TFormatSettings.Invariant) then
+        dt := StrToDateDef(AString, ADefault);
+    end;
+    Result := DateOf(dt);
+  end;
+end;
+
+function StringToDateTime(const AString: string; const ADefault: TDateTime): TDateTime;
+begin
+  Result := ADefault;
+  if not AString.IsEmpty then begin
+    if not TryISO8601ToDate(AString, Result) then begin
+      if not TryStrToDateTime(AString, Result, TFormatSettings.Invariant) then
+        Result := StrToDateTimeDef(AString, ADefault);
+    end;
+  end;
+end;
+
+function StringToTime(const AString: string; const ADefault: TTime): TTime;
+begin
+  Result := ADefault;
+  if not AString.IsEmpty then begin
+    var dt: TDateTime;
+    { ISO8601 time only is not supported }
+    if not TryStrToTime(AString, dt, TFormatSettings.Invariant) then
+      dt := StrToTimeDef(AString, ADefault);
+    Result := TimeOf(dt);
+  end;
+end;
 
 function GetDynArrayElType(ATypeInfo: PTypeInfo): PTypeInfo;
 var
@@ -322,10 +370,8 @@ end;
 
 function TAbstractStorageTarget.ReadDateTime(const Key, Ident: string; const Default: TDateTime): TDateTime;
 begin
-  Result := Default;
   var S := ReadString(Key, Ident, '');
-  if not S.IsEmpty then
-    Result := StrToDateTimeDef(S, Default, FormatSettings);
+  Result := Converter.ConvertStringToDateTime(S, Default);
 end;
 
 function TAbstractStorageTarget.ReadFloat(const Key, Ident: string; const Default: Double): Double;
@@ -414,7 +460,7 @@ end;
 
 procedure TAbstractStorageTarget.WriteDateTime(const Key, Ident: string; const Value: TDateTime);
 begin
-  WriteString(Key, Ident, DateTimeToStr(Value, FormatSettings));
+  WriteString(Key, Ident, Converter.ConvertToString(Value));
 end;
 
 procedure TAbstractStorageTarget.WriteFloat(const Key, Ident: string; const Value: Double);
@@ -472,6 +518,69 @@ begin
   raise ENotImplemented.CreateFmt('Storage type "%s" not supported!', [ATypeName]);
 end;
 
+function TValueConverter.ConvertStringToDate(const AString: string; const ADefault: TDate): TDate;
+begin
+  Result := ADefault;
+  if not AString.IsEmpty then begin
+    var dt: TDateTime;
+    if TryISO8601ToDate(AString, dt) then begin
+      if not TryStrToDate(AString, dt, TFormatSettings.Invariant) then
+        dt := StrToDateDef(AString, ADefault);
+    end;
+    Result := DateOf(dt);
+  end;
+end;
+
+function TValueConverter.ConvertStringToDateTime(const AString: string; const ADefault: TDateTime): TDateTime;
+begin
+  Result := ADefault;
+  if not AString.IsEmpty then begin
+    if not TryISO8601ToDate(AString, Result) then begin
+      if not TryStrToDateTime(AString, Result, TFormatSettings.Invariant) then
+        Result := StrToDateTimeDef(AString, ADefault);
+    end;
+  end;
+end;
+
+function TValueConverter.ConvertStringToTime(const AString: string; const ADefault: TTime): TTime;
+begin
+  Result := ADefault;
+  if not AString.IsEmpty then begin
+    var dt: TDateTime;
+    { ISO8601 time only is not supported }
+    if not TryStrToTime(AString, dt, TFormatSettings.Invariant) then
+      dt := StrToTimeDef(AString, ADefault);
+    Result := TimeOf(dt);
+  end;
+end;
+
+function TValueConverter.ConvertToString(const ADate: TDate): string;
+begin
+  Result := RemoveIsoTimePart(DateToISO8601(ADate));
+end;
+
+function TValueConverter.ConvertToString(const ADateTime: TDateTime): string;
+const
+  cZeroZulu = 'T00:00:00.000Z';
+begin
+  Result := DateToISO8601(ADateTime);
+  if Result.EndsWith(cZeroZulu) then
+    Result := RemoveIsoTimePart(Result);
+end;
+
+function TValueConverter.ConvertToString(const ATime: TTime): string;
+begin
+  Result := TimeToStr(ATime, TFormatSettings.Invariant);
+end;
+
+function TValueConverter.RemoveIsoTimePart(const AString: string): string;
+begin
+  Result := AString;
+  var timeSep := Result.IndexOf('T');
+  if timeSep > 0 then
+    Result := Result.Remove(timeSep);
+end;
+
 function TValueConverter.StringToValue(const AString: string; const Default: TValue): TValue;
 begin
   Result := Default;
@@ -500,11 +609,11 @@ begin
       case Default.TypeData.FloatType of
         ftDouble: begin { handle special Double cases }
           if Default.TypeInfo = TypeInfo(TDate) then
-            Result := TValue.From<TDate>(StrToDateDef(AString, Default.AsType<TDate>, FormatSettings))
+            Result := TValue.From<TDate>(ConvertStringToDate(AString, Default.AsType<TDate>))
           else if Default.TypeInfo = TypeInfo(TTime) then
-            Result := TValue.From<TTime>(StrToTimeDef(AString, Default.AsType<TTime>, FormatSettings))
+            Result := TValue.From<TTime>(ConvertStringToTime(AString, Default.AsType<TTime>))
           else if Default.TypeInfo = TypeInfo(TDateTime) then
-            Result := TValue.From<TDateTime>(StrToDateTimeDef(AString, Default.AsType<TDateTime>, FormatSettings))
+            Result := TValue.From<TDateTime>(ConvertStringToDateTime(AString, Default.AsType<TDateTime>))
           else
             Result := TValue.From<Double>(StrToFloatDef(AString, Default.AsType<Double>, FormatSettings));
         end;
@@ -578,11 +687,11 @@ begin
       case Value.TypeData.FloatType of
         ftDouble: begin { handle special Double cases }
           if Value.TypeInfo = TypeInfo(TDate) then
-            Result := DateToStr(Value.AsType<TDate>, FormatSettings)
+            Result := ConvertToString(Value.AsType<TDate>)
           else if Value.TypeInfo = TypeInfo(TTime) then
-            Result := TimeToStr(Value.AsType<TTime>, FormatSettings)
+            Result := ConvertToString(Value.AsType<TTime>)
           else if Value.TypeInfo = TypeInfo(TDateTime) then
-            Result := DateTimeToStr(Value.AsType<TDateTime>, FormatSettings)
+            Result := ConvertToString(Value.AsType<TDateTime>)
           else
             Result := FloatToStr(Value.AsType<Double>, FormatSettings);
         end;
