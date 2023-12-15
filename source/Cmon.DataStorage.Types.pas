@@ -504,7 +504,7 @@ begin
           WriteFloat(Key, Ident, Value.AsType<Double>);
         Exit;
       end
-      else if Value.TypeData.FloatType in [ftSingle, ftDouble] then begin
+      else if Value.TypeData.FloatType in [ftSingle, ftExtended] then begin
         WriteFloat(Key, Ident, Value.AsExtended);
         Exit;
       end;
