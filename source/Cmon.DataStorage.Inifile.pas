@@ -98,7 +98,7 @@ end;
 
 function TIniStorageTarget.GetData: TBytes;
 begin
-  Result := Stream.Bytes;
+  Result := Copy(Stream.Bytes, 0, Stream.Size);
 end;
 
 function TIniStorageTarget.InternalLoadBytes(const AFileName: string): TBytes;
