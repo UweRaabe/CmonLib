@@ -1,0 +1,44 @@
+package CmonLibVcl;
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS OFF}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO OFF}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE RELEASE}
+{$ENDIF IMPLICITBUILDING}
+{$DESCRIPTION 'CmonLibVcl - Common Library VCL'}
+{$LIBSUFFIX '290'}
+{$RUNONLY}
+{$IMPLICITBUILD OFF}
+
+requires
+  CmonLib,
+  vcl,
+  vclwinx;
+
+contains
+  Cmon.Messaging.Dialogs.Vcl in '..\..\source\Cmon.Messaging.Dialogs.Vcl.pas',
+  Cmon.Observers.Vcl in '..\..\source\Cmon.Observers.Vcl.pas',
+  Cmon.Utilities.Vcl in '..\..\source\Cmon.Utilities.Vcl.pas',
+  Cmon.Vcl.Forms in '..\..\source\Cmon.Vcl.Forms.pas';
+
+end.
