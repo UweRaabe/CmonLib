@@ -123,7 +123,7 @@
             </Platforms>
             <MMX>
                 <UsesClauseFormatter AutoFormat="1">
-                    <GroupNames>Winapi;System.Win;System;Data;REST;Xml;Vcl;FMX;Cmon</GroupNames>
+                    <GroupNames>Winapi;System.Win;System;Data;Datasnap;REST;Xml;Vcl;FMX;Cmon</GroupNames>
                 </UsesClauseFormatter>
                 <Parser>
                     <Defines/>

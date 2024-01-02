@@ -42,7 +42,7 @@
         <DCC_ExeOutput>.\$(Platform)\$(Config)</DCC_ExeOutput>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
         <DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
-        <DllSuffix>280</DllSuffix>
+        <DllSuffix>$(Auto)</DllSuffix>
         <GenDll>true</GenDll>
         <GenPackage>true</GenPackage>
         <RuntimeOnlyPackage>true</RuntimeOnlyPackage>

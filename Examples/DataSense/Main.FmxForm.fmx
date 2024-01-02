@@ -382,4 +382,19 @@ object MainForm: TMainForm
       Columns = <>
     end
   end
+  object DataSense1: TDataSense
+    DataLinks = <
+      item
+        DataField = 'Company'
+        DataSource = DsCustomer
+        Target = edtCompany
+      end
+      item
+        DataField = 'City'
+        DataSource = DsCustomer
+        Target = edtCity
+      end>
+    Left = 336
+    Top = 40
+  end
 end

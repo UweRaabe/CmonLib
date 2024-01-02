@@ -1,0 +1,120 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{C7727CFD-9140-4690-8AFB-ECB79B81D366}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="Observers\ObserversDemo.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="DataStorage\DataStorageDemo.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="DataSetHelper\DataSetHelperDemo.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Dialogs\DialogsDemoVCL.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Dialogs\DialogsDemoFMX.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="ImageLists\ImageListsDemo.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="DataSense\DataSenseDemoVcl.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="DataSense\DataSenseDemoFmx.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="ObserversDemo">
+        <MSBuild Projects="Observers\ObserversDemo.dproj"/>
+    </Target>
+    <Target Name="ObserversDemo:Clean">
+        <MSBuild Projects="Observers\ObserversDemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="ObserversDemo:Make">
+        <MSBuild Projects="Observers\ObserversDemo.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="DataStorageDemo">
+        <MSBuild Projects="DataStorage\DataStorageDemo.dproj"/>
+    </Target>
+    <Target Name="DataStorageDemo:Clean">
+        <MSBuild Projects="DataStorage\DataStorageDemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="DataStorageDemo:Make">
+        <MSBuild Projects="DataStorage\DataStorageDemo.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="DataSetHelperDemo">
+        <MSBuild Projects="DataSetHelper\DataSetHelperDemo.dproj"/>
+    </Target>
+    <Target Name="DataSetHelperDemo:Clean">
+        <MSBuild Projects="DataSetHelper\DataSetHelperDemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="DataSetHelperDemo:Make">
+        <MSBuild Projects="DataSetHelper\DataSetHelperDemo.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="DialogsDemoVCL">
+        <MSBuild Projects="Dialogs\DialogsDemoVCL.dproj"/>
+    </Target>
+    <Target Name="DialogsDemoVCL:Clean">
+        <MSBuild Projects="Dialogs\DialogsDemoVCL.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="DialogsDemoVCL:Make">
+        <MSBuild Projects="Dialogs\DialogsDemoVCL.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="DialogsDemoFMX">
+        <MSBuild Projects="Dialogs\DialogsDemoFMX.dproj"/>
+    </Target>
+    <Target Name="DialogsDemoFMX:Clean">
+        <MSBuild Projects="Dialogs\DialogsDemoFMX.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="DialogsDemoFMX:Make">
+        <MSBuild Projects="Dialogs\DialogsDemoFMX.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="ImageListsDemo">
+        <MSBuild Projects="ImageLists\ImageListsDemo.dproj"/>
+    </Target>
+    <Target Name="ImageListsDemo:Clean">
+        <MSBuild Projects="ImageLists\ImageListsDemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="ImageListsDemo:Make">
+        <MSBuild Projects="ImageLists\ImageListsDemo.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="DataSenseDemoVcl">
+        <MSBuild Projects="DataSense\DataSenseDemoVcl.dproj"/>
+    </Target>
+    <Target Name="DataSenseDemoVcl:Clean">
+        <MSBuild Projects="DataSense\DataSenseDemoVcl.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="DataSenseDemoVcl:Make">
+        <MSBuild Projects="DataSense\DataSenseDemoVcl.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="DataSenseDemoFmx">
+        <MSBuild Projects="DataSense\DataSenseDemoFmx.dproj"/>
+    </Target>
+    <Target Name="DataSenseDemoFmx:Clean">
+        <MSBuild Projects="DataSense\DataSenseDemoFmx.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="DataSenseDemoFmx:Make">
+        <MSBuild Projects="DataSense\DataSenseDemoFmx.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="ObserversDemo;DataStorageDemo;DataSetHelperDemo;DialogsDemoVCL;DialogsDemoFMX;ImageListsDemo;DataSenseDemoVcl;DataSenseDemoFmx"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="ObserversDemo:Clean;DataStorageDemo:Clean;DataSetHelperDemo:Clean;DialogsDemoVCL:Clean;DialogsDemoFMX:Clean;ImageListsDemo:Clean;DataSenseDemoVcl:Clean;DataSenseDemoFmx:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="ObserversDemo:Make;DataStorageDemo:Make;DataSetHelperDemo:Make;DialogsDemoVCL:Make;DialogsDemoFMX:Make;ImageListsDemo:Make;DataSenseDemoVcl:Make;DataSenseDemoFmx:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

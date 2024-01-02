@@ -40,7 +40,7 @@
         <DCC_DcuOutput>.\$(Platform)\$(Config)</DCC_DcuOutput>
         <DCC_ExeOutput>.\$(Platform)\$(Config)</DCC_ExeOutput>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
-        <DllSuffix>290</DllSuffix>
+        <DllSuffix>$(Auto)</DllSuffix>
         <GenDll>true</GenDll>
         <GenPackage>true</GenPackage>
     </PropertyGroup>
@@ -113,6 +113,7 @@
                 <Source>
                     <Source Name="MainSource">CmonLibDataDesign.dpk</Source>
                 </Source>
+                <Excluded_Packages/>
             </Delphi.Personality>
             <Platforms>
                 <Platform value="Linux64">False</Platform>

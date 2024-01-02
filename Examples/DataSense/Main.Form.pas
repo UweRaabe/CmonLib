@@ -5,8 +5,10 @@ interface
 uses
   System.ImageList, System.Classes,
   Data.DB,
-  Vcl.Forms, Vcl.ImgList, Vcl.VirtualImageList, Vcl.ExtCtrls, Vcl.Controls, Vcl.StdCtrls, Vcl.Mask, Vcl.DBCtrls, Vcl.Grids, Vcl.DBGrids,
-  Datasnap.DBClient, Cmon.DataSense, Cmon.DataSense.VCL;
+  Datasnap.DBClient,
+  Vcl.Forms, Vcl.ImgList, Vcl.VirtualImageList, Vcl.ExtCtrls, Vcl.Controls, Vcl.StdCtrls, Vcl.Mask, Vcl.DBCtrls, Vcl.Grids,
+  Vcl.DBGrids, Vcl.Buttons,
+  Cmon.DataSense, Cmon.DataSense.VCL;
 
 type
   TMainForm = class(TForm)
