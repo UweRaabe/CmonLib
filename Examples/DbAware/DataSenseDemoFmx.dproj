@@ -4,7 +4,7 @@
         <AppType>Application</AppType>
         <Config Condition="'$(Config)'==''">Release</Config>
         <FrameworkType>FMX</FrameworkType>
-        <MainSource>DbAwareDemoFmx.dpr</MainSource>
+        <MainSource>DataSenseDemoFmx.dpr</MainSource>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <ProjectGuid>{372894FF-5EBF-48A9-9BC1-3D691F2F0DF3}</ProjectGuid>
         <ProjectVersion>20.1</ProjectVersion>
@@ -58,7 +58,7 @@
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
-        <SanitizedProjectName>DbAwareDemoFmx</SanitizedProjectName>
+        <SanitizedProjectName>DataSenseDemoFmx</SanitizedProjectName>
         <DCC_DcuOutput>.\$(Platform)\$(Config)</DCC_DcuOutput>
         <DCC_ExeOutput>.\bin</DCC_ExeOutput>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
@@ -141,7 +141,7 @@
         <BorlandProject>
             <Delphi.Personality>
                 <Source>
-                    <Source Name="MainSource">DbAwareDemoFmx.dpr</Source>
+                    <Source Name="MainSource">DataSenseDemoFmx.dpr</Source>
                 </Source>
                 <Excluded_Packages/>
             </Delphi.Personality>

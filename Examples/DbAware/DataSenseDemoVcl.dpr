@@ -1,4 +1,4 @@
-program DbAwareDemo;
+program DataSenseDemoVcl;
 
 uses
   Vcl.Forms,

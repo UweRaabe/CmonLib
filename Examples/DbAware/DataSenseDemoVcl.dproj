@@ -4,7 +4,7 @@
         <AppType>Application</AppType>
         <Config Condition="'$(Config)'==''">Release</Config>
         <FrameworkType>VCL</FrameworkType>
-        <MainSource>DbAwareDemo.dpr</MainSource>
+        <MainSource>DataSenseDemoVcl.dpr</MainSource>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <ProjectGuid>{53E60E67-18D8-4527-B34F-6C00D33F5337}</ProjectGuid>
         <ProjectVersion>20.1</ProjectVersion>
@@ -41,7 +41,7 @@
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
-        <SanitizedProjectName>DbAwareDemo</SanitizedProjectName>
+        <SanitizedProjectName>DataSenseDemoVcl</SanitizedProjectName>
         <DCC_DcuOutput>.\$(Platform)\$(Config)</DCC_DcuOutput>
         <DCC_ExeOutput>.\bin</DCC_ExeOutput>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
@@ -113,7 +113,7 @@
         <BorlandProject>
             <Delphi.Personality>
                 <Source>
-                    <Source Name="MainSource">DbAwareDemo.dpr</Source>
+                    <Source Name="MainSource">DataSenseDemoVcl.dpr</Source>
                 </Source>
                 <Excluded_Packages/>
             </Delphi.Personality>

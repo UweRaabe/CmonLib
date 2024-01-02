@@ -1,4 +1,4 @@
-program DbAwareDemoFmx;
+program DataSenseDemoFmx;
 
 uses
   System.StartUpCopy,
