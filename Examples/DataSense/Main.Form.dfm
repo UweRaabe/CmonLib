@@ -25,9 +25,9 @@ object MainForm: TMainForm
     object dspCity: TLabel
       Left = 264
       Top = 56
-      Width = 109
+      Width = 14
       Height = 15
-      Caption = '4-976 Sugarloaf Hwy'
+      Caption = 'US'
     end
     object lblCompany: TLabel
       Left = 11
@@ -476,5 +476,20 @@ object MainForm: TMainForm
     DataSet = QuCustomer
     Left = 390
     Top = 330
+  end
+  object DataSense: TDataSense
+    DataLinks = <
+      item
+        DataField = 'City'
+        DataSource = DsCustomer
+        Target = edtCity
+      end
+      item
+        DataField = 'Addr1'
+        DataSource = DsCustomer
+        Target = LabeledEdit1
+      end>
+    Left = 320
+    Top = 16
   end
 end
