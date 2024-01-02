@@ -5,6 +5,8 @@ A collection of several units with different purpose.
 
 **Cmon.CmdLineHandler** and **Cmon.CmdLineFileHandler** contain classes for handling command line applications. Derived classes concentrate on the actual task to do.
 
+**Cmon.DataSense** adds data sensitivity to controls that don't support that itself. PLace a TDataSense component onto a form and all supported controls get a DataSource and DataField property in the object inspector.
+
 **Cmon.DataSetHelper** offers a class helper for TDataSet with enumerator support as well as loading and storing classes and records.
 
 **Cmon.DataStorage** allows persistance of fields and properties of class instances, especially forms and frames, by applying attributes.
