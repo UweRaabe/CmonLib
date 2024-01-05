@@ -3,7 +3,7 @@ unit Cmon.DataStorage.JSON;
 interface
 
 uses
-  System.JSON, System.Classes,
+  System.JSON, System.Classes, System.SysUtils,
   Cmon.DataStorage, Cmon.DataStorage.Target;
 
 type
@@ -18,6 +18,8 @@ type
   strict protected
     procedure DeleteKey(const Key, Ident: string); override;
     procedure EraseStorageKey(const Key: string); override;
+    function InternalLoadBytes(const AFileName: string): TBytes; virtual;
+    procedure InternalSaveBytes(const AFileName: string; const ABytes: TBytes); virtual;
     procedure ReadKey(const Key: string; Target: TStrings); override;
     function ReadString(const Key: string; const Ident: string; const Default: string): string; override;
     function ReadBoolean(const Key: string; const Ident: string; const Default: Boolean): Boolean; override;
@@ -50,7 +52,7 @@ type
 implementation
 
 uses
-  System.SysUtils, System.IOUtils, System.Generics.Collections,
+  System.IOUtils, System.Generics.Collections,
   Cmon.Utilities, Cmon.Messaging, Cmon.Initializing;
 
 resourcestring
@@ -135,10 +137,20 @@ begin
     Result := node.Values[Ident];
 end;
 
+function TJSONStorageTarget.InternalLoadBytes(const AFileName: string): TBytes;
+begin
+  Result := TFile.ReadAllBytes(AFileName);
+end;
+
+procedure TJSONStorageTarget.InternalSaveBytes(const AFileName: string; const ABytes: TBytes);
+begin
+  TFile.WriteAllBytes(AFileName, ABytes);
+end;
+
 procedure TJSONStorageTarget.LoadFromFile(const AFileName: string);
 begin
   if TFile.Exists(AFileName) then
-    Json := TJSONValue.ParseJSONValue(TFile.ReadAllText(AFileName)) as TJSONObject
+    Json := TJSONValue.ParseJSONValueUTF8(InternalLoadBytes(AFileName), 0) as TJSONObject
   else
     Json := TJSONObject.Create;
   Modified := False;
@@ -190,7 +202,7 @@ end;
 procedure TJSONStorageTarget.SaveToFile(const AFileName: string);
 begin
   if Modified and (Json <> nil) then
-    TFile.WriteAllText(AFileName, Json.Format(4), TEncoding.UTF8);
+    InternalSaveBytes(AFileName, TEncoding.UTF8.GetBytes(Json.Format(4)));
   Modified := False;
   inherited;
 end;
