@@ -150,7 +150,7 @@ end;
 procedure TJSONStorageTarget.LoadFromFile(const AFileName: string);
 begin
   if TFile.Exists(AFileName) then
-    Json := TJSONValue.ParseJSONValueUTF8(InternalLoadBytes(AFileName), 0) as TJSONObject
+    Json := TJSONValue.ParseJSONValue(InternalLoadBytes(AFileName), 0) as TJSONObject
   else
     Json := TJSONObject.Create;
   Modified := False;
