@@ -54,8 +54,11 @@ type
   class var
     FAppName: string;
     FCompanyName: string;
-  var
   public
+    class function CommonAppDataPath: string; overload; static; inline;
+    class function CommonAppDataPath(const AFileName: string): string; overload; static; inline;
+    class function CommonDocumentsPath: string; overload; static; inline;
+    class function CommonDocumentsPath(const AFileName: string): string; overload; static; inline;
     class function GetCompanyAppSubPath: string; static;
     class function GetExeName: string; static; inline;
     class procedure Postpone(AProc: TThreadMethod; ADelayMS: Cardinal = 0); overload; static;
@@ -76,6 +79,26 @@ uses
   System.Threading;
 
 { TUtilities }
+
+class function TUtilities.CommonAppDataPath: string;
+begin
+  Result := TPath.Combine(TPath.GetPublicPath, GetCompanyAppSubPath);
+end;
+
+class function TUtilities.CommonAppDataPath(const AFileName: string): string;
+begin
+  Result := TPath.Combine(CommonAppDataPath, AFileName);
+end;
+
+class function TUtilities.CommonDocumentsPath: string;
+begin
+  Result := TPath.Combine(TPath.GetSharedDocumentsPath, GetCompanyAppSubPath);
+end;
+
+class function TUtilities.CommonDocumentsPath(const AFileName: string): string;
+begin
+  Result := TPath.Combine(CommonDocumentsPath, AFileName);
+end;
 
 class function TUtilities.GetCompanyAppSubPath: string;
 begin
