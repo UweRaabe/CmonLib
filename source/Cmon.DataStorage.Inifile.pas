@@ -103,20 +103,21 @@ end;
 
 function TIniStorageTarget.InternalLoadBytes(const AFileName: string): TBytes;
 begin
-  Result := TFile.ReadAllBytes(AFileName);
+  Result := nil;
+  if TFile.Exists(AFileName) then
+    Result := TFile.ReadAllBytes(AFileName);
 end;
 
 procedure TIniStorageTarget.InternalSaveBytes(const AFileName: string; const ABytes: TBytes);
 begin
+  { make sure the folder exists }
+  TDirectory.CreateDirectory(TPath.GetDirectoryName(AFileName));
   TFile.WriteAllBytes(AFileName, ABytes);
 end;
 
 procedure TIniStorageTarget.LoadFromFile(const AFileName: string);
 begin
-  if TFile.Exists(AFileName) then
-    Data := InternalLoadBytes(AFileName)
-  else
-    Data := nil;
+  Data := InternalLoadBytes(AFileName);
   inherited;
 end;
 
@@ -133,8 +134,6 @@ end;
 procedure TIniStorageTarget.SaveToFile(const AFileName: string);
 begin
   inherited;
-  { make sure the folder exists }
-  TDirectory.CreateDirectory(TPath.GetDirectoryName(AFileName));
   UpdateData;
   InternalSaveBytes(AFileName, Data);
 end;

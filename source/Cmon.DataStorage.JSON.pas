@@ -139,17 +139,22 @@ end;
 
 function TJSONStorageTarget.InternalLoadBytes(const AFileName: string): TBytes;
 begin
-  Result := TFile.ReadAllBytes(AFileName);
+  Result := nil;
+  if TFile.Exists(AFileName) then
+    Result := TFile.ReadAllBytes(AFileName);
 end;
 
 procedure TJSONStorageTarget.InternalSaveBytes(const AFileName: string; const ABytes: TBytes);
 begin
+  { make sure the folder exists }
+  TDirectory.CreateDirectory(TPath.GetDirectoryName(AFileName));
   TFile.WriteAllBytes(AFileName, ABytes);
 end;
 
 procedure TJSONStorageTarget.LoadFromFile(const AFileName: string);
 begin
-  if TFile.Exists(AFileName) then
+  var bytes := InternalLoadBytes(AFileName);
+  if bytes <> nil then
     Json := TJSONValue.ParseJSONValue(InternalLoadBytes(AFileName), 0) as TJSONObject
   else
     Json := TJSONObject.Create;
