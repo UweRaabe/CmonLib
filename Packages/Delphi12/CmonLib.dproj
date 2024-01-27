@@ -104,6 +104,7 @@
         <DCCReference Include="..\..\source\Cmon.CmdLineFileHandler.pas"/>
         <DCCReference Include="..\..\source\Cmon.Initializing.pas"/>
         <DCCReference Include="..\..\source\Cmon.Utilities.Win.pas"/>
+        <DCCReference Include="..\..\source\Cmon.AsyncGuard.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
