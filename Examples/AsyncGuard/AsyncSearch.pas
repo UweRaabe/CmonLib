@@ -13,21 +13,19 @@ type
   end;
 
 type
-  TSearch = class(TAsyncGuard)
+  TSearch = class(TAsyncTask<ISearchTarget>)
   private
     FPath: string;
     FSearchPattern: string;
-    FTarget: ISearchTarget;
     procedure SearchFolder(const APath, ASearchPattern: string);
   strict protected
     procedure AddFiles(const AFiles: TArray<string>); virtual;
     procedure BeginSearch; virtual;
-    procedure CheckCancelled;
     procedure EndSearch; virtual;
-    procedure Execute; override;
+    procedure InternalExecute; override;
   public
     constructor Create(ATarget: ISearchTarget; const APath, ASearchPattern: string);
-    class procedure Execute(ATarget: ISearchTarget; const APath, ASearchPattern: string; out ACancel: ICancel); reintroduce; overload;
+    class procedure Execute(ATarget: ISearchTarget; const APath, ASearchPattern: string; out ACancel: ICancel);
   end;
 
 type
@@ -36,8 +34,8 @@ type
     procedure AddFiles(const AFiles: TArray<string>); override;
     procedure BeginSearch; override;
     procedure EndSearch; override;
-    procedure Execute(ACancel: ICancel); override;
   public
+    class procedure Execute(ATarget: ISearchTarget; const APath, ASearchPattern: string; out ACancel: ICancel);
   end;
 
 implementation
@@ -60,48 +58,44 @@ begin
   TThread.Synchronize(nil, procedure begin inherited; end);
 end;
 
-procedure TAsyncSearch.Execute(ACancel: ICancel);
+class procedure TAsyncSearch.Execute(ATarget: ISearchTarget; const APath, ASearchPattern: string; out ACancel: ICancel);
 begin
-  ExecuteAsync(ACancel);
+  TAsyncGuard.ExecuteAsync(Self.Create(ATarget, APath, ASearchPattern), ACancel);
 end;
 
 constructor TSearch.Create(ATarget: ISearchTarget; const APath, ASearchPattern: string);
 begin
-  inherited Create;
-  FTarget := ATarget;
+  inherited Create(ATarget);
   FPath := APath;
   FSearchPattern := ASearchPattern;
 end;
 
 procedure TSearch.AddFiles(const AFiles: TArray<string>);
+var
+  Target: ISearchTarget;
 begin
-  CheckCancelled;
   if Length(AFiles) = 0 then Exit;
-  if FTarget <> nil then
-    FTarget.AddFiles(AFiles);
+  if HasTarget(Target) then
+    Target.AddFiles(AFiles);
 end;
 
 procedure TSearch.BeginSearch;
+var
+  Target: ISearchTarget;
 begin
-  CheckCancelled;
-  if FTarget <> nil then
-    FTarget.BeginSearch;
-end;
-
-procedure TSearch.CheckCancelled;
-begin
-  if IsCancelled then
-    FTarget := nil;
+  if HasTarget(Target) then
+    Target.BeginSearch;
 end;
 
 procedure TSearch.EndSearch;
+var
+  Target: ISearchTarget;
 begin
-  CheckCancelled;
-  if FTarget <> nil then
-    FTarget.EndSearch;
+  if HasTarget(Target) then
+    Target.EndSearch;
 end;
 
-procedure TSearch.Execute;
+procedure TSearch.InternalExecute;
 begin
   BeginSearch;
   SearchFolder(FPath, FSearchPattern);
@@ -110,7 +104,7 @@ end;
 
 class procedure TSearch.Execute(ATarget: ISearchTarget; const APath, ASearchPattern: string; out ACancel: ICancel);
 begin
-  Execute(Self.Create(ATarget, APath, ASearchPattern), ACancel);
+  TAsyncGuard.ExecuteSync(Self.Create(ATarget, APath, ASearchPattern), ACancel);
 end;
 
 procedure TSearch.SearchFolder(const APath, ASearchPattern: string);
@@ -123,7 +117,7 @@ begin
   { release memory as early as possible }
   arr := nil;
   for dir in TDirectory.GetDirectories(APath) do begin
-    if IsCancelled then Exit;
+    if IsCanceled then Exit;
     if not TDirectory.Exists(dir) then Continue;
     SearchFolder(dir, ASearchPattern);
   end;

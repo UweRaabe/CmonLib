@@ -21,6 +21,8 @@ type
     imgList: TVirtualImageList;
     btnNewSearchWindow: TButton;
     StatusBar: TStatusBar;
+    btnCancel: TButton;
+    procedure btnCancelClick(Sender: TObject);
     procedure btnNewSearchWindowClick(Sender: TObject);
     procedure dspFilesData(Sender: TObject; Item: TListItem);
     procedure dspFilesDataFind(Sender: TObject; Find: TItemFind; const FindString: string; const FindPosition: TPoint;
@@ -80,6 +82,11 @@ procedure TSearchForm.BeginSearch;
 begin
   FStopWatch := TStopwatch.StartNew;
   dspFiles.Cursor := crHourGlass;
+end;
+
+procedure TSearchForm.btnCancelClick(Sender: TObject);
+begin
+  Search := nil;
 end;
 
 procedure TSearchForm.btnNewSearchWindowClick(Sender: TObject);
