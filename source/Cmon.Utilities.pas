@@ -207,6 +207,8 @@ begin
       case FDirection of
         TEnumDirection.Normal: idx := FIndex;
         TEnumDirection.Reverse: idx := FCount - FIndex - 1;
+      else
+        raise EProgrammerNotFound.Create('unhandled case');
       end;
       cmp := FGetItem(idx);
       if cmp.InheritsFrom(T) then
