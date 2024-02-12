@@ -113,28 +113,46 @@ type
     procedure PushStorageKey; overload;
     procedure PushStorageKey(const NewKey: string); overload;
     { Reading, Writing, Key and Section handling }
-    procedure EraseStorageKey;
-    procedure DeleteKey(const Ident: string);
-    procedure ReadKey(Target: TStrings);
-    function ReadBoolean(const Ident: string; const Default: Boolean): Boolean;
-    function ReadDateTime(const Ident: string; const Default: TDateTime): TDateTime;
-    function ReadFloat(const Ident: string; const Default: Double): Double;
+    procedure DeleteKey(const Key, Ident: string); overload;
+    procedure DeleteKey(const Ident: string); overload;
+    procedure EraseStorageKey(const Key: string); overload;
+    procedure EraseStorageKey; overload;
+    procedure ReadKey(const Key: string; Target: TStrings); overload;
+    procedure ReadKey(Target: TStrings); overload;
+    function ReadBoolean(const Key, Ident: string; const Default: Boolean): Boolean; overload;
+    function ReadBoolean(const Ident: string; const Default: Boolean): Boolean; overload;
     procedure ReadChild(Instance: TObject; const Ident: string = ''); overload;
     procedure ReadChild<A: TCustomStorageAttribute>(Instance: TObject; const Ident: string = ''); overload;
-    function ReadInteger(const Ident: string; const Default: Integer): Integer;
-    function ReadString(const Ident, Default: string): string;
-    procedure ReadStrings(const Ident: string; Target: TStrings);
-    function ReadValue(const Ident: string; const Default: TValue): TValue;
-    function ValueExists(const Ident: string): Boolean;
-    procedure WriteBoolean(const Ident: string; const Value: Boolean);
-    procedure WriteDateTime(const Ident: string; const Value: TDateTime);
-    procedure WriteFloat(const Ident: string; const Value: Double);
+    function ReadDateTime(const Key, Ident: string; const Default: TDateTime): TDateTime; overload;
+    function ReadDateTime(const Ident: string; const Default: TDateTime): TDateTime; overload;
+    function ReadFloat(const Key, Ident: string; const Default: Double): Double; overload;
+    function ReadFloat(const Ident: string; const Default: Double): Double; overload;
+    function ReadInteger(const Key, Ident: string; const Default: Integer): Integer; overload;
+    function ReadInteger(const Ident: string; const Default: Integer): Integer; overload;
+    function ReadString(const Key, Ident, Default: string): string; overload;
+    function ReadString(const Ident, Default: string): string; overload;
+    procedure ReadStrings(const Key, Ident: string; Target: TStrings); overload;
+    procedure ReadStrings(const Ident: string; Target: TStrings); overload;
+    function ReadValue(const Key, Ident: string; const Default: TValue): TValue; overload;
+    function ReadValue(const Ident: string; const Default: TValue): TValue; overload;
+    function ValueExists(const Key, Ident: string): Boolean; overload;
+    function ValueExists(const Ident: string): Boolean; overload;
+    procedure WriteBoolean(const Key, Ident: string; const Value: Boolean); overload;
+    procedure WriteBoolean(const Ident: string; const Value: Boolean); overload;
     procedure WriteChild(Instance: TObject; const Ident: string = ''); overload;
     procedure WriteChild<A: TCustomStorageAttribute>(Instance: TObject; const Ident: string = ''); overload;
-    procedure WriteInteger(const Ident: string; const Value: Integer);
-    procedure WriteString(const Ident: string; const Value: string);
-    procedure WriteStrings(const Ident: string; Source: TStrings);
-    procedure WriteValue(const Ident: string; const Value: TValue);
+    procedure WriteDateTime(const Key, Ident: string; const Value: TDateTime); overload;
+    procedure WriteDateTime(const Ident: string; const Value: TDateTime); overload;
+    procedure WriteFloat(const Key, Ident: string; const Value: Double); overload;
+    procedure WriteFloat(const Ident: string; const Value: Double); overload;
+    procedure WriteInteger(const Key, Ident: string; const Value: Integer); overload;
+    procedure WriteInteger(const Ident: string; const Value: Integer); overload;
+    procedure WriteString(const Key, Ident, Value: string); overload;
+    procedure WriteString(const Ident: string; const Value: string); overload;
+    procedure WriteStrings(const Key, Ident: string; Source: TStrings); overload;
+    procedure WriteStrings(const Ident: string; Source: TStrings); overload;
+    procedure WriteValue(const Key, Ident: string; const Value: TValue); overload;
+    procedure WriteValue(const Ident: string; const Value: TValue); overload;
     { Properties }
     class property AutoRegisterHandler: Boolean read FAutoRegisterHandler write FAutoRegisterHandler;
     class property DefaultInstance: TDataStorage read GetDefaultInstance;
@@ -385,6 +403,16 @@ begin
   FStorageTarget.DeleteKey(StorageKey, Ident);
 end;
 
+procedure TDataStorage.DeleteKey(const Key, Ident: string);
+begin
+  FStorageTarget.DeleteKey(Key, Ident);
+end;
+
+procedure TDataStorage.EraseStorageKey(const Key: string);
+begin
+  FStorageTarget.EraseStorageKey(Key);
+end;
+
 class procedure TDataStorage.ExecuteInit(AInstance, ATypeInfo: Pointer; AAttribute: TCustomAttributeClass);
 begin
   TMemberIterator.Execute(TStorageAction.init, nil, AInstance, ATypeInfo, AAttribute);
@@ -562,17 +590,12 @@ end;
 
 function TDataStorage.ReadBoolean(const Ident: string; const Default: Boolean): Boolean;
 begin
-  Result := FStorageTargetExt.ReadBoolean(StorageKey, Ident, Default);
+  Result := ReadBoolean(StorageKey, Ident, Default);
 end;
 
-function TDataStorage.ReadDateTime(const Ident: string; const Default: TDateTime): TDateTime;
+function TDataStorage.ReadBoolean(const Key, Ident: string; const Default: Boolean): Boolean;
 begin
-  Result := FStorageTargetExt.ReadDateTime(StorageKey, Ident, Default);
-end;
-
-function TDataStorage.ReadFloat(const Ident: string; const Default: Double): Double;
-begin
-  Result := FStorageTargetExt.ReadFloat(StorageKey, Ident, Default);
+  Result := FStorageTargetExt.ReadBoolean(Key, Ident, Default);
 end;
 
 procedure TDataStorage.ReadChild(Instance: TObject; const Ident: string = '');
@@ -593,29 +616,74 @@ begin
   end;
 end;
 
+function TDataStorage.ReadDateTime(const Ident: string; const Default: TDateTime): TDateTime;
+begin
+  Result := ReadDateTime(StorageKey, Ident, Default);
+end;
+
+function TDataStorage.ReadDateTime(const Key, Ident: string; const Default: TDateTime): TDateTime;
+begin
+  Result := FStorageTargetExt.ReadDateTime(Key, Ident, Default);
+end;
+
+function TDataStorage.ReadFloat(const Ident: string; const Default: Double): Double;
+begin
+  Result := ReadFloat(StorageKey, Ident, Default);
+end;
+
+function TDataStorage.ReadFloat(const Key, Ident: string; const Default: Double): Double;
+begin
+  Result := FStorageTargetExt.ReadFloat(Key, Ident, Default);
+end;
+
 function TDataStorage.ReadInteger(const Ident: string; const Default: Integer): Integer;
 begin
-  Result := FStorageTargetExt.ReadInteger(StorageKey, Ident, Default);
+  Result := ReadInteger(StorageKey, Ident, Default);
+end;
+
+function TDataStorage.ReadInteger(const Key, Ident: string; const Default: Integer): Integer;
+begin
+  Result := FStorageTargetExt.ReadInteger(Key, Ident, Default);
 end;
 
 procedure TDataStorage.ReadKey(Target: TStrings);
 begin
-  FStorageTarget.ReadKey(StorageKey, Target);
+  ReadKey(StorageKey, Target);
+end;
+
+procedure TDataStorage.ReadKey(const Key: string; Target: TStrings);
+begin
+  FStorageTarget.ReadKey(Key, Target);
 end;
 
 function TDataStorage.ReadString(const Ident, Default: string): string;
 begin
-  Result := FStorageTarget.ReadString(StorageKey, Ident, Default);
+  Result := ReadString(StorageKey, Ident, Default);
+end;
+
+function TDataStorage.ReadString(const Key, Ident, Default: string): string;
+begin
+  Result := FStorageTarget.ReadString(Key, Ident, Default);
 end;
 
 procedure TDataStorage.ReadStrings(const Ident: string; Target: TStrings);
 begin
-  FStorageTargetExt.ReadStrings(StorageKey, Ident, Target);
+  ReadStrings(StorageKey, Ident, Target);
+end;
+
+procedure TDataStorage.ReadStrings(const Key, Ident: string; Target: TStrings);
+begin
+  FStorageTargetExt.ReadStrings(Key, Ident, Target);
 end;
 
 function TDataStorage.ReadValue(const Ident: string; const Default: TValue): TValue;
 begin
-  Result := FStorageTargetExt.ReadValue(StorageKey, Ident, Default);
+  Result := ReadValue(StorageKey, Ident, Default);
+end;
+
+function TDataStorage.ReadValue(const Key, Ident: string; const Default: TValue): TValue;
+begin
+  Result := FStorageTargetExt.ReadValue(Key, Ident, Default);
 end;
 
 function TDataStorage.RetrieveStorageKey(Instance: TObject): string;
@@ -674,22 +742,22 @@ end;
 
 function TDataStorage.ValueExists(const Ident: string): Boolean;
 begin
-  Result := FStorageTarget.ValueExists(StorageKey, Ident);
+  Result := ValueExists(StorageKey, Ident);
+end;
+
+function TDataStorage.ValueExists(const Key, Ident: string): Boolean;
+begin
+  Result := FStorageTarget.ValueExists(Key, Ident);
 end;
 
 procedure TDataStorage.WriteBoolean(const Ident: string; const Value: Boolean);
 begin
-  FStorageTargetExt.WriteBoolean(StorageKey, Ident, Value);
+  WriteBoolean(StorageKey, Ident, Value);
 end;
 
-procedure TDataStorage.WriteDateTime(const Ident: string; const Value: TDateTime);
+procedure TDataStorage.WriteBoolean(const Key, Ident: string; const Value: Boolean);
 begin
-  FStorageTargetExt.WriteDateTime(StorageKey, Ident, Value);
-end;
-
-procedure TDataStorage.WriteFloat(const Ident: string; const Value: Double);
-begin
-  FStorageTargetExt.WriteFloat(StorageKey, Ident, Value);
+  FStorageTargetExt.WriteBoolean(Key, Ident, Value);
 end;
 
 procedure TDataStorage.WriteChild(Instance: TObject; const Ident: string = '');
@@ -710,24 +778,64 @@ begin
   end;
 end;
 
+procedure TDataStorage.WriteDateTime(const Ident: string; const Value: TDateTime);
+begin
+  WriteDateTime(StorageKey, Ident, Value);
+end;
+
+procedure TDataStorage.WriteDateTime(const Key, Ident: string; const Value: TDateTime);
+begin
+  FStorageTargetExt.WriteDateTime(Key, Ident, Value);
+end;
+
+procedure TDataStorage.WriteFloat(const Ident: string; const Value: Double);
+begin
+  WriteFloat(StorageKey, Ident, Value);
+end;
+
+procedure TDataStorage.WriteFloat(const Key, Ident: string; const Value: Double);
+begin
+  FStorageTargetExt.WriteFloat(Key, Ident, Value);
+end;
+
 procedure TDataStorage.WriteInteger(const Ident: string; const Value: Integer);
 begin
-  FStorageTargetExt.WriteInteger(StorageKey, Ident, Value);
+  WriteInteger(StorageKey, Ident, Value);
+end;
+
+procedure TDataStorage.WriteInteger(const Key, Ident: string; const Value: Integer);
+begin
+  FStorageTargetExt.WriteInteger(Key, Ident, Value);
 end;
 
 procedure TDataStorage.WriteString(const Ident: string; const Value: string);
 begin
-  FStorageTarget.WriteString(StorageKey, Ident, Value);
+  WriteString(StorageKey, Ident, Value);
+end;
+
+procedure TDataStorage.WriteString(const Key, Ident, Value: string);
+begin
+  FStorageTarget.WriteString(Key, Ident, Value);
 end;
 
 procedure TDataStorage.WriteStrings(const Ident: string; Source: TStrings);
 begin
-  FStorageTargetExt.WriteStrings(StorageKey, Ident, Source);
+  WriteStrings(StorageKey, Ident, Source);
+end;
+
+procedure TDataStorage.WriteStrings(const Key, Ident: string; Source: TStrings);
+begin
+  FStorageTargetExt.WriteStrings(Key, Ident, Source);
 end;
 
 procedure TDataStorage.WriteValue(const Ident: string; const Value: TValue);
 begin
-  FStorageTargetExt.WriteValue(StorageKey, Ident, Value);
+  WriteValue(StorageKey, Ident, Value);
+end;
+
+procedure TDataStorage.WriteValue(const Key, Ident: string; const Value: TValue);
+begin
+  FStorageTargetExt.WriteValue(Key, Ident, Value);
 end;
 
 procedure TCustomStoredClass.Finalize;
