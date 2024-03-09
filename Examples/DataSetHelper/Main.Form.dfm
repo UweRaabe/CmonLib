@@ -85,6 +85,47 @@ object MainForm: TMainForm
       TitleFont.Name = 'Tahoma'
       TitleFont.Style = []
       OnDblClick = GrdCustomerDblClick
+      Columns = <
+        item
+          Expanded = False
+          FieldName = 'CustNo'
+          Visible = True
+        end
+        item
+          Expanded = False
+          FieldName = 'Company'
+          Visible = True
+        end
+        item
+          Expanded = False
+          FieldName = 'Phone'
+          Visible = True
+        end
+        item
+          Expanded = False
+          FieldName = 'FAX'
+          Visible = True
+        end
+        item
+          Expanded = False
+          FieldName = 'TaxRate'
+          Visible = True
+        end
+        item
+          Expanded = False
+          FieldName = 'Contact'
+          Visible = True
+        end
+        item
+          Expanded = False
+          FieldName = 'LastInvoiceDate'
+          Visible = True
+        end
+        item
+          Expanded = False
+          FieldName = 'FullAddress'
+          Visible = True
+        end>
     end
   end
   object DsEmployee: TDataSource
@@ -94,7 +135,7 @@ object MainForm: TMainForm
   end
   object DsCustomer: TDataSource
     DataSet = QuCustomer
-    Left = 110
+    Left = 166
     Top = 66
   end
   object QuEmployee: TClientDataSet
@@ -162,9 +203,19 @@ object MainForm: TMainForm
       FBEE9ACC42000000000040DF40}
     Active = True
     Aggregates = <>
+    FieldOptions.AutoCreateMode = acCombineAlways
+    FieldOptions.PositionMode = poFirst
+    FieldOptions.UpdatePersistent = True
     Params = <>
+    OnCalcFields = QuEmployeeCalcFields
     Left = 64
     Top = 152
+    object QuEmployeeFullName: TStringField
+      FieldKind = fkCalculated
+      FieldName = 'FullName'
+      Size = 80
+      Calculated = True
+    end
   end
   object QuCustomer: TClientDataSet
     PersistDataPacket.Data = {
@@ -405,8 +456,19 @@ object MainForm: TMainForm
       7300446FBD72A0CC42}
     Active = True
     Aggregates = <>
+    FieldOptions.AutoCreateMode = acCombineAlways
+    FieldOptions.PositionMode = poFirst
+    FieldOptions.UpdatePersistent = True
     Params = <>
+    OnCalcFields = QuCustomerCalcFields
     Left = 168
     Top = 152
+    object QuCustomerFullAddress: TStringField
+      DisplayWidth = 256
+      FieldKind = fkCalculated
+      FieldName = 'FullAddress'
+      Size = 256
+      Calculated = True
+    end
   end
 end

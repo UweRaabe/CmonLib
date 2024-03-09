@@ -2,53 +2,21 @@ unit Main.Form;
 
 interface
 
-{ Example showing the use of the uDataSetHelper unit }
+{ Example showing the use of the Cmon.DataSetHelper unit }
 
 uses
   System.Classes,
-  Data.DB, Datasnap.DBClient,
-  Vcl.Controls, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Forms, Vcl.Grids, Vcl.DBGrids;
-
-type
-  TMainForm = class(TForm)
-    MemOutput: TMemo;
-    PnlTop: TPanel;
-    PnlMain: TPanel;
-    BtnListEmployees: TButton;
-    BtnListCustomers: TButton;
-    GrdEmployee: TDBGrid;
-    DsEmployee: TDataSource;
-    GrdCustomer: TDBGrid;
-    DsCustomer: TDataSource;
-    QuEmployee: TClientDataSet;
-    QuCustomer: TClientDataSet;
-    procedure FormCreate(Sender: TObject);
-    procedure BtnListEmployeesClick(Sender: TObject);
-    procedure BtnListCustomersClick(Sender: TObject);
-    procedure GrdCustomerDblClick(Sender: TObject);
-    procedure GrdEmployeeDblClick(Sender: TObject);
-  private
-  public
-  end;
-
-var
-  MainForm: TMainForm;
-
-implementation
-
-uses
-  System.Sysutils,
-  Vcl.Dialogs,
-  MidasLib,
+  Data.DB,
+  Datasnap.DBClient,
+  Vcl.Controls, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Forms, Vcl.Grids, Vcl.DBGrids,
   Cmon.DataSetHelper;
-
-{$R *.dfm}
 
 type
   TEmployee = record
     EmpNo: Integer;
     LastName: string;
     FirstName: string;
+    FullName: string;
     PhoneExt: string;
     HireDate: TDateTime;
     Salary: Double;
@@ -107,6 +75,108 @@ type
     property SomeOtherField: string read FSomeOtherField write FSomeOtherField;
   end;
 
+type
+  TEmployeeFields = class(TRecordFields)
+  private
+    FEmpNo: TField;
+    FFirstName: TField;
+    FFullName: TField;
+    FHireDate: TField;
+    FLastName: TField;
+    FPhoneExt: TField;
+    FSalary: TField;
+  protected
+    procedure InternalCalcFields; override;
+  public
+    property EmpNo: TField read FEmpNo;
+    property FirstName: TField read FFirstName;
+    property FullName: TField read FFullName;
+    property HireDate: TField read FHireDate;
+    property LastName: TField read FLastName;
+    property PhoneExt: TField read FPhoneExt;
+    property Salary: TField read FSalary;
+  end;
+
+type
+  TCustomerFields = class(TRecordFields)
+  private
+    FCustNo: TField;
+    FCompany: TField;
+    [DBField('Addr1')]
+    FAddress1: TField;
+    [DBField('Addr2')]
+    FAddress2: TField;
+    FCity: TField;
+    FState: TField;
+    [DBField('Zip')]
+    FZipCode: TField;
+    FCountry: TField;
+    FPhone: TField;
+    FFAX: TField;
+    FTaxRate: TField;
+    FContact: TField;
+    FFullAddress: TField;
+    FLastInvoiceDate: TField;
+  protected
+    procedure InternalCalcFields; override;
+  public
+    property Address1: TField read FAddress1;
+    property Address2: TField read FAddress2;
+    property City: TField read FCity;
+    property Company: TField read FCompany;
+    property Contact: TField read FContact;
+    property Country: TField read FCountry;
+    property CustNo: TField read FCustNo;
+    property FAX: TField read FFAX;
+    property FullAddress: TField read FFullAddress;
+    property LastInvoiceDate: TField read FLastInvoiceDate;
+    property Phone: TField read FPhone;
+    property State: TField read FState;
+    property TaxRate: TField read FTaxRate;
+    property ZipCode: TField read FZipCode;
+  end;
+
+type
+  TMainForm = class(TForm)
+    MemOutput: TMemo;
+    PnlTop: TPanel;
+    PnlMain: TPanel;
+    BtnListEmployees: TButton;
+    BtnListCustomers: TButton;
+    GrdEmployee: TDBGrid;
+    DsEmployee: TDataSource;
+    GrdCustomer: TDBGrid;
+    DsCustomer: TDataSource;
+    QuEmployee: TClientDataSet;
+    QuCustomer: TClientDataSet;
+    QuEmployeeFullName: TStringField;
+    QuCustomerFullAddress: TStringField;
+    procedure FormCreate(Sender: TObject);
+    procedure BtnListEmployeesClick(Sender: TObject);
+    procedure BtnListCustomersClick(Sender: TObject);
+    procedure GrdCustomerDblClick(Sender: TObject);
+    procedure GrdEmployeeDblClick(Sender: TObject);
+    procedure QuCustomerCalcFields(DataSet: TDataSet);
+    procedure QuEmployeeCalcFields(DataSet: TDataSet);
+  private
+    FCustomerFields: TCustomerFields;
+    FEmployeeFields: TEmployeeFields;
+  public
+    destructor Destroy; override;
+  end;
+
+var
+  MainForm: TMainForm;
+
+implementation
+
+uses
+  System.SysUtils,
+  Vcl.Dialogs,
+  MidasLib;
+
+{$R *.dfm}
+
 
 function TCustomer.GetCustNo: Integer;
 begin
@@ -118,8 +188,19 @@ begin
   FCustNo := Value;
 end;
 
+destructor TMainForm.Destroy;
+begin
+  FCustomerFields.Free;
+  FEmployeeFields.Free;
+  inherited Destroy;
+end;
+
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
+  FEmployeeFields := TEmployeeFields.Create;
+  FEmployeeFields.DataSet := QuEmployee;
+  FCustomerFields := TCustomerFields.Create;
+  FCustomerFields.DataSet := QuCustomer;
   QuEmployee.Active := true;
   QuCustomer.Active := true;
 end;
@@ -195,6 +276,44 @@ begin
   { Show the employee's name and the hire date. }
   Employee := QuEmployee.GetCurrentRec<TEmployee>;
   ShowMessage(Format('%s %s was hired on %s', [Employee.FirstName, Employee.LastName, FormatDateTime('dddddd', Employee.HireDate)]));
+end;
+
+procedure TMainForm.QuCustomerCalcFields(DataSet: TDataSet);
+begin
+  if FCustomerFields <> nil then
+    FCustomerFields.CalcFields;
+end;
+
+procedure TMainForm.QuEmployeeCalcFields(DataSet: TDataSet);
+begin
+  if FEmployeeFields <> nil then
+    FEmployeeFields.CalcFields;
+end;
+
+procedure TEmployeeFields.InternalCalcFields;
+begin
+  inherited;
+  FullName.AsString := FirstName.AsString + ' ' + LastName.AsString;
+end;
+
+procedure TCustomerFields.InternalCalcFields;
+var
+  lst: TStringList;
+begin
+  inherited;
+  lst := TStringList.Create;
+  try
+    lst.Add(Company.AsString);
+    lst.Add(Address1.AsString);
+    lst.Add(Address2.AsString);
+    lst.Add(Format('%s %s', [ZipCode.AsString, City.AsString]));
+    lst.Add(State.AsString);
+    lst.Add(Country.AsString);
+
+    FullAddress.AsString := lst.CommaText;
+  finally
+    lst.Free;
+  end;
 end;
 
 end.
