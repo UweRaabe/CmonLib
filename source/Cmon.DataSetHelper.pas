@@ -142,6 +142,44 @@ type
     function Records<T: record>: IRecords<T>; overload;
   end;
 
+type
+  TRecordFields = class
+  type
+    TFieldsDataLink = class(TDataLink)
+    private
+      FOwner: TRecordFields;
+      procedure UpdateField;
+    protected
+      procedure ActiveChanged; override;
+      procedure DataEvent(Event: TDataEvent; Info: NativeInt); override;
+      procedure LayoutChanged; override;
+      property Owner: TRecordFields read FOwner;
+    public
+      constructor Create(AOwner: TRecordFields);
+    end;
+  private
+    FDataSource: TDataSource;
+    FDataLink: TFieldsDataLink;
+    FFieldsAreLinked: Boolean;
+    FMapMode: TDBFieldsMapping;
+    FRTTIContext: TRTTIContext;
+    function CheckAttributes(obj: TRttiNamedObject; const ADefault: string = ''): string;
+    function GetDataSet: TDataSet;
+    function GetMapMode(obj: TRttiNamedObject): TDBFieldsMapping;
+    procedure LinkFields;
+    procedure SetDataSet(const Value: TDataSet);
+    procedure SetFieldsAreLinked(const Value: Boolean);
+    procedure UnlinkFields;
+  protected
+    procedure InternalCalcFields; virtual;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure CalcFields;
+    property DataSet: TDataSet read GetDataSet write SetDataSet;
+    property FieldsAreLinked: Boolean read FFieldsAreLinked write SetFieldsAreLinked;
+  end;
+
 implementation
 
 uses
@@ -553,6 +591,190 @@ end;
 function TDataSetHelper.TRecordsInstance<T>.GetEnumerator: TDataSetEnumerator<T>;
 begin
   Result := TDataSetEnumerator<T>.Create(FDataSet, FInstance);
+end;
+
+constructor TRecordFields.Create;
+begin
+  inherited;
+  FDataSource := TDataSource.Create(nil);
+  FDataLink := TFieldsDataLink.Create(Self);
+  FDataLink.DataSource := FDataSource;
+end;
+
+destructor TRecordFields.Destroy;
+begin
+  FDataLink.Free;
+  FDataSource.Free;
+  inherited Destroy;
+end;
+
+procedure TRecordFields.CalcFields;
+begin
+  if (DataSet <> nil) and DataSet.Active then begin
+    var needsCancel := False;
+    if not (DataSet.State in [dsCalcFields, dsInternalCalc]) then
+      needsCancel := DataSet.AssureEdit;
+    try
+      InternalCalcFields;
+    finally
+      if needsCancel then
+        DataSet.Cancel;
+    end;
+  end;
+end;
+
+function TRecordFields.CheckAttributes(obj: TRttiNamedObject; const ADefault: string = ''): string;
+var
+  attr: TCustomAttribute;
+  storedAttr: DBFieldAttribute;
+begin
+  case FMapMode of
+    mapAuto: begin
+      if ADefault > '' then
+        result := ADefault
+      else
+        result := obj.Name;
+    end;
+    mapManual: result := '';
+  end;
+  for attr in obj.GetAttributes do begin
+    if attr is DBFieldAttribute then begin
+      storedAttr := attr as DBFieldAttribute;
+      if storedAttr.IsStored then begin
+        if storedAttr.FieldName > '' then begin
+          Result := storedAttr.FieldName;
+        end;
+      end
+      else begin
+        Result := '';
+      end;
+      Break;
+    end;
+  end;
+end;
+
+function TRecordFields.GetDataSet: TDataSet;
+begin
+  Result := FDataSource.DataSet;
+end;
+
+function TRecordFields.GetMapMode(obj: TRttiNamedObject): TDBFieldsMapping;
+var
+  attr: TCustomAttribute;
+begin
+  result := DefaultDBFieldsMapping;
+  for attr in obj.GetAttributes do begin
+    if attr is DBFieldsAttribute then begin
+      Exit((attr as DBFieldsAttribute).Mode);
+    end;
+  end;
+end;
+
+procedure TRecordFields.LinkFields;
+var
+  field: TRttiField;
+  fld: TField;
+  prop: TRttiProperty;
+  rttyType: TRTTIType;
+begin
+  if FDataSource.State = dsInactive then Exit;
+
+  FRTTIContext := TRTTIContext.Create;
+  rttyType := FRTTIContext.GetType(ClassType);
+  FMapMode := GetMapMode(rttyType);
+  for field in rttyType.GetFields do begin
+    var def := field.Name;
+    if def.StartsWith('F', True) then
+      def := def.Remove(0, 1);
+    fld := DataSet.FindField(CheckAttributes(field, def));
+    if fld = nil then Continue;
+    field.SetValue(Self, TValue.From<TField>(fld));
+  end;
+  for prop in rttyType.GetProperties do begin
+    if not prop.IsWritable then Continue;
+    fld := DataSet.FindField(CheckAttributes(prop));
+    if fld = nil then Continue;
+    prop.SetValue(Self, TValue.From<TField>(fld));
+  end;
+end;
+
+procedure TRecordFields.UnlinkFields;
+var
+  field: TRttiField;
+  fld: TField;
+  prop: TRttiProperty;
+  rttyType: TRTTIType;
+begin
+  if FDataSource.State = dsInactive then Exit;
+
+  FRTTIContext := TRTTIContext.Create;
+  rttyType := FRTTIContext.GetType(ClassType);
+  FMapMode := GetMapMode(rttyType);
+  for field in rttyType.GetFields do begin
+    fld := DataSet.FindField(CheckAttributes(field));
+    if fld = nil then Continue;
+    if field.GetValue(Self).AsObject = fld then
+      field.SetValue(Self, TValue.From<TField>(nil));
+  end;
+  for prop in rttyType.GetProperties do begin
+    if not prop.IsWritable then Continue;
+    fld := DataSet.FindField(CheckAttributes(prop));
+    if fld = nil then Continue;
+    if prop.GetValue(Self).AsObject = fld then
+      prop.SetValue(Self, TValue.From<TField>(nil));
+  end;
+end;
+
+procedure TRecordFields.InternalCalcFields;
+begin
+end;
+
+procedure TRecordFields.SetDataSet(const Value: TDataSet);
+begin
+  FDataSource.DataSet := Value;
+  if (Value <> nil) and Value.Active then begin
+    CalcFields;
+  end;
+end;
+
+procedure TRecordFields.SetFieldsAreLinked(const Value: Boolean);
+begin
+  if FFieldsAreLinked <> Value then
+  begin
+    if FFieldsAreLinked then
+      UnlinkFields;
+    if Value then
+      LinkFields;
+    FFieldsAreLinked := Value;
+  end;
+end;
+
+constructor TRecordFields.TFieldsDataLink.Create(AOwner: TRecordFields);
+begin
+  inherited Create;
+  FOwner := AOwner;
+end;
+
+procedure TRecordFields.TFieldsDataLink.ActiveChanged;
+begin
+  UpdateField;
+end;
+
+procedure TRecordFields.TFieldsDataLink.DataEvent(Event: TDataEvent; Info: NativeInt);
+begin
+  inherited;
+  if Event = deDisabledStateChange then
+    UpdateField;
+end;
+
+procedure TRecordFields.TFieldsDataLink.LayoutChanged;
+begin
+  UpdateField;
+end;
+
+procedure TRecordFields.TFieldsDataLink.UpdateField;
+begin
+  Owner.FieldsAreLinked := Active;
 end;
 
 end.
