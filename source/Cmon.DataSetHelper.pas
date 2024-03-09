@@ -133,6 +133,7 @@ type
   public
     function AssureEdit: Boolean;
     procedure AssurePost;
+    procedure ExportToCSV(const AFileName: string);
     function GetCurrentRec<T: record>: T;
     procedure SetCurrentRec<T: record>(AInstance: T);
     procedure LoadInstanceFromCurrent<T: class>(AInstance: T);
@@ -144,7 +145,7 @@ type
 implementation
 
 uses
-  System.Sysutils;
+  System.SysUtils, System.Classes;
 
 constructor DBFieldsAttribute.Create(AMode: TDBFieldsMapping);
 begin
@@ -186,6 +187,43 @@ procedure TDataSetHelper.AssurePost;
 begin
   if State in [dsEdit, dsInsert] then begin
     Post;
+  end;
+end;
+
+procedure TDataSetHelper.ExportToCSV(const AFileName: string);
+var
+  fld: TField;
+  lst: TStringList;
+  wasActive: Boolean;
+  writer: TTextWriter;
+begin
+  writer := TStreamWriter.Create(AFileName);
+  try
+    lst := TStringList.Create;
+    try
+      lst.QuoteChar := '"';
+      lst.Delimiter := ';';
+      wasActive := Active;
+      try
+        Active := true;
+        GetFieldNames(lst);
+        writer.WriteLine(lst.DelimitedText);
+        First;
+        while not Eof do begin
+          lst.Clear;
+          for fld in Fields do
+            lst.Add(fld.Text);
+          writer.WriteLine(lst.DelimitedText);
+          Next;
+        end;
+      finally
+        Active := wasActive;
+      end;
+    finally
+      lst.Free;
+    end;
+  finally
+    writer.Free;
   end;
 end;
 
