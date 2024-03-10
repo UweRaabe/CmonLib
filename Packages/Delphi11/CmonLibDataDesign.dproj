@@ -77,6 +77,8 @@
         <DCCReference Include="CmonLibDataVCL.dcp"/>
         <DCCReference Include="CmonLibDataFMX.dcp"/>
         <DCCReference Include="..\..\source\Cmon.DataSense.Design.pas"/>
+        <DCCReference Include="..\..\source\Cmon.DataSetHelper.Design.pas"/>
+        <DCCReference Include="..\..\source\Cmon.DataSetHelper.Generator.pas"/>
         <RcItem Include="..\..\Icons\TDataSense128.png">
             <ResourceType>RCDATA</ResourceType>
             <ResourceId>TDataSense128_PNG</ResourceId>

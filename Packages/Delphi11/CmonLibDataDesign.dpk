@@ -36,6 +36,8 @@ requires
   CmonLibDataFMX;
 
 contains
-  Cmon.DataSense.Design in '..\..\source\Cmon.DataSense.Design.pas';
+  Cmon.DataSense.Design in '..\..\source\Cmon.DataSense.Design.pas',
+  Cmon.DataSetHelper.Design in '..\..\source\Cmon.DataSetHelper.Design.pas',
+  Cmon.DataSetHelper.Generator in '..\..\source\Cmon.DataSetHelper.Generator.pas';
 
 end.
