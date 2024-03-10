@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xlat>
+  <meta>
+    <version>3</version>
+    <created>2024-03-10T23:45:25.024+01:00</created>
+    <tool>amTranslationManager</tool>
+    <toolversion>2.0.8628.33873</toolversion>
+  </meta>
+  <options>
+    <stringlisthandling>2</stringlisthandling>
+    <omitdonttranslate>True</omitdonttranslate>
+    <sorted>False</sorted>
+    <omitnewstate>True</omitnewstate>
+  </options>
+  <project sourcefile="C:\Users\Public\Documents\Embarcadero\Studio\23.0\Bpl\CmonLibDataDesign290.bpl" stringsymbolfile=".\CmonLibDataDesign.drc" language="en-US" properties="3">
+    <targetlanguages>
+      <language language="de" translated="3"/>
+      <language language="fr" translated="3"/>
+      <language language="ja" translated="3"/>
+    </targetlanguages>
+    <modules>
+      <module name="resourcestrings" type="strings" properties="3">
+        <items>
+          <item name="Cmon_DataSetHelper_Design_SCreateAccessClass">
+            <properties>
+              <property>
+                <value>Create access class</value>
+                <translations>
+                  <translation language="de" status="proposed">Access class erzeugen</translation>
+                  <translation language="fr" status="proposed">créer la classe d'accès</translation>
+                  <translation language="ja" status="proposed">アクセスクラスの作成</translation>
+                </translations>
+              </property>
+            </properties>
+          </item>
+          <item name="Cmon_DataSetHelper_Design_SCreateAccessRecord">
+            <properties>
+              <property>
+                <value>Create access record</value>
+                <translations>
+                  <translation language="de" status="proposed">Access record erzeugen</translation>
+                  <translation language="fr" status="proposed">créer un record d'accès</translation>
+                  <translation language="ja" status="proposed">アクセスレコードの作成</translation>
+                </translations>
+              </property>
+            </properties>
+          </item>
+          <item name="Cmon_DataSetHelper_Design_SCreateTRecordFieldsClass">
+            <properties>
+              <property>
+                <value>Create TRecordFields class</value>
+                <translations>
+                  <translation language="de" status="proposed">TRecordFields Klasse erzeugen</translation>
+                  <translation language="fr" status="proposed">créer la classe TRecordFields</translation>
+                  <translation language="ja" status="proposed">TRecordFieldsクラスを作成する</translation>
+                </translations>
+              </property>
+            </properties>
+          </item>
+        </items>
+      </module>
+    </modules>
+  </project>
+</xlat>
