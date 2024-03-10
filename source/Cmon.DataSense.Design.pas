@@ -9,8 +9,6 @@ uses
 
 type
   TDataSenseEditor = class(TComponentEditor)
-  private
-  class var
   public
     procedure ExecuteVerb(Index: Integer); override;
     function GetVerb(Index: Integer): string; override;
@@ -67,7 +65,7 @@ begin
   RegisterSelectionEditor(Vcl.Controls.TControl, TLinkedPropertyFilterVCL);
   RegisterSelectionEditor(FMX.Controls.TControl, TLinkedPropertyFilterFMX);
 
-  { we won't this to be editable in the Object Inspector, but we need the streaming }
+  { we don't want this to be editable in the Object Inspector, but we need the streaming }
   UnlistPublishedProperty(TDataSenseItem, 'Target');
 end;
 
