@@ -2,7 +2,7 @@
 <xlat>
   <meta>
     <version>3</version>
-    <created>2024-03-10T23:45:25.024+01:00</created>
+    <created>2024-03-11T16:13:51.694+01:00</created>
     <tool>amTranslationManager</tool>
     <toolversion>2.0.8628.33873</toolversion>
   </meta>
@@ -12,35 +12,35 @@
     <sorted>False</sorted>
     <omitnewstate>True</omitnewstate>
   </options>
-  <project sourcefile="C:\Users\Public\Documents\Embarcadero\Studio\23.0\Bpl\CmonLibDataDesign290.bpl" stringsymbolfile=".\CmonLibDataDesign.drc" language="en-US" properties="3">
+  <project sourcefile="..\..\..\Users\Public\Documents\Embarcadero\Studio\23.0\Bpl\CmonLibDataDesign290.bpl" stringsymbolfile=".\CmonLibDataDesign.drc" language="en-US" properties="4">
     <targetlanguages>
-      <language language="de" translated="3"/>
-      <language language="fr" translated="3"/>
-      <language language="ja" translated="3"/>
+      <language language="de" translated="4"/>
+      <language language="fr" translated="4"/>
+      <language language="ja" translated="4"/>
     </targetlanguages>
     <modules>
-      <module name="resourcestrings" type="strings" properties="3">
+      <module name="resourcestrings" type="strings" properties="4">
         <items>
           <item name="Cmon_DataSetHelper_Design_SCreateAccessClass">
             <properties>
               <property>
-                <value>Create access class</value>
+                <value>Create mapped class</value>
                 <translations>
-                  <translation language="de" status="proposed">Access class erzeugen</translation>
-                  <translation language="fr" status="proposed">créer la classe d'accès</translation>
-                  <translation language="ja" status="proposed">アクセスクラスの作成</translation>
+                  <translation language="de" status="proposed">Mapped class erzeugen</translation>
+                  <translation language="fr" status="proposed">Créer une class mappée</translation>
+                  <translation language="ja" status="proposed">マップされたクラスの作成</translation>
                 </translations>
               </property>
             </properties>
           </item>
-          <item name="Cmon_DataSetHelper_Design_SCreateAccessRecord">
+          <item name="Cmon_DataSetHelper_Design_STypesCopiedToClipboard">
             <properties>
               <property>
-                <value>Create access record</value>
+                <value>Types copied to clipboard: </value>
                 <translations>
-                  <translation language="de" status="proposed">Access record erzeugen</translation>
-                  <translation language="fr" status="proposed">créer un record d'accès</translation>
-                  <translation language="ja" status="proposed">アクセスレコードの作成</translation>
+                  <translation language="de" status="proposed">Folgende Typen wurden in die Zwischenablage kopiert: &amp;#13;&amp;#10;</translation>
+                  <translation language="ja" status="proposed">クリップボードにコピーされたタイプ： </translation>
+                  <translation language="fr" status="proposed">Types copiés dans le presse-papiers: </translation>
                 </translations>
               </property>
             </properties>
@@ -51,8 +51,20 @@
                 <value>Create TRecordFields class</value>
                 <translations>
                   <translation language="de" status="proposed">TRecordFields Klasse erzeugen</translation>
-                  <translation language="fr" status="proposed">créer la classe TRecordFields</translation>
+                  <translation language="fr" status="proposed">Créer un class TRecordFields</translation>
                   <translation language="ja" status="proposed">TRecordFieldsクラスを作成する</translation>
+                </translations>
+              </property>
+            </properties>
+          </item>
+          <item name="Cmon_DataSetHelper_Design_SCreateAccessRecord">
+            <properties>
+              <property>
+                <value>Create mapped record</value>
+                <translations>
+                  <translation language="de" status="proposed">Mapped record erzeugen</translation>
+                  <translation language="fr" status="proposed">Créer un record mappé</translation>
+                  <translation language="ja" status="proposed">マップされたレコードの作成</translation>
                 </translations>
               </property>
             </properties>

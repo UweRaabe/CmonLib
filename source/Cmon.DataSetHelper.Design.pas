@@ -6,9 +6,10 @@ uses
   DesignIntf, DesignEditors;
 
 resourcestring
-  SCreateAccessRecord = 'Create access record';
-  SCreateAccessClass = 'Create access class';
+  SCreateAccessRecord = 'Create mapped record';
+  SCreateAccessClass = 'Create mapped class';
   SCreateTRecordFieldsClass = 'Create TRecordFields class';
+  STypesCopiedToClipboard = 'Types copied to clipboard: ';
 
 type
   TDataSetHelperEditor = class(TSelectionEditor)
@@ -23,7 +24,9 @@ procedure Register;
 implementation
 
 uses
+  System.SysUtils,
   Data.DB,
+  Vcl.Dialogs,
   Cmon.DataSetHelper.Generator;
 
 procedure Register;
@@ -44,6 +47,8 @@ begin
       end;
     end;
     instance.CopyToClipboard;
+    var msg := STypesCopiedToClipboard + instance.TypesCreated.CommaText;
+    ShowMessage(msg);
   finally
     instance.Free;
   end;

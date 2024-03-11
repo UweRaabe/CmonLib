@@ -10,6 +10,7 @@ type
   TDataSetHelperGenerator = class
   private
     FCode: TStringList;
+    FTypesCreated: TStrings;
   protected
     function ExtractTypeName(ADataSet: TDataSet): string;
     function GetTypeFromFieldType(AFieldType: TFieldType): string;
@@ -21,6 +22,7 @@ type
     procedure CreateAccessRecord(ADataSet: TDataSet);
     procedure CreateRecordFields(ADataSet: TDataSet);
     property Code: TStringList read FCode;
+    property TypesCreated: TStrings read FTypesCreated;
   end;
 
 implementation
@@ -33,10 +35,12 @@ constructor TDataSetHelperGenerator.Create;
 begin
   inherited Create;
   FCode := TStringList.Create();
+  FTypesCreated := TStringList.Create;
 end;
 
 destructor TDataSetHelperGenerator.Destroy;
 begin
+  FTypesCreated.Free;
   FCode.Free;
   inherited Destroy;
 end;
@@ -53,6 +57,7 @@ begin
   if not ADataSet.Active then Exit;
   if ADataSet.FieldCount = 0 then Exit;
   var typeName := ExtractTypeName(ADataSet);
+  TypesCreated.Add(typename);
   Code.Add('type');
   Code.Add(Format('  %s = class', [typeName]));
   Code.Add('  private');
@@ -74,6 +79,7 @@ begin
   if not ADataSet.Active then Exit;
   if ADataSet.FieldCount = 0 then Exit;
   var typeName := ExtractTypeName(ADataSet);
+  TypesCreated.Add(typename);
   Code.Add('type');
   Code.Add(Format('  %s = record', [typeName]));
   for var fld in ADataSet.Fields do begin
@@ -89,6 +95,7 @@ begin
   if not ADataSet.Active then Exit;
   if ADataSet.FieldCount = 0 then Exit;
   var typeName := ExtractTypeName(ADataSet) + 'Fields';
+  TypesCreated.Add(typename);
   Code.Add('type');
   Code.Add(Format('  %s = class(TRecordFields)', [typeName]));
   Code.Add('  private');
