@@ -46,6 +46,7 @@ type
       private
         FField: TField;
         FIsInstanceType: Boolean;
+        FType: TRttiType;
         function GetFieldValue: TValue;
         procedure SetFieldValue(const Value: TValue);
       protected
@@ -53,7 +54,7 @@ type
         property FieldValue: TValue read GetFieldValue write SetFieldValue;
         property IsInstanceType: Boolean read FIsInstanceType;
       public
-        constructor Create(AField: TField; AIsInstanceType: Boolean);
+        constructor Create(AField: TField; AType: TRttiType; AIsInstanceType: Boolean);
         procedure LoadFromField(var Target: T); virtual; abstract;
         procedure StoreToField(var Source: T); virtual; abstract;
       end;
@@ -164,6 +165,7 @@ type
     FMapMode: TDBFieldsMapping;
     FRTTIContext: TRTTIContext;
     function CheckAttributes(obj: TRttiNamedObject; const ADefault: string = ''): string;
+    procedure DoCalcFields(ADataSet: TDataSet);
     function GetDataSet: TDataSet;
     function GetMapMode(obj: TRttiNamedObject): TDBFieldsMapping;
     procedure LinkFields;
@@ -183,7 +185,7 @@ type
 implementation
 
 uses
-  System.SysUtils, System.Classes;
+  System.SysUtils, System.Classes, System.StrUtils;
 
 constructor DBFieldsAttribute.Create(AMode: TDBFieldsMapping);
 begin
@@ -504,23 +506,61 @@ begin
   Result := TDataSetEnumerator<T>.Create(FDataSet);
 end;
 
-constructor TDataSetHelper.TDataSetRecord<T>.TMapping.Create(AField: TField; AIsInstanceType: Boolean);
+constructor TDataSetHelper.TDataSetRecord<T>.TMapping.Create(AField: TField; AType: TRttiType; AIsInstanceType: Boolean);
 begin
   inherited Create;
   FField := AField;
   FIsInstanceType := AIsInstanceType;
+  FType := AType;
 end;
 
 function TDataSetHelper.TDataSetRecord<T>.TMapping.GetFieldValue: TValue;
 begin
-  if FField.IsNull then
-    Result := TValue.Empty
-  else if FField.DataType in [ftTimeStamp, ftTimeStampOffset] then
-    Result := TValue.From<TDateTime>(FField.AsDateTime)
-  else if FField.DataType in [ftBCD, ftFMTBcd] then
-    Result := TValue.From<Double>(FField.AsFloat)
-  else
-    Result := TValue.FromVariant(FField.Value);
+  Result := TValue.Empty;
+  if not FField.IsNull then begin
+    case FType.TypeKind of
+      tkUnknown: ;
+      tkInteger: Result := FField.AsInteger;
+      tkChar,
+      tkWChar: begin
+        var S := FField.AsString;
+        if not S.IsEmpty then
+          Result := S[1];
+      end;
+      tkEnumeration: begin
+        if SameText(FType.Name, 'Boolean') then
+          Result := FField.AsBoolean;
+      end;
+      tkFloat: begin
+        { handle special Double cases }
+        if MatchText(FType.Name, ['TDate', 'TTime', 'TDateTime']) then
+          Result := FField.AsDateTime
+        else
+          Result := FField.AsFloat;
+      end;
+      tkLString,
+      tkWString,
+      tkUString,
+      tkString: Result := FField.AsString;
+      tkSet: ;
+      tkClass: ;
+      tkMethod: ;
+      tkArray: ;
+      tkRecord: ;
+      tkInterface: ;
+      tkInt64: Result := FField.AsLargeInt;
+      tkDynArray: begin
+        if SameText(FType.Name, 'TBytes') then
+          Result := TValue.From<TBytes>(FField.AsBytes);
+      end;
+      tkClassRef: ;
+      tkPointer: ;
+      tkProcedure: ;
+      tkMRecord: ;
+    else
+      Result := TValue.FromVariant(FField.Value);
+    end;
+  end;
 end;
 
 function TDataSetHelper.TDataSetRecord<T>.TMapping.GetPointer(var Target: T): Pointer;
@@ -538,20 +578,55 @@ begin
   if FField.DataType = ftAutoInc then Exit;
   if FField.ReadOnly then Exit;
 
-  if Value.IsEmpty then
-    FField.Clear
-  else if FField.DataType in [ftTimeStamp, ftTimeStampOffset] then
-    FField.AsDateTime := Value.AsType<TDateTime>
-  else if FField.DataType in [ftBCD, ftFMTBcd] then
-    FField.AsFloat := Value.AsType<Double>
-  else
-    FField.Value := Value.AsVariant;
+  if Value.IsEmpty then begin
+    FField.Clear;
+  end
+  else begin
+    case FType.TypeKind of
+      tkUnknown: ;
+      tkInteger: FField.AsInteger := Value.AsInteger;
+      tkChar,
+      tkWChar: FField.AsString := Value.AsString;
+      tkEnumeration: begin
+        if SameText(FType.Name, 'Boolean') then
+          FField.AsBoolean := Value.AsBoolean;
+      end;
+      tkFloat: begin
+        { handle special Double cases }
+        if MatchText(FType.Name, ['TDate', 'TTime', 'TDateTime']) then
+          FField.AsDateTime := Value.AsType<TDateTime>
+        else
+          FField.AsFloat := Value.AsExtended;
+      end;
+      tkLString,
+      tkWString,
+      tkUString,
+      tkString: FField.AsString := Value.AsString;
+      tkSet: ;
+      tkClass: ;
+      tkMethod: ;
+      tkArray: ;
+      tkRecord: ;
+      tkInterface: ;
+      tkInt64: FField.AsLargeInt := Value.AsInt64;
+      tkDynArray: begin
+        if SameText(FType.Name, 'TBytes') then
+          FField.AsBytes := Value.AsType<TBytes>;
+      end;
+      tkClassRef: ;
+      tkPointer: ;
+      tkProcedure: ;
+      tkMRecord: ;
+    else
+      FField.Value := Value.AsVariant;
+    end;
+  end;
 end;
 
 constructor TDataSetHelper.TDataSetRecord<T>.TFieldMapping.Create(AField: TField; ARTTIField: TRTTIField;
     AIsInstanceType: Boolean);
 begin
-  inherited Create(AField, AIsInstanceType);
+  inherited Create(AField, ARTTIField.FieldType, AIsInstanceType);
   FRTTIField := ARTTIField;
 end;
 
@@ -568,7 +643,7 @@ end;
 constructor TDataSetHelper.TDataSetRecord<T>.TPropMapping.Create(AField: TField; ARTTIProp: TRttiProperty;
     AIsInstanceType: Boolean);
 begin
-  inherited Create(AField, AIsInstanceType);
+  inherited Create(AField, ARTTIProp.PropertyType, AIsInstanceType);
   FRTTIProp := ARTTIProp;
 end;
 
@@ -610,7 +685,7 @@ end;
 
 procedure TRecordFields.CalcFields;
 begin
-  if (DataSet <> nil) and DataSet.Active then begin
+  if (DataSet <> nil) and (FDataSource.State <> dsInactive) then begin
     var needsCancel := False;
     if not (DataSet.State in [dsCalcFields, dsInternalCalc]) then
       needsCancel := DataSet.AssureEdit;
@@ -650,6 +725,13 @@ begin
       end;
       Break;
     end;
+  end;
+end;
+
+procedure TRecordFields.DoCalcFields(ADataSet: TDataSet);
+begin
+  if (ADataSet = DataSet) then begin
+    CalcFields;
   end;
 end;
 
@@ -732,8 +814,11 @@ end;
 procedure TRecordFields.SetDataSet(const Value: TDataSet);
 begin
   FDataSource.DataSet := Value;
-  if (Value <> nil) and Value.Active then begin
-    CalcFields;
+  if (Value <> nil) then begin
+    if not Assigned(Value.OnCalcFields) then
+      Value.OnCalcFields := DoCalcFields;
+    if Value.Active then
+      CalcFields;
   end;
 end;
 
