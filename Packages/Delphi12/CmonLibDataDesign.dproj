@@ -3,7 +3,7 @@
         <Base>True</Base>
         <AppType>Package</AppType>
         <Config Condition="'$(Config)'==''">Release</Config>
-        <FrameworkType>None</FrameworkType>
+        <FrameworkType>VCL</FrameworkType>
         <MainSource>CmonLibDataDesign.dpk</MainSource>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <ProjectGuid>{6A73F0E1-227D-478F-9880-2057527BB206}</ProjectGuid>
@@ -39,7 +39,7 @@
         <DCC_CBuilderOutput>All</DCC_CBuilderOutput>
         <DCC_DcuOutput>.\$(Platform)\$(Config)</DCC_DcuOutput>
         <DCC_ExeOutput>.\$(Platform)\$(Config)</DCC_ExeOutput>
-        <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
+        <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
         <DCC_OutputDRCFile>true</DCC_OutputDRCFile>
         <DllSuffix>$(Auto)</DllSuffix>
         <GenDll>true</GenDll>
@@ -80,6 +80,10 @@
         <DCCReference Include="..\..\source\Cmon.DataSense.Design.pas"/>
         <DCCReference Include="..\..\source\Cmon.DataSetHelper.Design.pas"/>
         <DCCReference Include="..\..\source\Cmon.DataSetHelper.Generator.pas"/>
+        <DCCReference Include="..\..\source\Cmon.DataSetHelper.Generator.Form.pas">
+            <Form>MappingsGeneratorForm</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <RcItem Include="..\..\Icons\TDataSense128.png">
             <ResourceType>RCDATA</ResourceType>
             <ResourceId>TDataSense128_PNG</ResourceId>

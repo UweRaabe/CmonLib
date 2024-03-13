@@ -38,6 +38,7 @@ requires
 contains
   Cmon.DataSense.Design in '..\..\source\Cmon.DataSense.Design.pas',
   Cmon.DataSetHelper.Design in '..\..\source\Cmon.DataSetHelper.Design.pas',
-  Cmon.DataSetHelper.Generator in '..\..\source\Cmon.DataSetHelper.Generator.pas';
+  Cmon.DataSetHelper.Generator in '..\..\source\Cmon.DataSetHelper.Generator.pas',
+  Cmon.DataSetHelper.Generator.Form in '..\..\source\Cmon.DataSetHelper.Generator.Form.pas' {MappingsGeneratorForm};
 
 end.

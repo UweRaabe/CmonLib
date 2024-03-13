@@ -5,12 +5,6 @@ interface
 uses
   DesignIntf, DesignEditors;
 
-resourcestring
-  SCreateAccessRecord = 'Create mapped record';
-  SCreateAccessClass = 'Create mapped class';
-  SCreateTRecordFieldsClass = 'Create TRecordFields class';
-  STypesCopiedToClipboard = 'Types copied to clipboard: ';
-
 type
   TDataSetHelperEditor = class(TSelectionEditor)
   public
@@ -27,7 +21,11 @@ uses
   System.SysUtils,
   Data.DB,
   Vcl.Dialogs,
-  Cmon.DataSetHelper.Generator;
+  Cmon.DataSetHelper.Generator, Cmon.DataSetHelper.Generator.Form;
+
+resourcestring
+  SCreateMappings = 'Create mappings';
+  STypesCopiedToClipboard = 'Types copied to clipboard:';
 
 procedure Register;
 begin
@@ -40,21 +38,14 @@ begin
   try
     for var I := 0 to List.Count - 1 do begin
       var dataSet := List[I] as TDataSet;
-      var wasActive := dataSet.Active;
-      try
-        dataSet.Active := True;
-        case Index of
-          0: instance.CreateAccessRecord(dataSet);
-          1: instance.CreateAccessClass(dataSet);
-          2: instance.CreateRecordFields(dataSet);
-        end;
-      finally
-        dataSet.Active := wasActive;
-      end;
+      instance.DataSets.Add(dataSet);
     end;
-    instance.CopyToClipboard;
-    var msg := STypesCopiedToClipboard + instance.TypesCreated.CommaText;
-    ShowMessage(msg);
+    if TMappingsGeneratorForm.Execute(instance) then begin
+      instance.Execute;
+      instance.CopyToClipboard;
+      var msg := STypesCopiedToClipboard + sLineBreak + instance.TypesCreated.Text;
+      ShowMessage(msg);
+    end;
   finally
     instance.Free;
   end;
@@ -63,9 +54,7 @@ end;
 function TDataSetHelperEditor.GetVerb(Index: Integer): string;
 begin
   case Index of
-    0: Result := SCreateAccessRecord;
-    1: Result := SCreateAccessClass;
-    2: Result := SCreateTRecordFieldsClass;
+    0: Result := SCreateMappings;
   else
     Result := '';
   end;
@@ -73,7 +62,7 @@ end;
 
 function TDataSetHelperEditor.GetVerbCount: Integer;
 begin
-  Result := 3;
+  Result := 1;
 end;
 
 end.
