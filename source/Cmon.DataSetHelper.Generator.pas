@@ -11,6 +11,7 @@ type
   private
     FCode: TStringList;
     FTypesCreated: TStrings;
+    procedure AddFieldNameConstants(ADataSet: TDataSet);
   protected
     function ExtractTypeName(ADataSet: TDataSet): string;
     function GetTypeFromFieldType(AFieldType: TFieldType): string;
@@ -45,6 +46,14 @@ begin
   inherited Destroy;
 end;
 
+procedure TDataSetHelperGenerator.AddFieldNameConstants(ADataSet: TDataSet);
+begin
+  Code.Add('  public const');
+  for var fld in ADataSet.Fields do begin
+    Code.Add(Format('    c%s = %s;', [fld.FieldName, fld.FieldName.QuotedString]));
+  end;
+end;
+
 procedure TDataSetHelperGenerator.CopyToClipboard;
 begin
   Clipboard.Open;
@@ -63,6 +72,7 @@ begin
   Code.Add('  private');
   for var fld in ADataSet.Fields do begin
     typeName := GetTypeFromFieldType(fld.DataType);
+    Code.Add(Format('    [DBField(%s)]', [fld.FieldName.QuotedString]));
     Code.Add(Format('    F%s: %s;', [fld.FieldName, typeName]));
   end;
   Code.Add('  public');
@@ -84,6 +94,7 @@ begin
   Code.Add(Format('  %s = record', [typeName]));
   for var fld in ADataSet.Fields do begin
     typeName := GetTypeFromFieldType(fld.DataType);
+    Code.Add(Format('    [DBField(%s)]', [fld.FieldName.QuotedString]));
     Code.Add(Format('    %s: %s;', [fld.FieldName, typeName]));
   end;
   Code.Add('  end;');
@@ -98,8 +109,10 @@ begin
   TypesCreated.Add(typename);
   Code.Add('type');
   Code.Add(Format('  %s = class(TRecordFields)', [typeName]));
+  AddFieldNameConstants(ADataSet);
   Code.Add('  private');
   for var fld in ADataSet.Fields do begin
+    Code.Add(Format('    [DBField(c%s)]', [fld.FieldName]));
     Code.Add(Format('    F%s: TField;', [fld.FieldName]));
   end;
   Code.Add('  public');
