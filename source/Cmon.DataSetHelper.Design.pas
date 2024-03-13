@@ -40,10 +40,16 @@ begin
   try
     for var I := 0 to List.Count - 1 do begin
       var dataSet := List[I] as TDataSet;
-      case Index of
-        0: instance.CreateAccessRecord(dataSet);
-        1: instance.CreateAccessClass(dataSet);
-        2: instance.CreateRecordFields(dataSet);
+      var wasActive := dataSet.Active;
+      try
+        dataSet.Active := True;
+        case Index of
+          0: instance.CreateAccessRecord(dataSet);
+          1: instance.CreateAccessClass(dataSet);
+          2: instance.CreateRecordFields(dataSet);
+        end;
+      finally
+        dataSet.Active := wasActive;
       end;
     end;
     instance.CopyToClipboard;
