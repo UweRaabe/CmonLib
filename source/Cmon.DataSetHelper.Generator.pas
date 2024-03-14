@@ -13,19 +13,26 @@ type
 
 type
   TDataSetHelperGenerator = class
+  type
+    TDataSets = TList<TDataSet>;
+    TTypeNames = TDictionary<string, string>;
   private
     FBaseTypeName: string;
     FCode: TStringList;
     FCreateFields: Boolean;
     FCreateMode: TCreateMode;
-    FDataSets: TList<TDataSet>;
+    FDataSets: TDataSets;
     FIndent: Integer;
     FMapMode: TDBFieldsMapping;
     FNameDetection: TNameDetection;
     FPrefixes: string;
     FRegEx: string;
+    FTypeNames: TTypeNames;
     FTypesCreated: TStrings;
     FUseNameConstants: Boolean;
+    procedure SetNameDetection(const Value: TNameDetection);
+    procedure SetPrefixes(const Value: string);
+    procedure SetRegEx(const Value: string);
   protected
     procedure BeginIndent;
     procedure CreateMappingType(ADataSet: TDataSet);
@@ -33,26 +40,29 @@ type
     procedure CreateRecordFields(ADataSet: TDataSet);
     procedure EndIndent;
     function ExtractName(const AName: string): string;
-    function ExtractTypeName(ADataSet: TDataSet): string;
+    function ExtractTypeName(const ADataSetName: string): string;
     function GetTypeFromFieldType(AFieldType: TFieldType): string;
+    procedure RefreshTypeNames;
     function StripPrefix(const AName: string): string;
     procedure WriteAttribute(const AFieldName: string);
     procedure WriteLine(const AText: string);
     procedure WriteMapMode;
+    property BaseTypeName: string read FBaseTypeName write FBaseTypeName;
+    property Code: TStringList read FCode;
   public
     constructor Create;
     destructor Destroy; override;
+    procedure AddDataSet(ADataSet: TDataSet);
     procedure CopyToClipboard; virtual;
     procedure Execute;
-    property BaseTypeName: string read FBaseTypeName write FBaseTypeName;
-    property Code: TStringList read FCode;
     property CreateFields: Boolean read FCreateFields write FCreateFields;
     property CreateMode: TCreateMode read FCreateMode write FCreateMode;
-    property DataSets: TList<TDataSet> read FDataSets;
+    property DataSets: TDataSets read FDataSets;
     property MapMode: TDBFieldsMapping read FMapMode write FMapMode;
-    property NameDetection: TNameDetection read FNameDetection write FNameDetection;
-    property Prefixes: string read FPrefixes write FPrefixes;
-    property RegEx: string read FRegEx write FRegEx;
+    property NameDetection: TNameDetection read FNameDetection write SetNameDetection;
+    property Prefixes: string read FPrefixes write SetPrefixes;
+    property RegEx: string read FRegEx write SetRegEx;
+    property TypeNames: TTypeNames read FTypeNames;
     property TypesCreated: TStrings read FTypesCreated;
     property UseNameConstants: Boolean read FUseNameConstants write FUseNameConstants;
   end;
@@ -68,15 +78,24 @@ begin
   inherited Create;
   FCode := TStringList.Create();
   FTypesCreated := TStringList.Create;
-  FDataSets := TList<TDataSet>.Create();
+  FDataSets := TDataSets.Create();
+  FTypeNames := TTypeNames.Create();
 end;
 
 destructor TDataSetHelperGenerator.Destroy;
 begin
+  FTypeNames.Free;
   FDataSets.Free;
   FTypesCreated.Free;
   FCode.Free;
   inherited Destroy;
+end;
+
+procedure TDataSetHelperGenerator.AddDataSet(ADataSet: TDataSet);
+begin
+  DataSets.Add(ADataSet);
+  var dsName := ADataSet.Name;
+  TypeNames.Add(dsName, ExtractTypeName(dsName));
 end;
 
 procedure TDataSetHelperGenerator.BeginIndent;
@@ -181,13 +200,13 @@ end;
 
 procedure TDataSetHelperGenerator.Execute;
 begin
-  for var dataset in DataSets do begin
+  for var dataSet in DataSets do begin
     var wasActive := dataSet.Active;
     try
       dataSet.Active := True;
       if not dataSet.Active then Exit;
       if dataSet.FieldCount = 0 then Exit;
-      BaseTypeName := ExtractTypeName(dataSet);
+      BaseTypeName := TypeNames[dataSet.Name];
       TypesCreated.Add(BaseTypeName);
       CreateMappingType(dataSet);
     finally
@@ -205,12 +224,13 @@ begin
     Result := AName;
 end;
 
-function TDataSetHelperGenerator.ExtractTypeName(ADataSet: TDataSet): string;
+function TDataSetHelperGenerator.ExtractTypeName(const ADataSetName: string): string;
 begin
-  Result := ADataSet.Name;
   case NameDetection of
-    ndStripPrefix: Result := StripPrefix(ADataSet.Name);
-    ndRegEx: Result := ExtractName(ADataSet.Name);
+    ndStripPrefix: Result := StripPrefix(ADataSetName);
+    ndRegEx: Result := ExtractName(ADataSetName);
+  else
+    Result := ADataSetName;
   end;
   Result := 'T' + Result;
 end;
@@ -257,14 +277,55 @@ begin
   end;
 end;
 
+procedure TDataSetHelperGenerator.RefreshTypeNames;
+begin
+  for var dsName in TypeNames.Keys do
+    TypeNames[dsName] := ExtractTypeName(dsName);
+end;
+
+procedure TDataSetHelperGenerator.SetNameDetection(const Value: TNameDetection);
+begin
+  if FNameDetection <> Value then
+  begin
+    FNameDetection := Value;
+    RefreshTypeNames;
+  end;
+end;
+
+procedure TDataSetHelperGenerator.SetPrefixes(const Value: string);
+begin
+  if FPrefixes <> Value then
+  begin
+    FPrefixes := Value;
+    if NameDetection = ndStripPrefix then
+      RefreshTypeNames;
+  end;
+end;
+
+procedure TDataSetHelperGenerator.SetRegEx(const Value: string);
+begin
+  if FRegEx <> Value then
+  begin
+    FRegEx := Value;
+    if NameDetection = ndRegEx then
+      RefreshTypeNames;
+  end;
+end;
+
 function TDataSetHelperGenerator.StripPrefix(const AName: string): string;
 begin
   Result := AName;
-  for var pre in ['qry', 'qu', 'tbl', 'tb'] do begin
-    if Result.StartsWith(pre, True) then begin
-      Result := Result.Substring(pre.Length);
-      Break;
+  var lst := TStringList.Create;
+  try
+    lst.CommaText := Prefixes;
+    for var pre in lst do begin
+      if Result.StartsWith(pre, True) then begin
+        Result := Result.Substring(pre.Length);
+        Break;
+      end;
     end;
+  finally
+    lst.Free;
   end;
 end;
 

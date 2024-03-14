@@ -4,7 +4,7 @@ interface
 
 uses
   System.Classes, System.Actions,
-  Vcl.Forms, Vcl.Controls, Vcl.ExtCtrls, Vcl.ActnList, Vcl.StdCtrls,
+  Vcl.Forms, Vcl.Controls, Vcl.ExtCtrls, Vcl.ActnList, Vcl.StdCtrls, Vcl.Grids, Vcl.ValEdit,
   Cmon.DataSetHelper.Generator;
 
 type
@@ -37,6 +37,10 @@ type
     btnCancel: TButton;
     actOK: TAction;
     actCancel: TAction;
+    tkey: TRadioGroup;
+    pnlTop: TPanel;
+    edtTypeNames: TValueListEditor;
+    procedure FormCreate(Sender: TObject);
     procedure actCancelExecute(Sender: TObject);
     procedure actCreateClassExecute(Sender: TObject);
     procedure actCreateClassUpdate(Sender: TObject);
@@ -57,17 +61,42 @@ type
     procedure actUseRegexUpdate(Sender: TObject);
   private
     FGenerator: TDataSetHelperGenerator;
+    procedure SetGenerator(const Value: TDataSetHelperGenerator);
+  protected
+    procedure LoadTypeNames;
+    procedure SaveTypeNames;
   public
     class function Execute(AGenerator: TDataSetHelperGenerator): Boolean;
-    property Generator: TDataSetHelperGenerator read FGenerator write FGenerator;
+    procedure LoadValues;
+    procedure SaveValues;
+    property Generator: TDataSetHelperGenerator read FGenerator write SetGenerator;
   end;
 
 implementation
 
 uses
-  Cmon.DataSetHelper;
+  System.Generics.Collections, System.SysUtils,
+  Cmon.DataSetHelper, Cmon.Observers.Vcl;
 
 {$R *.dfm}
+
+procedure TMappingsGeneratorForm.FormCreate(Sender: TObject);
+begin
+  edtPrefixes.AddObserver(
+    procedure (Value: string)
+    begin
+      Generator.Prefixes := Value;
+      if Generator.NameDetection = ndStripPrefix then
+        LoadTypeNames;
+    end);
+  edtRegex.AddObserver(
+    procedure (Value: string)
+    begin
+      Generator.RegEx := Value;
+      if Generator.NameDetection = ndRegEx then
+        LoadTypeNames;
+    end);
+end;
 
 procedure TMappingsGeneratorForm.actCancelExecute(Sender: TObject);
 begin
@@ -126,12 +155,16 @@ end;
 
 procedure TMappingsGeneratorForm.actOKExecute(Sender: TObject);
 begin
+  SaveValues;
   ModalResult := mrOK;
 end;
 
 procedure TMappingsGeneratorForm.actStripPrefixExecute(Sender: TObject);
 begin
-  Generator.NameDetection := ndStripPrefix;
+  if Generator.NameDetection <> ndStripPrefix then begin
+    Generator.NameDetection := ndStripPrefix;
+    LoadTypeNames;
+  end;
 end;
 
 procedure TMappingsGeneratorForm.actStripPrefixUpdate(Sender: TObject);
@@ -151,12 +184,16 @@ end;
 
 procedure TMappingsGeneratorForm.actUseRegexExecute(Sender: TObject);
 begin
-  Generator.NameDetection := ndRegEx;
+  if Generator.NameDetection <> ndRegEx then begin
+    Generator.NameDetection := ndRegEx;
+    LoadTypeNames;
+  end;
 end;
 
 procedure TMappingsGeneratorForm.actUseRegexUpdate(Sender: TObject);
 begin
   actUseRegex.Checked := (Generator.NameDetection = ndRegEx);
+  actUseRegex.Enabled := not Generator.RegEx.IsEmpty;
 end;
 
 class function TMappingsGeneratorForm.Execute(AGenerator: TDataSetHelperGenerator): Boolean;
@@ -168,6 +205,55 @@ begin
   finally
     instance.Free;
   end;
+end;
+
+procedure TMappingsGeneratorForm.LoadTypeNames;
+begin
+  edtTypeNames.BeginUpdate;
+  try
+    edtTypeNames.Strings.Clear;
+    var lst := TStringList.Create;
+    try
+      for var pair in Generator.TypeNames do
+        lst.AddPair(pair.Key, pair.Value);
+      lst.Sort;
+      for var I := 0 to lst.Count - 1 do
+        edtTypeNames.Strings.AddPair(lst.Names[I], lst.ValueFromIndex[I]);
+    finally
+      lst.Free;
+    end;
+  finally
+    edtTypeNames.EndUpdate;
+  end;
+end;
+
+procedure TMappingsGeneratorForm.LoadValues;
+begin
+  edtPrefixes.Text := Generator.Prefixes;
+  edtRegex.Text := Generator.RegEx;
+  LoadTypeNames;
+end;
+
+procedure TMappingsGeneratorForm.SaveTypeNames;
+begin
+  for var I := 0 to edtTypeNames.Strings.Count - 1 do begin
+    var key := edtTypeNames.Strings.Names[I];
+    var value := edtTypeNames.Strings.ValueFromIndex[I];
+    Generator.TypeNames[key] := value;
+  end;
+end;
+
+procedure TMappingsGeneratorForm.SaveValues;
+begin
+  Generator.Prefixes := edtPrefixes.Text;
+  Generator.RegEx := edtRegex.Text;
+  SaveTypeNames;
+end;
+
+procedure TMappingsGeneratorForm.SetGenerator(const Value: TDataSetHelperGenerator);
+begin
+  FGenerator := Value;
+  LoadValues;
 end;
 
 end.

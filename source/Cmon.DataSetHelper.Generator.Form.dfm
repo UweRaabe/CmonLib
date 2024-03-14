@@ -2,7 +2,7 @@ object MappingsGeneratorForm: TMappingsGeneratorForm
   Left = 0
   Top = 0
   Caption = 'DataSet Mappings Generator'
-  ClientHeight = 260
+  ClientHeight = 464
   ClientWidth = 565
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -10,22 +10,87 @@ object MappingsGeneratorForm: TMappingsGeneratorForm
   Font.Height = -12
   Font.Name = 'Segoe UI'
   Font.Style = []
+  ShowHint = True
+  OnCreate = FormCreate
   TextHeight = 15
   object pnlMain: TPanel
     Left = 0
-    Top = 0
+    Top = 180
     Width = 565
-    Height = 212
+    Height = 236
     Align = alClient
     BevelOuter = bvNone
     ParentBackground = False
     ShowCaption = False
     TabOrder = 0
+    object tkey: TRadioGroup
+      AlignWithMargins = True
+      Left = 3
+      Top = 3
+      Width = 559
+      Height = 230
+      Align = alClient
+      Caption = 'tkey'
+      TabOrder = 0
+    end
+    object edtTypeNames: TValueListEditor
+      AlignWithMargins = True
+      Left = 3
+      Top = 3
+      Width = 559
+      Height = 230
+      Align = alClient
+      TabOrder = 1
+      TitleCaptions.Strings = (
+        'DataSet'
+        'Base Type Name')
+      ColWidths = (
+        150
+        403)
+    end
+  end
+  object pnlBottom: TPanel
+    Left = 0
+    Top = 416
+    Width = 565
+    Height = 48
+    Align = alBottom
+    BevelOuter = bvNone
+    ParentBackground = False
+    ShowCaption = False
+    TabOrder = 1
+    object btnOK: TButton
+      Left = 372
+      Top = 6
+      Width = 75
+      Height = 25
+      Action = actOK
+      TabOrder = 0
+    end
+    object btnCancel: TButton
+      Left = 453
+      Top = 6
+      Width = 75
+      Height = 25
+      Action = actCancel
+      TabOrder = 1
+    end
+  end
+  object pnlTop: TPanel
+    Left = 0
+    Top = 0
+    Width = 565
+    Height = 180
+    Align = alTop
+    BevelOuter = bvNone
+    TabOrder = 2
     object grpCreateMappings: TGroupBox
-      Left = 8
-      Top = 16
+      AlignWithMargins = True
+      Left = 3
+      Top = 3
       Width = 161
-      Height = 81
+      Height = 78
+      Align = alLeft
       Caption = ' Create mappings as'
       TabOrder = 0
       object selCreateRecord: TRadioButton
@@ -46,10 +111,12 @@ object MappingsGeneratorForm: TMappingsGeneratorForm
       end
     end
     object grpOptions: TGroupBox
-      Left = 175
-      Top = 16
-      Width = 378
-      Height = 81
+      AlignWithMargins = True
+      Left = 170
+      Top = 3
+      Width = 392
+      Height = 78
+      Align = alClient
       Caption = ' Options '
       TabOrder = 1
       object selUseNameConstants: TCheckBox
@@ -86,10 +153,12 @@ object MappingsGeneratorForm: TMappingsGeneratorForm
       end
     end
     object grpTypeName: TGroupBox
-      Left = 8
-      Top = 103
-      Width = 545
+      AlignWithMargins = True
+      Left = 3
+      Top = 87
+      Width = 559
       Height = 90
+      Align = alBottom
       Caption = ' determine type name from dataset name '
       TabOrder = 2
       object selStripPrefix: TRadioButton
@@ -113,6 +182,7 @@ object MappingsGeneratorForm: TMappingsGeneratorForm
         Top = 24
         Width = 417
         Height = 23
+        Hint = 'Enter multiple prefixes as comma separated list.'
         TabOrder = 2
         TextHint = 'enter prefixes'
       end
@@ -121,36 +191,12 @@ object MappingsGeneratorForm: TMappingsGeneratorForm
         Top = 53
         Width = 417
         Height = 23
+        Hint = 
+          'The regular expression must return the  desired string in the fi' +
+          'rst match!'
         TabOrder = 3
-        TextHint = 'enter regulart expression'
+        TextHint = 'enter regular expression'
       end
-    end
-  end
-  object pnlBottom: TPanel
-    Left = 0
-    Top = 212
-    Width = 565
-    Height = 48
-    Align = alBottom
-    BevelOuter = bvNone
-    ParentBackground = False
-    ShowCaption = False
-    TabOrder = 1
-    object btnOK: TButton
-      Left = 372
-      Top = 6
-      Width = 75
-      Height = 25
-      Action = actOK
-      TabOrder = 0
-    end
-    object btnCancel: TButton
-      Left = 453
-      Top = 6
-      Width = 75
-      Height = 25
-      Action = actCancel
-      TabOrder = 1
     end
   end
   object MainActionList: TActionList
@@ -158,41 +204,49 @@ object MappingsGeneratorForm: TMappingsGeneratorForm
     Top = 112
     object actCreateRecord: TAction
       Caption = 'record'
+      Hint = 'create mappings as record'
       OnExecute = actCreateRecordExecute
       OnUpdate = actCreateRecordUpdate
     end
     object actCreateClass: TAction
       Caption = 'class'
+      Hint = 'create mappings as class'
       OnExecute = actCreateClassExecute
       OnUpdate = actCreateClassUpdate
     end
     object actCreateFields: TAction
       Caption = 'add field access'
+      Hint = 'add TRecordFields class'
       OnExecute = actCreateFieldsExecute
       OnUpdate = actCreateFieldsUpdate
     end
     object actMapAuto: TAction
       Caption = 'use automatic mapping'
+      Hint = 'adds mapAuto attribute'
       OnExecute = actMapAutoExecute
       OnUpdate = actMapAutoUpdate
     end
     object actMapManual: TAction
       Caption = 'use manual mapping'
+      Hint = '@adds individual attributes to fields|'
       OnExecute = actMapManualExecute
       OnUpdate = actMapManualUpdate
     end
     object actUseNameConstants: TAction
       Caption = 'use name constants'
+      Hint = 'adds type containing field names as constants'
       OnExecute = actUseNameConstantsExecute
       OnUpdate = actUseNameConstantsUpdate
     end
     object actStripPrefix: TAction
       Caption = 'strip prefix'
+      Hint = 'remove prefixes from dataset name to get type name'
       OnExecute = actStripPrefixExecute
       OnUpdate = actStripPrefixUpdate
     end
     object actUseRegex: TAction
       Caption = 'use regex'
+      Hint = 'use regular expression to get type name from dataset name'
       OnExecute = actUseRegexExecute
       OnUpdate = actUseRegexUpdate
     end

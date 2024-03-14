@@ -75,6 +75,7 @@
         </DelphiCompile>
         <DCCReference Include="DesignIDE.dcp"/>
         <DCCReference Include="dcldb.dcp"/>
+        <DCCReference Include="CmonLibVcl.dcp"/>
         <DCCReference Include="CmonLibDataVCL.dcp"/>
         <DCCReference Include="CmonLibDataFMX.dcp"/>
         <DCCReference Include="..\..\source\Cmon.DataSense.Design.pas"/>
@@ -129,7 +130,7 @@
             </Platforms>
             <MMX>
                 <UsesClauseFormatter AutoFormat="1">
-                    <GroupNames>Winapi;System.Win;System;Data;REST;Xml;Vcl;FMX;Cmon</GroupNames>
+                    <GroupNames>(DesignIntf,DesignEditors,ToolsAPI);Winapi;System.Win;System;Data;REST;Xml;Vcl;FMX;Cmon</GroupNames>
                 </UsesClauseFormatter>
                 <Parser>
                     <Defines/>
