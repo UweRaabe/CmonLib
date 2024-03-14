@@ -48,7 +48,7 @@
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <BT_BuildType>Debug</BT_BuildType>
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
-        <DCC_UsePackage>rtl;CmonLibVclDB;CmonLib;CmonLibFmxDB;CmonLibDataFMX;CmonLibDataVCL;$(DCC_UsePackage)</DCC_UsePackage>
+        <DCC_UsePackage>rtl;CmonLibVclDB;CmonLib;CmonLibFmxDB;CmonLibDataFMX;CmonLibDataVCL;CmonLibVcl;$(DCC_UsePackage)</DCC_UsePackage>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_DebugDCUs>true</DCC_DebugDCUs>

@@ -24,9 +24,6 @@
         <Projects Include="CmonLibDataDesign.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="..\..\source\TestCmonLib.dproj">
-            <Dependencies/>
-        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -98,23 +95,14 @@
     <Target Name="CmonLibDataDesign:Make">
         <MSBuild Projects="CmonLibDataDesign.dproj" Targets="Make"/>
     </Target>
-    <Target Name="TestCmonLib">
-        <MSBuild Projects="..\..\source\TestCmonLib.dproj"/>
-    </Target>
-    <Target Name="TestCmonLib:Clean">
-        <MSBuild Projects="..\..\source\TestCmonLib.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="TestCmonLib:Make">
-        <MSBuild Projects="..\..\source\TestCmonLib.dproj" Targets="Make"/>
-    </Target>
     <Target Name="Build">
-        <CallTarget Targets="CmonLib;CmonLibVcl;CmonLibFmx;CmonLibData;CmonLibDataVCL;CmonLibDataFMX;CmonLibDataDesign;TestCmonLib"/>
+        <CallTarget Targets="CmonLib;CmonLibVcl;CmonLibFmx;CmonLibData;CmonLibDataVCL;CmonLibDataFMX;CmonLibDataDesign"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="CmonLib:Clean;CmonLibVcl:Clean;CmonLibFmx:Clean;CmonLibData:Clean;CmonLibDataVCL:Clean;CmonLibDataFMX:Clean;CmonLibDataDesign:Clean;TestCmonLib:Clean"/>
+        <CallTarget Targets="CmonLib:Clean;CmonLibVcl:Clean;CmonLibFmx:Clean;CmonLibData:Clean;CmonLibDataVCL:Clean;CmonLibDataFMX:Clean;CmonLibDataDesign:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="CmonLib:Make;CmonLibVcl:Make;CmonLibFmx:Make;CmonLibData:Make;CmonLibDataVCL:Make;CmonLibDataFMX:Make;CmonLibDataDesign:Make;TestCmonLib:Make"/>
+        <CallTarget Targets="CmonLib:Make;CmonLibVcl:Make;CmonLibFmx:Make;CmonLibData:Make;CmonLibDataVCL:Make;CmonLibDataFMX:Make;CmonLibDataDesign:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>
