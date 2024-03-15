@@ -207,7 +207,6 @@ object MainForm: TMainForm
     FieldOptions.PositionMode = poFirst
     FieldOptions.UpdatePersistent = True
     Params = <>
-    OnCalcFields = QuEmployeeCalcFields
     Left = 64
     Top = 152
     object QuEmployeeFullName: TStringField
@@ -460,7 +459,6 @@ object MainForm: TMainForm
     FieldOptions.PositionMode = poFirst
     FieldOptions.UpdatePersistent = True
     Params = <>
-    OnCalcFields = QuCustomerCalcFields
     Left = 168
     Top = 152
     object QuCustomerFullAddress: TStringField

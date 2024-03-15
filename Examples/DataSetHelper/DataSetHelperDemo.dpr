@@ -2,7 +2,8 @@ program DataSetHelperDemo;
 
 uses
   Forms,
-  Main.Form in 'Main.Form.pas' {MainForm};
+  Main.Form in 'Main.Form.pas' {MainForm},
+  Mapping.Types in 'Mapping.Types.pas';
 
 {$R *.res}
 
