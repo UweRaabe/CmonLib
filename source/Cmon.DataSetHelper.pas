@@ -141,6 +141,7 @@ type
     procedure StoreInstanceToCurrent<T: class>(AInstance: T);
     function Records<T: class>(AInstance: T): IRecords<T>; overload;
     function Records<T: record>: IRecords<T>; overload;
+    procedure TriggerCalcFields;
   end;
 
 type
@@ -185,7 +186,7 @@ type
 implementation
 
 uses
-  System.SysUtils, System.Classes, System.StrUtils;
+  System.SysUtils, System.Classes, System.StrUtils, System.TypInfo;
 
 constructor DBFieldsAttribute.Create(AMode: TDBFieldsMapping);
 begin
@@ -323,6 +324,11 @@ begin
   finally
     tmp.Free;
   end;
+end;
+
+procedure TDataSetHelper.TriggerCalcFields;
+begin
+  GetCalcFields(ActiveBuffer);
 end;
 
 destructor TDataSetHelper.TDataSetEnumerator<T>.Destroy;
@@ -685,17 +691,8 @@ end;
 
 procedure TRecordFields.CalcFields;
 begin
-  if (DataSet <> nil) and (FDataSource.State <> dsInactive) then begin
-    var needsCancel := False;
-    if not (DataSet.State in [dsCalcFields, dsInternalCalc]) then
-      needsCancel := DataSet.AssureEdit;
-    try
-      InternalCalcFields;
-    finally
-      if needsCancel then
-        DataSet.Cancel;
-    end;
-  end;
+  if (DataSet <> nil) and (FDataSource.State <> dsInactive) then
+    InternalCalcFields;
 end;
 
 function TRecordFields.CheckAttributes(obj: TRttiNamedObject; const ADefault: string = ''): string;
@@ -818,7 +815,7 @@ begin
     if not Assigned(Value.OnCalcFields) then
       Value.OnCalcFields := DoCalcFields;
     if Value.Active then
-      CalcFields;
+      Value.TriggerCalcFields;
   end;
 end;
 
