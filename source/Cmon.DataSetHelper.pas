@@ -164,6 +164,7 @@ type
     FDataLink: TFieldsDataLink;
     FFieldsAreLinked: Boolean;
     FMapMode: TDBFieldsMapping;
+    FOnCalcFields: TDataSetNotifyEvent;
     FRTTIContext: TRTTIContext;
     function CheckAttributes(obj: TRttiNamedObject; const ADefault: string = ''): string;
     procedure DoCalcFields(ADataSet: TDataSet);
@@ -181,6 +182,7 @@ type
     procedure CalcFields;
     property DataSet: TDataSet read GetDataSet write SetDataSet;
     property FieldsAreLinked: Boolean read FFieldsAreLinked write SetFieldsAreLinked;
+    property OnCalcFields: TDataSetNotifyEvent read FOnCalcFields write FOnCalcFields;
   end;
 
 implementation
@@ -728,7 +730,11 @@ end;
 procedure TRecordFields.DoCalcFields(ADataSet: TDataSet);
 begin
   if (ADataSet = DataSet) then begin
-    CalcFields;
+    FieldsAreLinked := True;
+    if Assigned(FOnCalcFields) then
+      FOnCalcFields(DataSet)
+    else
+      CalcFields;
   end;
 end;
 
@@ -756,7 +762,7 @@ var
   prop: TRttiProperty;
   rttyType: TRTTIType;
 begin
-  if FDataSource.State = dsInactive then Exit;
+  if (DataSet = nil) or not DataSet.Active then Exit;
 
   FRTTIContext := TRTTIContext.Create;
   rttyType := FRTTIContext.GetType(ClassType);
@@ -784,7 +790,7 @@ var
   prop: TRttiProperty;
   rttyType: TRTTIType;
 begin
-  if FDataSource.State = dsInactive then Exit;
+  if (DataSet = nil) or not DataSet.Active then Exit;
 
   FRTTIContext := TRTTIContext.Create;
   rttyType := FRTTIContext.GetType(ClassType);
