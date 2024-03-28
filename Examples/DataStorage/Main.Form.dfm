@@ -111,6 +111,15 @@ object DemoMainForm: TDemoMainForm
       TabOrder = 7
       Text = ''
     end
+    object SomeIntegerEdit: TNumberBox
+      Left = 731
+      Top = 57
+      Width = 97
+      Height = 23
+      Alignment = taCenter
+      TabOrder = 8
+      SpinButtonOptions.Placement = nbspInline
+    end
   end
   object pnlLeft: TPanel
     Left = 0
@@ -255,15 +264,6 @@ object DemoMainForm: TDemoMainForm
         end
       end
     end
-  end
-  object SomeIntegerEdit: TNumberBox
-    Left = 731
-    Top = 465
-    Width = 97
-    Height = 23
-    Alignment = taCenter
-    TabOrder = 3
-    SpinButtonOptions.Placement = nbspInline
   end
   object LoadSettingsDialog: TFileOpenDialog
     FavoriteLinks = <>
