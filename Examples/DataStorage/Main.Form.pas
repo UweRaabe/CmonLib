@@ -28,6 +28,13 @@ type
   LayoutDefaultAttribute = class(TCustomDefaultAttribute);
 
 type
+  { Alternatives:
+    [FormStorage(TFormStorageParts.All)]
+    [FormStorage(TFormStorageParts.PosSize + [TFormStoragePart.Visible])]
+    [FormStorage([TFormStoragePart.Position])]
+    [FormStorage([TFormStoragePart.Size])]
+  }
+  [FormStorage] { same as [FormStorage(TFormStorageParts.PosSize)] }
   TDemoMainForm = class(TForm)
     SomeTextEdit: TLabeledEdit;
     SomeIndexSelector: TRadioGroup;

@@ -8,6 +8,36 @@ uses
   Cmon.DataStorage;
 
 type
+{$SCOPEDENUMS ON}
+  TFormStoragePart = (Position, Size, Visible, WindowState);
+{$SCOPEDENUMS OFF}
+  TFormStorageParts = set of TFormStoragePart;
+
+  TFormStoragePartsHelper = record helper for TFormStorageParts
+  private
+    function GetPart(Index: TFormStoragePart): Boolean;
+    procedure SetPart(Index: TFormStoragePart; const Value: Boolean);
+  public const
+    PosSize = [TFormStoragePart.Position, TFormStoragePart.Size];
+    All = [TFormStoragePart.Position .. TFormStoragePart.WindowState];
+  public
+    property Part[Index: TFormStoragePart]: Boolean read GetPart write SetPart;
+    property Position: Boolean index TFormStoragePart.Position read GetPart;
+    property Size: Boolean index TFormStoragePart.Size read GetPart;
+    property Visible: Boolean index TFormStoragePart.Visible read GetPart;
+    property WindowState: Boolean index TFormStoragePart.WindowState read GetPart;
+  end;
+
+type
+  FormStorageAttribute = class(TCustomAttribute)
+  private
+    FParts: TFormStorageParts;
+  public
+    constructor Create(AParts: TFormStorageParts = TFormStorageParts.PosSize);
+    property Parts: TFormStorageParts read FParts;
+  end;
+
+type
   TCommonFrame = class(TFrame)
   protected
     function GetStorageKey(Storage: TDataStorage): string; virtual;
@@ -54,16 +84,19 @@ type
     procedure DoDestroy; override;
     function GetAutoDataStorage: TAutoDataStorage; virtual;
     function GetDefaultDataStorage: TDataStorage; virtual;
+    function GetFormStorageParts: TFormStorageParts;
     function GetStorageKey(Storage: TDataStorage): string; virtual;
     procedure GrabVirtualImageLists(AClass: TDataModuleClass);
     procedure InternalInitDefaults(Storage: TDataStorage); virtual;
     procedure InternalLoadFromStorage(Storage: TDataStorage); virtual;
     procedure InternalPrepareStorage(Storage: TDataStorage); virtual;
     procedure InternalSaveToStorage(Storage: TDataStorage); virtual;
+    procedure LoadFormStorageParts(Storage: TDataStorage);
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     procedure PrepareStorage(Storage: TDataStorage); virtual;
     procedure RedirectReferences;
     procedure ResolveReferences;
+    procedure SaveFormStorageParts(Storage: TDataStorage);
     property HandledReferences: TStrings read FHandledReferences;
   public
     constructor Create(AOwner: TComponent); override;
@@ -117,7 +150,7 @@ implementation
 
 uses
   Winapi.Windows,
-  System.SysUtils,
+  System.SysUtils, System.Rtti,
   Vcl.VirtualImageList,
   Cmon.Utilities;
 
@@ -173,6 +206,18 @@ end;
 function TCommonForm.GetDefaultDataStorage: TDataStorage;
 begin
   Result := TDataStorage.DefaultInstance;
+end;
+
+function TCommonForm.GetFormStorageParts: TFormStorageParts;
+begin
+  Result := [];
+  var context := TRTTIContext.Create;
+  var myType := context.GetType(ClassType);
+  if myType <> nil then begin
+    var attr := myType.GetAttribute<FormStorageAttribute>;
+    if attr <> nil then
+      Result := attr.Parts;
+  end;
 end;
 
 function TCommonForm.GetStorageKey(Storage: TDataStorage): string;
@@ -260,6 +305,33 @@ procedure TCommonForm.InternalSaveToStorage(Storage: TDataStorage);
 begin
 end;
 
+procedure TCommonForm.LoadFormStorageParts(Storage: TDataStorage);
+begin
+  var parts := GetFormStorageParts;
+  if parts = [] then Exit;
+  Storage.PushStorageKey(Storage.MakeStorageSubKey('FormStorage'));
+  try
+    if parts.Position or parts.Size then begin
+      var R := BoundsRect;
+      if TFormStoragePart.Position in parts then begin
+        R.Left := Storage.ReadInteger('Left', R.Left);
+        R.Top := Storage.ReadInteger('Top', R.Top);
+      end;
+      if TFormStoragePart.Size in parts then begin
+        R.Width := Storage.ReadInteger('Width', R.Width);
+        R.Height := Storage.ReadInteger('Height', R.Height);
+      end;
+      BoundsRect := R;
+    end;
+    if parts.Visible then
+      Visible := Storage.ReadBoolean('Visible', Visible);
+    if parts.WindowState then
+      WindowState := Storage.ReadValue('WindowState', TValue.From<TWindowState>(WindowState)).AsType<TWindowState>;
+  finally
+    Storage.PopStorageKey;
+  end;
+end;
+
 procedure TCommonForm.LoadFromStorage;
 begin
   LoadFromStorage(DefaultDataStorage);
@@ -304,6 +376,7 @@ begin
   Storage.PushStorageKey;
   try
     PrepareStorage(Storage);
+    LoadFormStorageParts(Storage);
     Storage.LoadFromStorage(Self);
     for var frame in ComponentsOf<TCommonFrame> do
       frame.LoadFromStorage(Storage);
@@ -374,6 +447,29 @@ begin
   end;
 end;
 
+procedure TCommonForm.SaveFormStorageParts(Storage: TDataStorage);
+begin
+  var parts := GetFormStorageParts;
+  if parts = [] then Exit;
+  Storage.PushStorageKey(Storage.MakeStorageSubKey('FormStorage'));
+  try
+    if parts.Position then begin
+      Storage.WriteInteger('Left', Left);
+      Storage.WriteInteger('Top', Top);
+    end;
+    if parts.Size then begin
+      Storage.WriteInteger('Width', Width);
+      Storage.WriteInteger('Height', Height);
+    end;
+    if parts.Visible then
+      Storage.WriteBoolean('Visible', Visible);
+    if parts.WindowState then
+      Storage.WriteValue('WindowState', TValue.From<TWindowState>(WindowState));
+  finally
+    Storage.PopStorageKey;
+  end;
+end;
+
 procedure TCommonForm.SaveToStorage;
 begin
   SaveToStorage(DefaultDataStorage);
@@ -418,6 +514,7 @@ begin
   Storage.PushStorageKey;
   try
     PrepareStorage(Storage);
+    SaveFormStorageParts(Storage);
     Storage.SaveToStorage(Self);
     for var frame in ComponentsOf<TCommonFrame> do
       frame.SaveToStorage(Storage);
@@ -523,6 +620,25 @@ begin
       Result := FindNestedComponent(Result, Name.Substring(idx + 1));
     end;
   end;
+end;
+
+constructor FormStorageAttribute.Create(AParts: TFormStorageParts = TFormStorageParts.PosSize);
+begin
+  inherited Create;
+  FParts := AParts;
+end;
+
+function TFormStoragePartsHelper.GetPart(Index: TFormStoragePart): Boolean;
+begin
+  Result := Index in Self;
+end;
+
+procedure TFormStoragePartsHelper.SetPart(Index: TFormStoragePart; const Value: Boolean);
+begin
+  if Value then
+    Include(Self, Index)
+  else
+    Exclude(Self, Index);
 end;
 
 initialization
