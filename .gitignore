@@ -69,3 +69,7 @@ __recovery/
 # Boss dependency manager vendor folder https://github.com/HashLoad/boss
 modules/
 source/Win32
+*.ldp
+*.mmdep
+*.ldi
+Packages/Delphi12/MakeDSM.cmd
