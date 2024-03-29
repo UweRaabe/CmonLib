@@ -3,6 +3,8 @@
 
 A collection of several units with different purpose.
 
+**Cmon.AsyncGuard** provides basic classes to execute a task in parallel synchonizing with the VCL, while taking care of the usual pitfalls with dangling pointers and ownership.
+
 **Cmon.CmdLineHandler** and **Cmon.CmdLineFileHandler** contain classes for handling command line applications. Derived classes concentrate on the actual task to do.
 
 **Cmon.DataSense** adds data sensitivity to controls that don't support that itself. Place a _TDataSense_ component onto a form and all supported controls get a _DataSource_ and _DataField_ property in the object inspector.
@@ -22,3 +24,21 @@ A collection of several units with different purpose.
 **Cmon.Observers** introduces some helper classes for leveraging the observer support of several VCL controls as well as implement observer support for other classes.
 
 **Cmon.Utilities** contains some class helpers and general purpose routines.
+
+Most of the units are self-contained or form small clusters. This is to avoid when using one unit of the library having a bunch of others used indirectly. There are just a handful of units providing functionality used by several others.
+
+- The helpers for _TComponent_ and _TCollection_ as well as some methods from _TUtilities_ in _Cmon.Utilities_ are used in several places.
+- Auto-registering of messaging handlers makes use of _Cmon.Initializing_ to allow some fine control without touching the initialization sections.
+- The classes of _Cmon.Messaging_ come in too handy as that they were not preferred by those messaging handlers just mentioned.
+
+None of these three units has any dependency on another _CmonLib_ unit nor on any other unit outside the _System_ namespace.
+
+The other self-contained units are _Cmon.AsyncGuard_ and _Cmon.DataSetHelper_, where the latter obviously has a dependency on _Data.DB_. The rest form those individual clusters with dependencies on at most _Cmon.Messaging_, _Cmon.Initializing_ and _Cmon.Utilities_.
+
+A couple of these _CmonLib_ units have their roots in either an article on [my blog](https://www.uweraabe.de/Blog/) or one of my sessions at the various [CodeRage DE](https://www.youtube.com/@EmbarcaderoGermany/search?query=CodeRage%20Uwe%20Raabe) events.
+- AsyncGuard: [Async Tasks in VCL Projects](https://www.uweraabe.de/Blog/2021/11/07/async-tasks-in-vcl-projects/)
+- DataSetHelper: [Dataset Enumerator Reloaded](https://www.uweraabe.de/Blog/2017/02/09/dataset-enumerator-reloaded/) and [Poor Man’s CSV Export](https://www.uweraabe.de/Blog/2013/11/06/poor-mans-csv-export/)
+- DataStorage: [A Tribute To Attributes](https://youtu.be/7QQCEuZxFnE?feature=shared) (German)
+- Observers: [Observer - simpel und elegant](https://youtu.be/eLzr6DStsPY?feature=shared) (German)
+- Messaging, Dialogs, Logging: [Pimp My System Messaging](https://youtu.be/e7BIv-lrQFA?feature=shared) (German)
+- VirtualImageLists (in _Cmon.Vcl.Forms_): [ImageLists and High DPI](https://www.uweraabe.de/Blog/2022/09/19/imagelists-and-high-dpi/)
