@@ -7,6 +7,7 @@
         <MainSource>CmonLibData.dpk</MainSource>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <ProjectGuid>{CF3ABDE7-6534-4C97-88D9-5D87AB9A8451}</ProjectGuid>
+        <ProjectName Condition="'$(ProjectName)'==''">CmonLibData</ProjectName>
         <ProjectVersion>20.1</ProjectVersion>
         <TargetedPlatforms>3</TargetedPlatforms>
     </PropertyGroup>
@@ -112,9 +113,9 @@
                 <Excluded_Packages/>
             </Delphi.Personality>
             <Platforms>
-                <Platform value="Linux64">False</Platform>
                 <Platform value="Win32">True</Platform>
                 <Platform value="Win64">True</Platform>
+                <Platform value="Win64x">False</Platform>
             </Platforms>
             <MMX>
                 <UsesClauseFormatter AutoFormat="1">

@@ -7,6 +7,7 @@
         <MainSource>CmonLibVcl.dpk</MainSource>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <ProjectGuid>{C60C7770-4174-49DB-B73C-1AA57C2A2FF5}</ProjectGuid>
+        <ProjectName Condition="'$(ProjectName)'==''">CmonLibVcl</ProjectName>
         <ProjectVersion>20.1</ProjectVersion>
         <TargetedPlatforms>3</TargetedPlatforms>
     </PropertyGroup>
@@ -117,6 +118,7 @@
             <Platforms>
                 <Platform value="Win32">True</Platform>
                 <Platform value="Win64">True</Platform>
+                <Platform value="Win64x">False</Platform>
             </Platforms>
             <MMX>
                 <UsesClauseFormatter AutoFormat="1">

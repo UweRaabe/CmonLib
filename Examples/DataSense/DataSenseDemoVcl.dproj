@@ -9,6 +9,7 @@
         <ProjectGuid>{53E60E67-18D8-4527-B34F-6C00D33F5337}</ProjectGuid>
         <ProjectVersion>20.1</ProjectVersion>
         <TargetedPlatforms>1</TargetedPlatforms>
+        <ProjectName Condition="'$(ProjectName)'==''">DataSenseDemoVcl</ProjectName>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
         <Base>true</Base>

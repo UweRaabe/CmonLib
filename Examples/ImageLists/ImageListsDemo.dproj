@@ -9,6 +9,7 @@
         <ProjectGuid>{9ECB3A70-9339-4E07-BC92-06EC551F627E}</ProjectGuid>
         <ProjectVersion>20.1</ProjectVersion>
         <TargetedPlatforms>1</TargetedPlatforms>
+        <ProjectName Condition="'$(ProjectName)'==''">ImageListsDemo</ProjectName>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
         <Base>true</Base>
