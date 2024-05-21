@@ -249,7 +249,7 @@ begin
       wasActive := Active;
       try
         Active := true;
-        GetFieldNames(lst);
+        Fields.GetFieldNames(lst); // TDataSet.GetFieldNames changes QuoteChar and Delimiter
         writer.WriteLine(lst.DelimitedText);
         First;
         while not Eof do begin
