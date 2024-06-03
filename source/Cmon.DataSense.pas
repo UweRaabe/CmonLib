@@ -163,12 +163,12 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     class function CreateDataLink(ATarget: TComponent): TDataSenseLink;
-    function FindDataSenseItem(ATarget: TComponent): TDataSenseItem;
     class function FindLinkClass(ATarget: TComponent): TDataSenseLinkClass;
-    function AddDataSenseItem(ATarget: TComponent): TDataSenseItem;
     class procedure RegisterLinkClass(AClass: TComponentClass; ALinkClass: TDataSenseLinkClass);
     class function SupportsLinking(ATarget: TComponent): Boolean;
     class procedure UnregisterLinkClass(AClass: TComponentClass; ALinkClass: TDataSenseLinkClass);
+    function FindDataSenseItem(ATarget: TComponent): TDataSenseItem;
+    function AddDataSenseItem(ATarget: TComponent): TDataSenseItem;
   published
     property DataLinks: TDataSenseCollection read FDataLinks write SetDataLinks;
   end;

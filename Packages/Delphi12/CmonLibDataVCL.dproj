@@ -4,10 +4,10 @@
         <AppType>Package</AppType>
         <Config Condition="'$(Config)'==''">Release</Config>
         <FrameworkType>None</FrameworkType>
-        <MainSource>CmonLibDataVCL.dpk</MainSource>
+        <MainSource>CmonLibDataVcl.dpk</MainSource>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <ProjectGuid>{52D9DCA0-2762-40EA-B4CA-9C2B6FE7ECAA}</ProjectGuid>
-        <ProjectName Condition="'$(ProjectName)'==''">CmonLibDataVCL</ProjectName>
+        <ProjectName Condition="'$(ProjectName)'==''">CmonLibDataVcl</ProjectName>
         <ProjectVersion>20.1</ProjectVersion>
         <TargetedPlatforms>1</TargetedPlatforms>
     </PropertyGroup>
@@ -36,7 +36,7 @@
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
-        <SanitizedProjectName>CmonLibDataVCL</SanitizedProjectName>
+        <SanitizedProjectName>CmonLibDataVcl</SanitizedProjectName>
         <DCC_CBuilderOutput>All</DCC_CBuilderOutput>
         <DCC_DcuOutput>.\$(Platform)\$(Config)</DCC_DcuOutput>
         <DCC_Description>CmonLibVclDB - Common Library VCL DB aware</DCC_Description>
@@ -99,7 +99,7 @@
         <BorlandProject>
             <Delphi.Personality>
                 <Source>
-                    <Source Name="MainSource">CmonLibDataVCL.dpk</Source>
+                    <Source Name="MainSource">CmonLibDataVcl.dpk</Source>
                 </Source>
                 <Excluded_Packages/>
             </Delphi.Personality>

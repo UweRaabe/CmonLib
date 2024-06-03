@@ -3,7 +3,7 @@ unit Cmon.Utilities;
 interface
 
 uses
-  System.Classes, System.SysUtils;
+  System.Classes, System.SysUtils, System.IOUtils;
 
 type
   EValidationError = class(Exception);
@@ -76,7 +76,7 @@ type
 implementation
 
 uses
-  System.Threading, System.IOUtils;
+  System.Threading;
 
 { TUtilities }
 

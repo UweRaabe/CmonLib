@@ -39,6 +39,7 @@
         <SanitizedProjectName>CmonLibDataDesign</SanitizedProjectName>
         <DCC_CBuilderOutput>All</DCC_CBuilderOutput>
         <DCC_DcuOutput>.\$(Platform)\$(Config)</DCC_DcuOutput>
+        <DCC_Description>CmonLib Data Design Support</DCC_Description>
         <DCC_ExeOutput>.\$(Platform)\$(Config)</DCC_ExeOutput>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
         <DCC_OutputDRCFile>true</DCC_OutputDRCFile>
@@ -77,8 +78,8 @@
         <DCCReference Include="DesignIDE.dcp"/>
         <DCCReference Include="dcldb.dcp"/>
         <DCCReference Include="CmonLibVcl.dcp"/>
-        <DCCReference Include="CmonLibDataVCL.dcp"/>
-        <DCCReference Include="CmonLibDataFMX.dcp"/>
+        <DCCReference Include="CmonLibDataVcl.dcp"/>
+        <DCCReference Include="CmonLibDataFmx.dcp"/>
         <DCCReference Include="..\..\source\Cmon.DataSense.Design.pas"/>
         <DCCReference Include="..\..\source\Cmon.DataSetHelper.Design.pas"/>
         <DCCReference Include="..\..\source\Cmon.DataSetHelper.Generator.pas"/>

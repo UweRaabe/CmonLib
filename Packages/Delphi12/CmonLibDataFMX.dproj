@@ -4,10 +4,10 @@
         <AppType>Package</AppType>
         <Config Condition="'$(Config)'==''">Release</Config>
         <FrameworkType>None</FrameworkType>
-        <MainSource>CmonLibDataFMX.dpk</MainSource>
+        <MainSource>CmonLibDataFmx.dpk</MainSource>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <ProjectGuid>{D170521D-4946-4C3D-9F61-D60A1A0FDC06}</ProjectGuid>
-        <ProjectName Condition="'$(ProjectName)'==''">CmonLibDataFMX</ProjectName>
+        <ProjectName Condition="'$(ProjectName)'==''">CmonLibDataFmx</ProjectName>
         <ProjectVersion>20.1</ProjectVersion>
         <TargetedPlatforms>1</TargetedPlatforms>
     </PropertyGroup>
@@ -36,7 +36,7 @@
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
-        <SanitizedProjectName>CmonLibDataFMX</SanitizedProjectName>
+        <SanitizedProjectName>CmonLibDataFmx</SanitizedProjectName>
         <DCC_CBuilderOutput>All</DCC_CBuilderOutput>
         <DCC_DcuOutput>.\$(Platform)\$(Config)</DCC_DcuOutput>
         <DCC_ExeOutput>.\$(Platform)\$(Config)</DCC_ExeOutput>
@@ -96,7 +96,7 @@
         <BorlandProject>
             <Delphi.Personality>
                 <Source>
-                    <Source Name="MainSource">CmonLibDataFMX.dpk</Source>
+                    <Source Name="MainSource">CmonLibDataFmx.dpk</Source>
                 </Source>
                 <Excluded_Packages/>
             </Delphi.Personality>

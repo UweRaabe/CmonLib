@@ -65,25 +65,41 @@ implementation
 procedure TCustomEditDataSenseLink.DoLoadData;
 begin
   inherited;
-  Control.Text := Field.AsString;
+  if Control = nil then Exit;
+
+  if Field <> nil then
+    Control.Text := Field.AsString
+  else
+    Control.Text := '';
 end;
 
 procedure TCustomEditDataSenseLink.DoSaveData;
 begin
   inherited;
-  Field.AsString := Control.Text;
+  if Control = nil then Exit;
+
+  if Field <> nil then
+    Field.AsString := Control.Text;
 end;
 
 procedure TCustomMemoDataSenseLink.DoLoadData;
 begin
   inherited;
-  Control.Text := Field.AsString;
+  if Control = nil then Exit;
+
+  if Field <> nil then
+    Control.Text := Field.AsString
+  else
+    Control.Text := '';
 end;
 
 procedure TCustomMemoDataSenseLink.DoSaveData;
 begin
   inherited;
-  Field.AsString := Control.Lines.Text;
+  if Control = nil then Exit;
+
+  if Field <> nil then
+    Field.AsString := Control.Lines.Text;
 end;
 
 constructor TControlDataSenseLink<T>.Create(ATarget: TComponent);
