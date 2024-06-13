@@ -40,6 +40,8 @@ type
     tkey: TRadioGroup;
     pnlTop: TPanel;
     edtTypeNames: TValueListEditor;
+    selSorted: TCheckBox;
+    actSorted: TAction;
     procedure FormCreate(Sender: TObject);
     procedure actCancelExecute(Sender: TObject);
     procedure actCreateClassExecute(Sender: TObject);
@@ -53,6 +55,8 @@ type
     procedure actMapManualExecute(Sender: TObject);
     procedure actMapManualUpdate(Sender: TObject);
     procedure actOKExecute(Sender: TObject);
+    procedure actSortedExecute(Sender: TObject);
+    procedure actSortedUpdate(Sender: TObject);
     procedure actStripPrefixExecute(Sender: TObject);
     procedure actStripPrefixUpdate(Sender: TObject);
     procedure actUseNameConstantsExecute(Sender: TObject);
@@ -157,6 +161,16 @@ procedure TMappingsGeneratorForm.actOKExecute(Sender: TObject);
 begin
   SaveValues;
   ModalResult := mrOK;
+end;
+
+procedure TMappingsGeneratorForm.actSortedExecute(Sender: TObject);
+begin
+  Generator.CreateSorted := not Generator.CreateSorted;
+end;
+
+procedure TMappingsGeneratorForm.actSortedUpdate(Sender: TObject);
+begin
+  actSorted.Checked := Generator.CreateSorted;
 end;
 
 procedure TMappingsGeneratorForm.actStripPrefixExecute(Sender: TObject);

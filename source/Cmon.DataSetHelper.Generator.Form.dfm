@@ -3,7 +3,7 @@ object MappingsGeneratorForm: TMappingsGeneratorForm
   Top = 0
   Caption = 'DataSet Mappings Generator'
   ClientHeight = 464
-  ClientWidth = 565
+  ClientWidth = 555
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -15,9 +15,9 @@ object MappingsGeneratorForm: TMappingsGeneratorForm
   TextHeight = 15
   object pnlMain: TPanel
     Left = 0
-    Top = 180
-    Width = 565
-    Height = 236
+    Top = 201
+    Width = 555
+    Height = 215
     Align = alClient
     BevelOuter = bvNone
     ParentBackground = False
@@ -27,8 +27,8 @@ object MappingsGeneratorForm: TMappingsGeneratorForm
       AlignWithMargins = True
       Left = 3
       Top = 3
-      Width = 559
-      Height = 230
+      Width = 549
+      Height = 209
       Align = alClient
       Caption = 'tkey'
       TabOrder = 0
@@ -37,8 +37,8 @@ object MappingsGeneratorForm: TMappingsGeneratorForm
       AlignWithMargins = True
       Left = 3
       Top = 3
-      Width = 559
-      Height = 230
+      Width = 549
+      Height = 209
       Align = alClient
       TabOrder = 1
       TitleCaptions.Strings = (
@@ -46,13 +46,13 @@ object MappingsGeneratorForm: TMappingsGeneratorForm
         'Base Type Name')
       ColWidths = (
         150
-        403)
+        393)
     end
   end
   object pnlBottom: TPanel
     Left = 0
     Top = 416
-    Width = 565
+    Width = 555
     Height = 48
     Align = alBottom
     BevelOuter = bvNone
@@ -79,8 +79,8 @@ object MappingsGeneratorForm: TMappingsGeneratorForm
   object pnlTop: TPanel
     Left = 0
     Top = 0
-    Width = 565
-    Height = 180
+    Width = 555
+    Height = 201
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 2
@@ -89,7 +89,7 @@ object MappingsGeneratorForm: TMappingsGeneratorForm
       Left = 3
       Top = 3
       Width = 161
-      Height = 78
+      Height = 99
       Align = alLeft
       Caption = ' Create mappings as'
       TabOrder = 0
@@ -114,8 +114,8 @@ object MappingsGeneratorForm: TMappingsGeneratorForm
       AlignWithMargins = True
       Left = 170
       Top = 3
-      Width = 392
-      Height = 78
+      Width = 382
+      Height = 99
       Align = alClient
       Caption = ' Options '
       TabOrder = 1
@@ -151,12 +151,20 @@ object MappingsGeneratorForm: TMappingsGeneratorForm
         Action = actCreateFields
         TabOrder = 3
       end
+      object selSorted: TCheckBox
+        Left = 200
+        Top = 70
+        Width = 153
+        Height = 17
+        Action = actSorted
+        TabOrder = 4
+      end
     end
     object grpTypeName: TGroupBox
       AlignWithMargins = True
       Left = 3
-      Top = 87
-      Width = 559
+      Top = 108
+      Width = 549
       Height = 90
       Align = alBottom
       Caption = ' determine type name from dataset name '
@@ -257,6 +265,11 @@ object MappingsGeneratorForm: TMappingsGeneratorForm
     object actCancel: TAction
       Caption = 'Cancel'
       OnExecute = actCancelExecute
+    end
+    object actSorted: TAction
+      Caption = 'sorted'
+      OnExecute = actSortedExecute
+      OnUpdate = actSortedUpdate
     end
   end
 end

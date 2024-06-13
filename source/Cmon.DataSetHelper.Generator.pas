@@ -3,7 +3,7 @@ unit Cmon.DataSetHelper.Generator;
 interface
 
 uses
-  System.Classes, System.Generics.Collections,
+  System.Classes, System.Generics.Collections, System.Generics.Defaults,
   Data.DB,
   Cmon.DataSetHelper;
 
@@ -15,12 +15,18 @@ type
   TDataSetHelperGenerator = class
   type
     TDataSets = TList<TDataSet>;
+    TFieldList = TList<TField>;
     TTypeNames = TDictionary<string, string>;
+  strict private
+  class var
+    FComparer: IComparer<TField>;
+    class function GetComparer: IComparer<TField>; static;
   private
     FBaseTypeName: string;
     FCode: TStringList;
     FCreateFields: Boolean;
     FCreateMode: TCreateMode;
+    FCreateSorted: Boolean;
     FDataSets: TDataSets;
     FIndent: Integer;
     FMapMode: TDBFieldsMapping;
@@ -35,9 +41,9 @@ type
     procedure SetRegEx(const Value: string);
   protected
     procedure BeginIndent;
-    procedure CreateMappingType(ADataSet: TDataSet);
-    procedure CreateConstants(ADataSet: TDataSet);
-    procedure CreateRecordFields(ADataSet: TDataSet);
+    procedure CreateMappingType(AFields: TFieldList);
+    procedure CreateConstants(AFields: TFieldList);
+    procedure CreateRecordFields(AFields: TFieldList);
     procedure EndIndent;
     function ExtractName(const AName: string): string;
     function ExtractTypeName(const ADataSetName: string): string;
@@ -47,6 +53,7 @@ type
     procedure WriteAttribute(const AFieldName: string);
     procedure WriteLine(const AText: string);
     procedure WriteMapMode;
+    class property Comparer: IComparer<TField> read GetComparer;
     property BaseTypeName: string read FBaseTypeName write FBaseTypeName;
     property Code: TStringList read FCode;
   public
@@ -57,6 +64,7 @@ type
     procedure Execute;
     property CreateFields: Boolean read FCreateFields write FCreateFields;
     property CreateMode: TCreateMode read FCreateMode write FCreateMode;
+    property CreateSorted: Boolean read FCreateSorted write FCreateSorted;
     property DataSets: TDataSets read FDataSets;
     property MapMode: TDBFieldsMapping read FMapMode write FMapMode;
     property NameDetection: TNameDetection read FNameDetection write SetNameDetection;
@@ -103,14 +111,14 @@ begin
   Inc(FIndent);
 end;
 
-procedure TDataSetHelperGenerator.CreateConstants(ADataSet: TDataSet);
+procedure TDataSetHelperGenerator.CreateConstants(AFields: TFieldList);
 begin
   WriteLine('public type');
   BeginIndent;
   WriteLine('Consts = record');
   WriteLine('public const');
   BeginIndent;
-  for var fld in ADataSet.Fields do
+  for var fld in AFields do
     WriteLine(Format('%s = %s;', [fld.FieldName, fld.FieldName.QuotedString]));
   EndIndent;
   WriteLine('end;');
@@ -124,7 +132,7 @@ begin
   Clipboard.Close;
 end;
 
-procedure TDataSetHelperGenerator.CreateMappingType(ADataSet: TDataSet);
+procedure TDataSetHelperGenerator.CreateMappingType(AFields: TFieldList);
 const
   cModes: array[TCreateMode] of string = ('record', 'class');
   cFieldFmt: array[TCreateMode] of string = ('%s: %s;', 'F%s: %s;');
@@ -134,15 +142,15 @@ begin
   WriteMapMode;
   WriteLine(Format('%s = %s', [BaseTypeName, cModes[CreateMode]]));
   if UseNameConstants then
-    CreateConstants(ADataSet);
+    CreateConstants(AFields);
   if CreateFields then
-    CreateRecordFields(ADataSet);
+    CreateRecordFields(AFields);
   case CreateMode of
     cmRecord: WriteLine('public');
     cmClass: WriteLine('private');
   end;
   BeginIndent;
-  for var fld in ADataSet.Fields do begin
+  for var fld in AFields do begin
     WriteAttribute(fld.FieldName);
     var typeName := GetTypeFromFieldType(fld.DataType);
     WriteLine(Format(cFieldFmt[CreateMode], [fld.FieldName, typeName]));
@@ -151,7 +159,7 @@ begin
   if CreateMode = cmClass then begin
     WriteLine('public');
     BeginIndent;
-    for var fld in ADataSet.Fields do begin
+    for var fld in AFields do begin
       var typeName := GetTypeFromFieldType(fld.DataType);
       WriteLine(Format('property %0:s: %1:s read F%0:s write F%0:s;', [fld.FieldName, typeName]));
     end;
@@ -170,7 +178,7 @@ begin
   WriteLine('');
 end;
 
-procedure TDataSetHelperGenerator.CreateRecordFields(ADataSet: TDataSet);
+procedure TDataSetHelperGenerator.CreateRecordFields(AFields: TFieldList);
 begin
   WriteLine('public type');
   BeginIndent;
@@ -178,14 +186,14 @@ begin
   WriteLine('Fields = class(TRecordFields)');
   WriteLine('private');
   BeginIndent;
-  for var fld in ADataSet.Fields do begin
+  for var fld in AFields do begin
     WriteAttribute(fld.FieldName);
     WriteLine(Format('F%s: TField;', [fld.FieldName]));
   end;
   EndIndent;
   WriteLine('public');
   BeginIndent;
-  for var fld in ADataSet.Fields do begin
+  for var fld in AFields do begin
     WriteLine(Format('property %0:s: TField read F%0:s;', [fld.FieldName]));
   end;
   EndIndent;
@@ -208,7 +216,16 @@ begin
       if dataSet.FieldCount = 0 then Exit;
       BaseTypeName := TypeNames[dataSet.Name];
       TypesCreated.Add(BaseTypeName);
-      CreateMappingType(dataSet);
+      var fields := TFieldList.Create;
+      try
+        for var fld in dataSet.Fields do
+          fields.Add(fld);
+        if CreateSorted then
+          fields.Sort(Comparer);
+        CreateMappingType(fields);
+      finally
+        fields.Free;
+      end;
     finally
       dataSet.Active := wasActive;
     end;
@@ -233,6 +250,18 @@ begin
     Result := ADataSetName;
   end;
   Result := 'T' + Result;
+end;
+
+class function TDataSetHelperGenerator.GetComparer: IComparer<TField>;
+begin
+  if FComparer = nil then begin
+    FComparer := TDelegatedComparer<TField>.Create(
+      function(const Left, Right: TField): Integer
+      begin
+        Result := CompareStr(Left.FieldName, Right.FieldName);
+      end);
+  end;
+  Result := FComparer;
 end;
 
 function TDataSetHelperGenerator.GetTypeFromFieldType(AFieldType: TFieldType): string;
