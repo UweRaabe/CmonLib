@@ -7,7 +7,7 @@
         <MainSource>CmonLibDataFmx.dpk</MainSource>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <ProjectGuid>{D170521D-4946-4C3D-9F61-D60A1A0FDC06}</ProjectGuid>
-        <ProjectName Condition="'$(ProjectName)'==''">CmonLibDataFmx</ProjectName>
+        <ProjectName Condition="'$(ProjectName)'==''">CmonLibDataFMX</ProjectName>
         <ProjectVersion>20.1</ProjectVersion>
         <TargetedPlatforms>1</TargetedPlatforms>
     </PropertyGroup>

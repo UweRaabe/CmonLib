@@ -7,9 +7,9 @@
         <MainSource>TestCmonLib.dpr</MainSource>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <ProjectGuid>{28D30ED0-FFDE-4E46-B2F7-CA188CE89C74}</ProjectGuid>
+        <ProjectName Condition="'$(ProjectName)'==''">TestCmonLib</ProjectName>
         <ProjectVersion>20.1</ProjectVersion>
         <TargetedPlatforms>1</TargetedPlatforms>
-        <ProjectName Condition="'$(ProjectName)'==''">TestCmonLib</ProjectName>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
         <Base>true</Base>

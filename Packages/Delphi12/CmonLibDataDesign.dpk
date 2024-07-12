@@ -28,6 +28,7 @@ package CmonLibDataDesign;
 {$ENDIF IMPLICITBUILDING}
 {$DESCRIPTION 'CmonLib Data Design Support'}
 {$LIBSUFFIX AUTO}
+{$DESIGNONLY}
 {$IMPLICITBUILD ON}
 
 requires
