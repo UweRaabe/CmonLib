@@ -74,3 +74,4 @@ source/Win32
 *.ldi
 Packages/Delphi12/MakeDSM.cmd
 *.ldz
+*.res
