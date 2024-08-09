@@ -299,6 +299,8 @@ end;
 
 procedure TValueObservers<T>.ValueChanged(ID: Integer);
 begin
+  if not IsObserving(ID) then Exit;
+
   var list := GetMultiCastObserver(ID);
   for var I := 0 to list.Count - 1 do
     ValueChanged(list[I]);
@@ -376,6 +378,8 @@ var
   needsSort: Boolean;
   prioLists: array[TObserverPriority] of IInterfaceList;
 begin
+  if not IsObserving(AID) then Exit;
+
   needsSort := False;
   lastPrio := Low(TObserverPriority);
   list := GetMultiCastObserver(AID);
