@@ -44,15 +44,21 @@ type
   [StorageKey('SettingsRec'), AutoStorageFields([vcPrivate, vcPublic]), SkipFieldNameF([vcPrivate])]
   TMainDataRec = record
   private
+{$IF (CompilerVersion > 36.0) or RTLVersion123 }
+  {$MESSAGE HINT 'String fields in records used with generic record constraints break the 12.3 compiler.'}
+{$ELSE}
     [Default('Foo')]
     FSomeString: string;
+{$ENDIF}
+    function GetSomeString: string;
+    procedure SetSomeString(const Value: string);
   public
     [NoStorage, Default(5)]
     DontStoreMe: Integer;
     [Default(10)]
     SomeInteger: Integer;
     { AutoStorage for record properties will not work until RTTI supports it }
-    property SomeString: string read FSomeString write FSomeString;
+    property SomeString: string read GetSomeString write SetSomeString;
   end;
 
 var
@@ -71,6 +77,23 @@ destructor TMainData.Destroy;
 begin
   FSubData.Free;
   inherited Destroy;
+end;
+
+function TMainDataRec.GetSomeString: string;
+begin
+{$IF (CompilerVersion > 36.0) or RTLVersion123 }
+  Result := 'Feature not supported!';
+{$ELSE}
+  Result := FSomeString;
+{$ENDIF}
+end;
+
+procedure TMainDataRec.SetSomeString(const Value: string);
+begin
+{$IF (CompilerVersion > 36.0) or RTLVersion123 }
+{$ELSE}
+  FSomeString := Value;
+{$ENDIF}
 end;
 
 initialization
