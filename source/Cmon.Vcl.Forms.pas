@@ -424,8 +424,8 @@ begin
   if not HandleGlobalVirtualImageLists then Exit;
 
   { first resolve all existing references }
-  for var reference in HandledReferences do
-    RedirectFixupReferences(nil, reference, Name);
+  for var ref in HandledReferences do
+    RedirectFixupReferences(nil, ref, Name);
   { now resolve any remaining references by cloning the necessary image lists }
   ResolveReferences;
 end;
@@ -437,8 +437,8 @@ begin
   lst := TStringList.Create();
   try
     GetFixupReferenceNames(nil, lst);
-    for var reference in lst do begin
-      var cls := GetClass('T' + reference);
+    for var ref in lst do begin
+      var cls := GetClass('T' + ref);
       if (cls <> nil) and cls.InheritsFrom(TDataModule) then
         GrabVirtualImageLists(TDataModuleClass(cls));
     end;
