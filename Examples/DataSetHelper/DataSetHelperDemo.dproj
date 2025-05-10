@@ -7,9 +7,9 @@
         <MainSource>DataSetHelperDemo.dpr</MainSource>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <ProjectGuid>{5DB61331-EF6C-4931-8415-34BAF882703E}</ProjectGuid>
-        <ProjectVersion>20.1</ProjectVersion>
-        <TargetedPlatforms>1</TargetedPlatforms>
         <ProjectName Condition="'$(ProjectName)'==''">DataSetHelperDemo</ProjectName>
+        <ProjectVersion>20.3</ProjectVersion>
+        <TargetedPlatforms>1</TargetedPlatforms>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
         <Base>true</Base>

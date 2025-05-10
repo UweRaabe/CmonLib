@@ -7,9 +7,9 @@
         <MainSource>DialogsDemoFMX.dpr</MainSource>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <ProjectGuid>{8A91BB78-0B61-4638-8A0A-D9FFC6E4156C}</ProjectGuid>
-        <ProjectVersion>20.1</ProjectVersion>
-        <TargetedPlatforms>3</TargetedPlatforms>
         <ProjectName Condition="'$(ProjectName)'==''">DialogsDemoFMX</ProjectName>
+        <ProjectVersion>20.3</ProjectVersion>
+        <TargetedPlatforms>3</TargetedPlatforms>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
         <Base>true</Base>

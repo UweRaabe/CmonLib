@@ -7,9 +7,9 @@
         <MainSource>ObserversDemo.dpr</MainSource>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <ProjectGuid>{88487DB4-B267-43FA-A494-D7BFAE343421}</ProjectGuid>
-        <ProjectVersion>20.1</ProjectVersion>
-        <TargetedPlatforms>1</TargetedPlatforms>
         <ProjectName Condition="'$(ProjectName)'==''">ObserversDemo</ProjectName>
+        <ProjectVersion>20.3</ProjectVersion>
+        <TargetedPlatforms>1</TargetedPlatforms>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
         <Base>true</Base>
