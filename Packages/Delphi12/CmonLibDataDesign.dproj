@@ -149,6 +149,11 @@
                     <IfExpressions/>
                 </Parser>
             </MMX>
+            <DelphiInfo>
+                <IDEVersion NAME="Delphi 12.3 Athens" VERSION="36.3" SKU="52" TRIAL="0">
+                    <PLATFORMS>Win64,Win64x,Win32</PLATFORMS>
+                </IDEVersion>
+            </DelphiInfo>
         </BorlandProject>
         <ProjectFileVersion>12</ProjectFileVersion>
     </ProjectExtensions>
