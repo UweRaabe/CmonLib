@@ -68,7 +68,7 @@ begin
   if Control = nil then Exit;
 
   if Field <> nil then
-    Control.Text := Field.AsString
+    Control.Text := Field.DisplayText
   else
     Control.Text := '';
 end;
@@ -79,7 +79,7 @@ begin
   if Control = nil then Exit;
 
   if Field <> nil then
-    Field.AsString := Control.Text;
+    Field.Text := Control.Text;
 end;
 
 procedure TCustomMemoDataSenseLink.DoLoadData;
@@ -88,7 +88,7 @@ begin
   if Control = nil then Exit;
 
   if Field <> nil then
-    Control.Text := Field.AsString
+    Control.Text := Field.DisplayText
   else
     Control.Text := '';
 end;
@@ -99,7 +99,7 @@ begin
   if Control = nil then Exit;
 
   if Field <> nil then
-    Field.AsString := Control.Lines.Text;
+    Field.Text := Control.Lines.Text;
 end;
 
 constructor TControlDataSenseLink<T>.Create(ATarget: TComponent);
