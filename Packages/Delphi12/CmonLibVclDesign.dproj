@@ -3,24 +3,19 @@
         <Base>True</Base>
         <AppType>Package</AppType>
         <Config Condition="'$(Config)'==''">Release</Config>
-        <FrameworkType>VCL</FrameworkType>
-        <MainSource>CmonLibVcl.dpk</MainSource>
+        <FrameworkType>None</FrameworkType>
+        <MainSource>CmonLibVclDesign.dpk</MainSource>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
-        <ProjectGuid>{C60C7770-4174-49DB-B73C-1AA57C2A2FF5}</ProjectGuid>
-        <ProjectName Condition="'$(ProjectName)'==''">CmonLibVcl</ProjectName>
+        <ProjectGuid>{8A52DDD4-5590-4B22-9739-082999BCF589}</ProjectGuid>
+        <ProjectName Condition="'$(ProjectName)'==''">CmonLibVclDesign</ProjectName>
         <ProjectVersion>20.3</ProjectVersion>
-        <TargetedPlatforms>3</TargetedPlatforms>
+        <TargetedPlatforms>1</TargetedPlatforms>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Base)'=='true') or '$(Base_Win32)'!=''">
         <Base_Win32>true</Base_Win32>
-        <CfgParent>Base</CfgParent>
-        <Base>true</Base>
-    </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='Win64' and '$(Base)'=='true') or '$(Base_Win64)'!=''">
-        <Base_Win64>true</Base_Win64>
         <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
@@ -41,27 +36,25 @@
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
-        <SanitizedProjectName>CmonLibVcl</SanitizedProjectName>
+        <SanitizedProjectName>CmonLibVclDesign</SanitizedProjectName>
         <DCC_CBuilderOutput>All</DCC_CBuilderOutput>
         <DCC_DcuOutput>.\$(Platform)\$(Config)</DCC_DcuOutput>
-        <DCC_Description>CmonLibVcl - Common Library VCL</DCC_Description>
         <DCC_ExeOutput>.\$(Platform)\$(Config)</DCC_ExeOutput>
-        <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
-        <DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
+        <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
+        <DesignOnlyPackage>true</DesignOnlyPackage>
         <DllSuffix>$(Auto)</DllSuffix>
         <GenDll>true</GenDll>
         <GenPackage>true</GenPackage>
-        <RuntimeOnlyPackage>true</RuntimeOnlyPackage>
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <VerInfo_Locale>1031</VerInfo_Locale>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <BT_BuildType>Debug</BT_BuildType>
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Base_Win64)'!=''">
-        <BT_BuildType>Debug</BT_BuildType>
-        <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;$(DCC_Namespace)</DCC_Namespace>
+        <DCC_UsePackage>CmonLibVcl;$(DCC_UsePackage)</DCC_UsePackage>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+        <VerInfo_Locale>1033</VerInfo_Locale>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_DebugDCUs>true</DCC_DebugDCUs>
@@ -86,14 +79,9 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="CmonLib.dcp"/>
-        <DCCReference Include="vcl.dcp"/>
-        <DCCReference Include="vclwinx.dcp"/>
-        <DCCReference Include="..\..\source\Cmon.Messaging.Dialogs.Vcl.pas"/>
-        <DCCReference Include="..\..\source\Cmon.Observers.Vcl.pas"/>
-        <DCCReference Include="..\..\source\Cmon.Utilities.Vcl.pas"/>
-        <DCCReference Include="..\..\source\Cmon.Vcl.Forms.pas"/>
-        <DCCReference Include="..\..\source\Cmon.MRU.Vcl.pas"/>
+        <DCCReference Include="DesignIDE.dcp"/>
+        <DCCReference Include="CmonLibVcl.dcp"/>
+        <DCCReference Include="..\..\source\Cmon.Vcl.Design.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -112,25 +100,29 @@
         <BorlandProject>
             <Delphi.Personality>
                 <Source>
-                    <Source Name="MainSource">CmonLibVcl.dpk</Source>
+                    <Source Name="MainSource">CmonLibVclDesign.dpk</Source>
                 </Source>
                 <Excluded_Packages/>
             </Delphi.Personality>
             <Platforms>
                 <Platform value="Win32">True</Platform>
-                <Platform value="Win64">True</Platform>
+                <Platform value="Win64">False</Platform>
                 <Platform value="Win64x">False</Platform>
             </Platforms>
-            <MMX>
-                <UsesClauseFormatter AutoFormat="1">
-                    <GroupNames>WinApi;System.Win;System;Data;FireDAC;Vcl;Cmon</GroupNames>
-                </UsesClauseFormatter>
-            </MMX>
             <DelphiInfo>
                 <IDEVersion NAME="Delphi 12.3 Athens" VERSION="36.3" SKU="52" TRIAL="0">
                     <PLATFORMS>Win64,Win64x,Win32</PLATFORMS>
                 </IDEVersion>
             </DelphiInfo>
+            <MMX>
+                <UsesClauseFormatter AutoFormat="1" UseDefault="0">
+                    <GroupNames>(DesignIntf,DesignEditors,ToolsAPI);Winapi;System.Win;System;Data;REST;Xml;Vcl;FMX;Cmon</GroupNames>
+                </UsesClauseFormatter>
+                <Parser>
+                    <Defines/>
+                    <IfExpressions/>
+                </Parser>
+            </MMX>
         </BorlandProject>
         <ProjectFileVersion>12</ProjectFileVersion>
     </ProjectExtensions>
