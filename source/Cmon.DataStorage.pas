@@ -83,6 +83,7 @@ type
     constructor Create; overload;
     constructor Create(const AFileName: string; AReadOnly: Boolean = False); overload;
     destructor Destroy; override;
+    class function CombineStorageKey(const Key, SubKey: string): string;
     { StorageTargets }
     function CreateStorageTarget(const AFileName: string = ''): IStorageTarget; overload;
     class function CreateStorageTarget(Sender: TObject; const AFileName: string = ''): IStorageTarget; overload;
@@ -117,6 +118,7 @@ type
     procedure DeleteKey(const Ident: string); overload;
     procedure EraseStorageKey(const Key: string); overload;
     procedure EraseStorageKey; overload;
+    procedure PushStorageSubKey(const SubKey: string); overload;
     procedure ReadKey(const Key: string; Target: TStrings); overload;
     procedure ReadKey(Target: TStrings); overload;
     function ReadBoolean(const Key, Ident: string; const Default: Boolean): Boolean; overload;
@@ -383,6 +385,11 @@ begin
   FDefaultInstance.Free;
 end;
 
+class function TDataStorage.CombineStorageKey(const Key, SubKey: string): string;
+begin
+  Result := Key + cKeySeparator + SubKey;
+end;
+
 class function TDataStorage.CreateStorageTarget(Sender: TObject; const AFileName: string = ''): IStorageTarget;
 begin
   Result := TStorageTargetMessage.Execute(Sender, AFileName);
@@ -546,7 +553,7 @@ begin
   if StorageKey.IsEmpty or StorageKey.Equals(DefaultStorageKey) then
     Result := ASubKey
   else
-    Result := StorageKey + cKeySeparator + ASubKey;
+    Result := CombineStorageKey(StorageKey, ASubKey);
 end;
 
 class function TDataStorage.MakeStorageTargetFileFilter: string;
@@ -588,6 +595,12 @@ begin
   StorageKey := NewKey;
 end;
 
+procedure TDataStorage.PushStorageSubKey(const SubKey: string);
+begin
+  var key := MakeStorageSubKey(SubKey);
+  PushStorageKey(key);
+end;
+
 function TDataStorage.ReadBoolean(const Ident: string; const Default: Boolean): Boolean;
 begin
   Result := ReadBoolean(StorageKey, Ident, Default);
@@ -608,7 +621,7 @@ begin
   var key := Ident;
   if key.IsEmpty then
     key := GetStorageKeyFromAttribute(Instance);
-  PushStorageKey(MakeStorageSubKey(key));
+  PushStorageSubKey(key);
   try
     LoadFromStorage<A>(Instance);
   finally
@@ -770,7 +783,7 @@ begin
   var key := Ident;
   if key.IsEmpty then
     key := GetStorageKeyFromAttribute(Instance);
-  PushStorageKey(MakeStorageSubKey(key));
+  PushStorageSubKey(key);
   try
     SaveToStorage<A>(Instance);
   finally
@@ -1166,7 +1179,7 @@ begin
   var key := Ident;
   if keyIntf <> nil then
     key := keyIntf.GetStorageKey(Self);
-  PushStorageKey(MakeStorageSubKey(key));
+  PushStorageSubKey(key);
   try
     if Supports(Instance, IStoredData, dataIntf) then
       dataIntf.InternalPrepareStorage(Self);
@@ -1196,7 +1209,7 @@ begin
   var key := Ident;
   if keyIntf <> nil then
     key := keyIntf.GetStorageKey(Self);
-  PushStorageKey(MakeStorageSubKey(key));
+  PushStorageSubKey(key);
   try
     if dataIntf <> nil then
       dataIntf.InternalPrepareStorage(Self);

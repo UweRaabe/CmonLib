@@ -37,6 +37,11 @@ type
     property Parts: TFormStorageParts read FParts;
   end;
 
+  FormStorageAllAttribute = class(FormStorageAttribute)
+  public
+    constructor Create;
+  end;
+
 type
   TCommonFrame = class(TFrame)
   protected
@@ -145,6 +150,9 @@ type
     Just use this unit in the interface part after Vcl.Forms. }
   TForm = TCommonForm;
   TFrame = TCommonFrame;
+
+  TFormClass = class of TForm;
+  TFrameClass = class of TFrame;
 
 implementation
 
@@ -309,15 +317,16 @@ procedure TCommonForm.LoadFormStorageParts(Storage: TDataStorage);
 begin
   var parts := GetFormStorageParts;
   if parts = [] then Exit;
-  Storage.PushStorageKey(Storage.MakeStorageSubKey('FormStorage'));
+  Storage.PushStorageSubKey('FormStorage');
   try
     if parts.Position or parts.Size then begin
+      Position := poDesigned;
       var R := BoundsRect;
-      if TFormStoragePart.Position in parts then begin
+      if parts.Position then begin
         R.Left := Storage.ReadInteger('Left', R.Left);
         R.Top := Storage.ReadInteger('Top', R.Top);
       end;
-      if TFormStoragePart.Size in parts then begin
+      if parts.Size then begin
         R.Width := Storage.ReadInteger('Width', R.Width);
         R.Height := Storage.ReadInteger('Height', R.Height);
       end;
@@ -451,7 +460,7 @@ procedure TCommonForm.SaveFormStorageParts(Storage: TDataStorage);
 begin
   var parts := GetFormStorageParts;
   if parts = [] then Exit;
-  Storage.PushStorageKey(Storage.MakeStorageSubKey('FormStorage'));
+  Storage.PushStorageSubKey('FormStorage');
   try
     if parts.Position then begin
       Storage.WriteInteger('Left', Left);
@@ -639,6 +648,11 @@ begin
     Include(Self, Index)
   else
     Exclude(Self, Index);
+end;
+
+constructor FormStorageAllAttribute.Create;
+begin
+  inherited Create(TFormStorageParts.All);
 end;
 
 initialization
