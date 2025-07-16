@@ -62,6 +62,7 @@ type
     property Task: TAsyncTask read FTask;
   public
     constructor Create(ATask: TAsyncTask);
+    destructor Destroy; override;
     class procedure ExecuteSync(ATask: TAsyncTask; out ACancel: ICancel); overload;
     class procedure ExecuteAsync(ATask: TAsyncTask; out ACancel: ICancel); overload;
   end;
@@ -77,6 +78,12 @@ begin
   if ATask = nil then
     raise EArgumentException.Create('Task must not be nil!');
   FTask := ATask;
+end;
+
+destructor TAsyncGuard.Destroy;
+begin
+  FTask.Free;
+  inherited Destroy;
 end;
 
 procedure TAsyncGuard.Cancel;
