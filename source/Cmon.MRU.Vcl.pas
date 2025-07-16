@@ -278,7 +278,7 @@ end;
 
 function TCustomMRUFiles.GetItems: TStrings;
 begin
-  Result := Items;
+  Result := FItems;
 end;
 
 function TCustomMRUFiles.GetMenuItemClass: TMRUMenuItemClass;
