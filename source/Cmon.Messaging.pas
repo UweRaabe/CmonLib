@@ -6,6 +6,18 @@ uses
   System.Messaging, System.UITypes;
 
 type
+  TCommonMessage = class(TMessage)
+  strict protected
+    class function Manager: TMessageManager; virtual;
+  public
+    class procedure SendMessage(Sender: TObject);
+    class function Subscribe(const AListener: TMessageListener): Integer; overload;
+    class function Subscribe(const AListenerMethod: TMessageListenerMethod): Integer; overload;
+    class procedure Unsubscribe(Id: Integer; Immediate: Boolean = False); overload;
+    class procedure Unsubscribe(const AListener: TMessageListener; Immediate: Boolean = False); overload;
+    class procedure Unsubscribe(const AListenerMethod: TMessageListenerMethod; Immediate: Boolean = False); overload;
+  end;
+
   TCommonMessage<T> = class(TMessage<T>)
   strict protected
     class function Manager: TMessageManager; virtual;
@@ -172,6 +184,41 @@ end;
 function TDlgMessage.GetMessageText: string;
 begin
   Result := Value;
+end;
+
+class function TCommonMessage.Manager: TMessageManager;
+begin
+  Result := TMessageManager.DefaultManager;
+end;
+
+class procedure TCommonMessage.SendMessage(Sender: TObject);
+begin
+  Manager.SendMessage(Sender, Self.Create);
+end;
+
+class function TCommonMessage.Subscribe(const AListener: TMessageListener): Integer;
+begin
+  Result := Manager.SubscribeToMessage(Self, AListener);
+end;
+
+class function TCommonMessage.Subscribe(const AListenerMethod: TMessageListenerMethod): Integer;
+begin
+  Result := Manager.SubscribeToMessage(Self, AListenerMethod);
+end;
+
+class procedure TCommonMessage.Unsubscribe(Id: Integer; Immediate: Boolean);
+begin
+  Manager.Unsubscribe(Self, Id, Immediate);
+end;
+
+class procedure TCommonMessage.Unsubscribe(const AListener: TMessageListener; Immediate: Boolean);
+begin
+  Manager.Unsubscribe(Self, AListener, Immediate);
+end;
+
+class procedure TCommonMessage.Unsubscribe(const AListenerMethod: TMessageListenerMethod; Immediate: Boolean = False);
+begin
+  Manager.Unsubscribe(Self, AListenerMethod, Immediate);
 end;
 
 initialization
