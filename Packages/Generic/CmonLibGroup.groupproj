@@ -1,0 +1,108 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{C7727CFD-9140-4690-8AFB-ECB79B81D366}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="CmonLib.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="CmonLibVcl.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="CmonLibFmx.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="CmonLibData.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="CmonLibDataVCL.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="CmonLibDataFMX.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="CmonLibDataDesign.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="CmonLib">
+        <MSBuild Projects="CmonLib.dproj"/>
+    </Target>
+    <Target Name="CmonLib:Clean">
+        <MSBuild Projects="CmonLib.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="CmonLib:Make">
+        <MSBuild Projects="CmonLib.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="CmonLibVcl">
+        <MSBuild Projects="CmonLibVcl.dproj"/>
+    </Target>
+    <Target Name="CmonLibVcl:Clean">
+        <MSBuild Projects="CmonLibVcl.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="CmonLibVcl:Make">
+        <MSBuild Projects="CmonLibVcl.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="CmonLibFmx">
+        <MSBuild Projects="CmonLibFmx.dproj"/>
+    </Target>
+    <Target Name="CmonLibFmx:Clean">
+        <MSBuild Projects="CmonLibFmx.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="CmonLibFmx:Make">
+        <MSBuild Projects="CmonLibFmx.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="CmonLibData">
+        <MSBuild Projects="CmonLibData.dproj"/>
+    </Target>
+    <Target Name="CmonLibData:Clean">
+        <MSBuild Projects="CmonLibData.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="CmonLibData:Make">
+        <MSBuild Projects="CmonLibData.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="CmonLibDataVCL">
+        <MSBuild Projects="CmonLibDataVCL.dproj"/>
+    </Target>
+    <Target Name="CmonLibDataVCL:Clean">
+        <MSBuild Projects="CmonLibDataVCL.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="CmonLibDataVCL:Make">
+        <MSBuild Projects="CmonLibDataVCL.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="CmonLibDataFMX">
+        <MSBuild Projects="CmonLibDataFMX.dproj"/>
+    </Target>
+    <Target Name="CmonLibDataFMX:Clean">
+        <MSBuild Projects="CmonLibDataFMX.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="CmonLibDataFMX:Make">
+        <MSBuild Projects="CmonLibDataFMX.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="CmonLibDataDesign">
+        <MSBuild Projects="CmonLibDataDesign.dproj"/>
+    </Target>
+    <Target Name="CmonLibDataDesign:Clean">
+        <MSBuild Projects="CmonLibDataDesign.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="CmonLibDataDesign:Make">
+        <MSBuild Projects="CmonLibDataDesign.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="CmonLib;CmonLibVcl;CmonLibFmx;CmonLibData;CmonLibDataVCL;CmonLibDataFMX;CmonLibDataDesign"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="CmonLib:Clean;CmonLibVcl:Clean;CmonLibFmx:Clean;CmonLibData:Clean;CmonLibDataVCL:Clean;CmonLibDataFMX:Clean;CmonLibDataDesign:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="CmonLib:Make;CmonLibVcl:Make;CmonLibFmx:Make;CmonLibData:Make;CmonLibDataVCL:Make;CmonLibDataFMX:Make;CmonLibDataDesign:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
