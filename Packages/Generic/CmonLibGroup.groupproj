@@ -21,6 +21,9 @@
         <Projects Include="CmonLibDataFMX.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="CmonLibVclDesign.dproj">
+            <Dependencies/>
+        </Projects>
         <Projects Include="CmonLibDataDesign.dproj">
             <Dependencies/>
         </Projects>
@@ -86,6 +89,15 @@
     <Target Name="CmonLibDataFMX:Make">
         <MSBuild Projects="CmonLibDataFMX.dproj" Targets="Make"/>
     </Target>
+    <Target Name="CmonLibVclDesign">
+        <MSBuild Projects="CmonLibVclDesign.dproj"/>
+    </Target>
+    <Target Name="CmonLibVclDesign:Clean">
+        <MSBuild Projects="CmonLibVclDesign.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="CmonLibVclDesign:Make">
+        <MSBuild Projects="CmonLibVclDesign.dproj" Targets="Make"/>
+    </Target>
     <Target Name="CmonLibDataDesign">
         <MSBuild Projects="CmonLibDataDesign.dproj"/>
     </Target>
@@ -96,13 +108,13 @@
         <MSBuild Projects="CmonLibDataDesign.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="CmonLib;CmonLibVcl;CmonLibFmx;CmonLibData;CmonLibDataVCL;CmonLibDataFMX;CmonLibDataDesign"/>
+        <CallTarget Targets="CmonLib;CmonLibVcl;CmonLibFmx;CmonLibData;CmonLibDataVCL;CmonLibDataFMX;CmonLibVclDesign;CmonLibDataDesign"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="CmonLib:Clean;CmonLibVcl:Clean;CmonLibFmx:Clean;CmonLibData:Clean;CmonLibDataVCL:Clean;CmonLibDataFMX:Clean;CmonLibDataDesign:Clean"/>
+        <CallTarget Targets="CmonLib:Clean;CmonLibVcl:Clean;CmonLibFmx:Clean;CmonLibData:Clean;CmonLibDataVCL:Clean;CmonLibDataFMX:Clean;CmonLibVclDesign:Clean;CmonLibDataDesign:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="CmonLib:Make;CmonLibVcl:Make;CmonLibFmx:Make;CmonLibData:Make;CmonLibDataVCL:Make;CmonLibDataFMX:Make;CmonLibDataDesign:Make"/>
+        <CallTarget Targets="CmonLib:Make;CmonLibVcl:Make;CmonLibFmx:Make;CmonLibData:Make;CmonLibDataVCL:Make;CmonLibDataFMX:Make;CmonLibVclDesign:Make;CmonLibDataDesign:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

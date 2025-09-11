@@ -1,6 +1,7 @@
-package CmonLibVcl;
+package CmonLibVclDesign;
 
 {$R *.res}
+{$R *.dres}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
 {$ALIGN 8}
 {$ASSERTIONS ON}
@@ -25,21 +26,16 @@ package CmonLibVcl;
 {$IMAGEBASE $400000}
 {$DEFINE RELEASE}
 {$ENDIF IMPLICITBUILDING}
-{$DESCRIPTION 'CmonLibVcl - Common Library VCL'}
+{$DESCRIPTION 'CmonLib VCL Design Support'}
 {$LIBSUFFIX AUTO}
-{$RUNONLY}
-{$IMPLICITBUILD OFF}
+{$DESIGNONLY}
+{$IMPLICITBUILD ON}
 
 requires
-  CmonLib,
-  vcl,
-  vclwinx;
+  DesignIDE,
+  CmonLibVcl;
 
 contains
-  Cmon.Messaging.Dialogs.Vcl in '..\..\source\Cmon.Messaging.Dialogs.Vcl.pas',
-  Cmon.Observers.Vcl in '..\..\source\Cmon.Observers.Vcl.pas',
-  Cmon.Utilities.Vcl in '..\..\source\Cmon.Utilities.Vcl.pas',
-  Cmon.Vcl.Forms in '..\..\source\Cmon.Vcl.Forms.pas',
-  Cmon.MRU.Vcl in '..\..\source\Cmon.MRU.Vcl.pas';
+  Cmon.Vcl.Design in '..\..\source\Cmon.Vcl.Design.pas';
 
 end.
