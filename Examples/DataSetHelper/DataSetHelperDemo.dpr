@@ -1,7 +1,7 @@
 program DataSetHelperDemo;
 
 uses
-  Forms,
+  Vcl.Forms,
   Main.Form in 'Main.Form.pas' {MainForm},
   Mapping.Types in 'Mapping.Types.pas';
 
