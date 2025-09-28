@@ -18,17 +18,14 @@ type
     class procedure Unsubscribe(const AListenerMethod: TMessageListenerMethod; Immediate: Boolean = False); overload;
   end;
 
-  TCommonMessage<T> = class(TMessage<T>)
-  strict protected
-    class function Manager: TMessageManager; virtual;
-  public
-    class procedure SendMessage(Sender: TObject; const AValue: T);
+  TCommonMessage<T> = class(TCommonMessage)
+  private
+    FValue: T;
     procedure SetValue(const AValue: T);
-    class function Subscribe(const AListener: TMessageListener): Integer; overload;
-    class function Subscribe(const AListenerMethod: TMessageListenerMethod): Integer; overload;
-    class procedure Unsubscribe(const AListenerMethod: TMessageListenerMethod; Immediate: Boolean = False); overload;
-    class procedure Unsubscribe(Id: Integer; Immediate: Boolean = False); overload;
-    class procedure Unsubscribe(const AListener: TMessageListener; Immediate: Boolean = False); overload;
+  public
+    constructor Create(const AValue: T);
+    class procedure SendMessage(Sender: TObject; const AValue: T);
+    property Value: T read FValue write SetValue;
   end;
 
   TCommonMessage<T, TResult> = class(TCommonMessage<T>)
@@ -81,9 +78,9 @@ type
 
 implementation
 
-class function TCommonMessage<T>.Manager: TMessageManager;
+constructor TCommonMessage<T>.Create(const AValue: T);
 begin
-  Result := TMessageManager.DefaultManager;
+  FValue := AValue;
 end;
 
 class procedure TCommonMessage<T>.SendMessage(Sender: TObject; const AValue: T);
@@ -94,31 +91,6 @@ end;
 procedure TCommonMessage<T>.SetValue(const AValue: T);
 begin
   FValue := AValue;
-end;
-
-class function TCommonMessage<T>.Subscribe(const AListener: TMessageListener): Integer;
-begin
-  Result := Manager.SubscribeToMessage(Self, AListener);
-end;
-
-class function TCommonMessage<T>.Subscribe(const AListenerMethod: TMessageListenerMethod): Integer;
-begin
-  Result := Manager.SubscribeToMessage(Self, AListenerMethod);
-end;
-
-class procedure TCommonMessage<T>.Unsubscribe(const AListenerMethod: TMessageListenerMethod; Immediate: Boolean = False);
-begin
-  Manager.Unsubscribe(Self, AListenerMethod, Immediate);
-end;
-
-class procedure TCommonMessage<T>.Unsubscribe(Id: Integer; Immediate: Boolean);
-begin
-  Manager.Unsubscribe(Self, Id, Immediate);
-end;
-
-class procedure TCommonMessage<T>.Unsubscribe(const AListener: TMessageListener; Immediate: Boolean);
-begin
-  Manager.Unsubscribe(Self, AListener, Immediate);
 end;
 
 class function TCommonMessage<T, TResult>.Execute(Sender: TObject; const AValue: T; const ADefault: TResult): TResult;
