@@ -51,6 +51,9 @@
         <Projects Include="..\..\Examples\Dialogs\DialogsDemoVCL.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="..\..\Examples\Factory\FactoryDemo.dproj">
+            <Dependencies/>
+        </Projects>
         <Projects Include="..\..\Examples\ImageLists\ImageListsDemo.dproj">
             <Dependencies/>
         </Projects>
@@ -209,6 +212,15 @@
     <Target Name="DialogsDemoVCL:Make">
         <MSBuild Projects="..\..\Examples\Dialogs\DialogsDemoVCL.dproj" Targets="Make"/>
     </Target>
+    <Target Name="FactoryDemo">
+        <MSBuild Projects="..\..\Examples\Factory\FactoryDemo.dproj"/>
+    </Target>
+    <Target Name="FactoryDemo:Clean">
+        <MSBuild Projects="..\..\Examples\Factory\FactoryDemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="FactoryDemo:Make">
+        <MSBuild Projects="..\..\Examples\Factory\FactoryDemo.dproj" Targets="Make"/>
+    </Target>
     <Target Name="ImageListsDemo">
         <MSBuild Projects="..\..\Examples\ImageLists\ImageListsDemo.dproj"/>
     </Target>
@@ -228,13 +240,13 @@
         <MSBuild Projects="..\..\Examples\Observers\ObserversDemo.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="CmonLib;CmonLibVcl;CmonLibFmx;CmonLibData;CmonLibDataVCL;CmonLibDataFMX;CmonLibVclDesign;CmonLibDataDesign;TestCmonLib;AsyncGuardDemo;DataSenseDemoFmx;DataSenseDemoVcl;DataSetHelperDemo;DataStorageDemo;DialogsDemoFMX;DialogsDemoVCL;ImageListsDemo;ObserversDemo"/>
+        <CallTarget Targets="CmonLib;CmonLibVcl;CmonLibFmx;CmonLibData;CmonLibDataVCL;CmonLibDataFMX;CmonLibVclDesign;CmonLibDataDesign;TestCmonLib;AsyncGuardDemo;DataSenseDemoFmx;DataSenseDemoVcl;DataSetHelperDemo;DataStorageDemo;DialogsDemoFMX;DialogsDemoVCL;FactoryDemo;ImageListsDemo;ObserversDemo"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="CmonLib:Clean;CmonLibVcl:Clean;CmonLibFmx:Clean;CmonLibData:Clean;CmonLibDataVCL:Clean;CmonLibDataFMX:Clean;CmonLibVclDesign:Clean;CmonLibDataDesign:Clean;TestCmonLib:Clean;AsyncGuardDemo:Clean;DataSenseDemoFmx:Clean;DataSenseDemoVcl:Clean;DataSetHelperDemo:Clean;DataStorageDemo:Clean;DialogsDemoFMX:Clean;DialogsDemoVCL:Clean;ImageListsDemo:Clean;ObserversDemo:Clean"/>
+        <CallTarget Targets="CmonLib:Clean;CmonLibVcl:Clean;CmonLibFmx:Clean;CmonLibData:Clean;CmonLibDataVCL:Clean;CmonLibDataFMX:Clean;CmonLibVclDesign:Clean;CmonLibDataDesign:Clean;TestCmonLib:Clean;AsyncGuardDemo:Clean;DataSenseDemoFmx:Clean;DataSenseDemoVcl:Clean;DataSetHelperDemo:Clean;DataStorageDemo:Clean;DialogsDemoFMX:Clean;DialogsDemoVCL:Clean;FactoryDemo:Clean;ImageListsDemo:Clean;ObserversDemo:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="CmonLib:Make;CmonLibVcl:Make;CmonLibFmx:Make;CmonLibData:Make;CmonLibDataVCL:Make;CmonLibDataFMX:Make;CmonLibVclDesign:Make;CmonLibDataDesign:Make;TestCmonLib:Make;AsyncGuardDemo:Make;DataSenseDemoFmx:Make;DataSenseDemoVcl:Make;DataSetHelperDemo:Make;DataStorageDemo:Make;DialogsDemoFMX:Make;DialogsDemoVCL:Make;ImageListsDemo:Make;ObserversDemo:Make"/>
+        <CallTarget Targets="CmonLib:Make;CmonLibVcl:Make;CmonLibFmx:Make;CmonLibData:Make;CmonLibDataVCL:Make;CmonLibDataFMX:Make;CmonLibVclDesign:Make;CmonLibDataDesign:Make;TestCmonLib:Make;AsyncGuardDemo:Make;DataSenseDemoFmx:Make;DataSenseDemoVcl:Make;DataSetHelperDemo:Make;DataStorageDemo:Make;DialogsDemoFMX:Make;DialogsDemoVCL:Make;FactoryDemo:Make;ImageListsDemo:Make;ObserversDemo:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

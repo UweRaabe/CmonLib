@@ -30,6 +30,9 @@
         <Projects Include="AsyncGuard\AsyncGuardDemo.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="Factory\FactoryDemo.dproj">
+            <Dependencies/>
+        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -119,14 +122,23 @@
     <Target Name="AsyncGuardDemo:Make">
         <MSBuild Projects="AsyncGuard\AsyncGuardDemo.dproj" Targets="Make"/>
     </Target>
+    <Target Name="FactoryDemo">
+        <MSBuild Projects="Factory\FactoryDemo.dproj"/>
+    </Target>
+    <Target Name="FactoryDemo:Clean">
+        <MSBuild Projects="Factory\FactoryDemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="FactoryDemo:Make">
+        <MSBuild Projects="Factory\FactoryDemo.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="ObserversDemo;DataStorageDemo;DataSetHelperDemo;DialogsDemoVCL;DialogsDemoFMX;ImageListsDemo;DataSenseDemoVcl;DataSenseDemoFmx;AsyncGuardDemo"/>
+        <CallTarget Targets="ObserversDemo;DataStorageDemo;DataSetHelperDemo;DialogsDemoVCL;DialogsDemoFMX;ImageListsDemo;DataSenseDemoVcl;DataSenseDemoFmx;AsyncGuardDemo;FactoryDemo"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="ObserversDemo:Clean;DataStorageDemo:Clean;DataSetHelperDemo:Clean;DialogsDemoVCL:Clean;DialogsDemoFMX:Clean;ImageListsDemo:Clean;DataSenseDemoVcl:Clean;DataSenseDemoFmx:Clean;AsyncGuardDemo:Clean"/>
+        <CallTarget Targets="ObserversDemo:Clean;DataStorageDemo:Clean;DataSetHelperDemo:Clean;DialogsDemoVCL:Clean;DialogsDemoFMX:Clean;ImageListsDemo:Clean;DataSenseDemoVcl:Clean;DataSenseDemoFmx:Clean;AsyncGuardDemo:Clean;FactoryDemo:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="ObserversDemo:Make;DataStorageDemo:Make;DataSetHelperDemo:Make;DialogsDemoVCL:Make;DialogsDemoFMX:Make;ImageListsDemo:Make;DataSenseDemoVcl:Make;DataSenseDemoFmx:Make;AsyncGuardDemo:Make"/>
+        <CallTarget Targets="ObserversDemo:Make;DataStorageDemo:Make;DataSetHelperDemo:Make;DialogsDemoVCL:Make;DialogsDemoFMX:Make;ImageListsDemo:Make;DataSenseDemoVcl:Make;DataSenseDemoFmx:Make;AsyncGuardDemo:Make;FactoryDemo:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

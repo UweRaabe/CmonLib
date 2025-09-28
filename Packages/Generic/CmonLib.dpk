@@ -52,6 +52,7 @@ contains
   Cmon.CmdLineFileHandler in '..\..\source\Cmon.CmdLineFileHandler.pas',
   Cmon.Initializing in '..\..\source\Cmon.Initializing.pas',
   Cmon.Utilities.Win in '..\..\source\Cmon.Utilities.Win.pas',
-  Cmon.AsyncGuard in '..\..\source\Cmon.AsyncGuard.pas';
+  Cmon.AsyncGuard in '..\..\source\Cmon.AsyncGuard.pas',
+  Cmon.Factory in '..\..\source\Cmon.Factory.pas';
 
 end.
