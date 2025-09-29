@@ -3,24 +3,57 @@ unit Cmon.Logging;
 interface
 
 uses
-  System.Classes;
+  Cmon.Messaging;
 
 type
+  TLogMethod = procedure(const AMessage: string) of object;
+  TLogProc = reference to procedure(const AMessage: string);
+
   TLog = record
-  type
-    TLogHandlerProc = reference to procedure(const AMessage: string);
   public
     class procedure Send(const AMessage: string); overload; static;
     class procedure Send(const Fmt: string; const Args: Array of const); overload; static;
-    class function Subscribe(AProc: TLogHandlerProc): Integer; static;
-    class procedure Unsubscribe(AId: Integer); static;
+    class function Subscribe(AProc: TLogProc): IMessageHandler; overload; static;
+    class function Subscribe(AMethod: TLogMethod): IMessageHandler; overload; static;
   end;
 
 implementation
 
 uses
-  System.Messaging, System.SysUtils,
-  Cmon.Messaging;
+  System.SysUtils,
+  Cmon.Messaging.Logging;
+
+type
+  TLogHandler = class(TLogMessageHandler)
+  private
+    FLogMethod: TLogMethod;
+    FLogProc: TLogProc;
+  protected
+    procedure HandleMessage(const Sender: TObject; const Message: TLogMessage); override;
+  public
+    constructor Create(ALogMethod: TLogMethod); overload;
+    constructor Create(ALogProc: TLogProc); overload;
+  end;
+
+constructor TLogHandler.Create(ALogMethod: TLogMethod);
+begin
+  inherited Create;
+  FLogMethod := ALogMethod;
+end;
+
+constructor TLogHandler.Create(ALogProc: TLogProc);
+begin
+  inherited Create;
+  FLogProc := ALogProc;
+end;
+
+procedure TLogHandler.HandleMessage(const Sender: TObject; const Message: TLogMessage);
+begin
+  if Assigned(FLogProc) then
+    FLogProc(Message.MessageText);
+  if Assigned(FLogMethod) then
+    FLogMethod(Message.MessageText);
+end;
 
 class procedure TLog.Send(const AMessage: string);
 begin
@@ -32,18 +65,14 @@ begin
   Send(Format(Fmt, Args));
 end;
 
-class function TLog.Subscribe(AProc: TLogHandlerProc): Integer;
+class function TLog.Subscribe(AMethod: TLogMethod): IMessageHandler;
 begin
-  Result := TLogMessage.Subscribe(
-    procedure(const Sender: TObject; const M: TMessage)
-    begin
-      AProc(TLogMessage(M).Value);
-    end);
+  Result := TLogHandler.CreateInterface(TLogHandler.Create(AMethod));
 end;
 
-class procedure TLog.Unsubscribe(AId: Integer);
+class function TLog.Subscribe(AProc: TLogProc): IMessageHandler;
 begin
-  TLogMessage.Unsubscribe(AId);
+  Result := TLogHandler.CreateInterface(TLogHandler.Create(AProc));
 end;
 
 end.

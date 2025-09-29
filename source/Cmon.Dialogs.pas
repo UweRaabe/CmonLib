@@ -36,7 +36,7 @@ implementation
 
 uses
   System.SysUtils,
-  Cmon.Messaging;
+  Cmon.Messaging.Dialogs;
 
 class function TMessageDlg.Confirm(Sender: TObject; const ATitle, AMessageText: string; ADefault: Boolean = True; AHelpContext:
     Integer = 0): Boolean;

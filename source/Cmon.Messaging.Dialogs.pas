@@ -3,47 +3,63 @@ unit Cmon.Messaging.Dialogs;
 interface
 
 uses
-  System.Messaging;
+  System.UITypes,
+  Cmon.Messaging;
 
 type
-  TDlgMessageHandler = class
+  TDlgMessage = class(TCommonMessage<string>)
+  strict private
+  class var
+    FAutoRegisterHandler: Boolean;
   private
-    FMessageID: Integer;
-  strict protected
-    procedure DlgMessage(const Sender: TObject; const M: TMessage); virtual; abstract;
-    procedure Subscribe; virtual;
-    procedure Unsubscribe; virtual;
+    FAnswer: TModalResult;
+    FButtons: TMsgDlgButtons;
+    FHelpContext: Integer;
+    FMsgDlgType: TMsgDlgType;
+    FTitle: string;
+    function GetMessageText: string;
   public
-    constructor Create;
-    destructor Destroy; override;
+    class function Execute(Sender: TObject; const ATitle, AMessageText: string; AMsgDlgType: TMsgDlgType; AButtons: TMsgDlgButtons;
+        ADefault: TModalResult; AHelpContext: Integer): TModalResult;
+    class property AutoRegisterHandler: Boolean read FAutoRegisterHandler write FAutoRegisterHandler;
+    property Answer: TModalResult read FAnswer write FAnswer;
+    property Buttons: TMsgDlgButtons read FButtons write FButtons;
+    property HelpContext: Integer read FHelpContext write FHelpContext;
+    property MessageText: string read GetMessageText;
+    property MsgDlgType: TMsgDlgType read FMsgDlgType write FMsgDlgType;
+    property Title: string read FTitle write FTitle;
   end;
+  TDlgMessageHandler = class(TCommonMessageHandler<TDlgMessage>);
 
 implementation
 
 uses
-  System.SysUtils,
-  Cmon.Messaging;
+  System.SysUtils;
 
-constructor TDlgMessageHandler.Create;
+class function TDlgMessage.Execute(Sender: TObject; const ATitle, AMessageText: string; AMsgDlgType: TMsgDlgType; AButtons:
+    TMsgDlgButtons; ADefault: TModalResult; AHelpContext: Integer): TModalResult;
+var
+  instance: TDlgMessage;
 begin
-  inherited;
-  Subscribe;
+  instance := Self.Create(AMessageText);
+  try
+    instance.Title := ATitle;
+    instance.MsgDlgType := AMsgDlgType;
+    instance.Buttons := AButtons;
+    instance.Answer := ADefault;
+    Instance.HelpContext := AHelpContext;
+    Manager.SendMessage(Sender, instance, False);
+    Result := instance.Answer;
+  finally
+    instance.Free;
+  end;
 end;
 
-destructor TDlgMessageHandler.Destroy;
+function TDlgMessage.GetMessageText: string;
 begin
-  Unsubscribe;
-  inherited;
+  Result := Value;
 end;
 
-procedure TDlgMessageHandler.Subscribe;
-begin
-  FMessageID := TDlgMessage.Subscribe(DlgMessage);
-end;
-
-procedure TDlgMessageHandler.Unsubscribe;
-begin
-  TDlgMessage.Unsubscribe(FMessageID);
-end;
-
+initialization
+  TDlgMessage.AutoRegisterHandler := True;
 end.

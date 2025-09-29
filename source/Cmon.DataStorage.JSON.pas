@@ -313,18 +313,16 @@ begin
 end;
 
 var
-  Instance: TJSONStorageTargetHandler = nil;
+  Instance: IMessageHandler;
 
 { will be called in Application.Initialize after all other initialization code has been executed }
 procedure InitHandler;
 begin
   if TDataStorage.AutoRegisterHandler and TJSONStorageTargetHandler.AutoRegisterHandler then
-    Instance := TJSONStorageTargetHandler.Create;
+    Instance := TJSONStorageTargetHandler.CreateInterface;
 end;
 
 initialization
   TJSONStorageTargetHandler.AutoRegisterHandler := True;
   TInitialize.AddInitProc(InitHandler);
-finalization
-  Instance.Free;
 end.

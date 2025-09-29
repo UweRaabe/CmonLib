@@ -3,7 +3,7 @@ unit Cmon.Messaging;
 interface
 
 uses
-  System.Messaging, System.UITypes;
+  System.Messaging;
 
 type
   TCommonMessage = class(TMessage)
@@ -40,43 +40,61 @@ type
   end;
 
 type
-  TLogMessage = class(TCommonMessage<string>)
-  strict private
-  class var
-    FAutoRegisterHandler: Boolean;
-  private
-    function GetMessageText: string;
-  public
-    class procedure SendMessage(Sender: TObject; const AMessageText: string);
-    class property AutoRegisterHandler: Boolean read FAutoRegisterHandler write FAutoRegisterHandler;
-    property MessageText: string read GetMessageText;
+  IMessageHandler = interface
   end;
 
-type
-  TDlgMessage = class(TCommonMessage<string>)
-  strict private
-  class var
-    FAutoRegisterHandler: Boolean;
-  private
-    FAnswer: TModalResult;
-    FButtons: TMsgDlgButtons;
-    FHelpContext: Integer;
-    FMsgDlgType: TMsgDlgType;
-    FTitle: string;
-    function GetMessageText: string;
+  TCommonMessageHandlerClass = class of TCommonMessageHandler;
+  TCommonMessageHandler = class
   public
-    class function Execute(Sender: TObject; const ATitle, AMessageText: string; AMsgDlgType: TMsgDlgType; AButtons: TMsgDlgButtons;
-        ADefault: TModalResult; AHelpContext: Integer): TModalResult;
-    class property AutoRegisterHandler: Boolean read FAutoRegisterHandler write FAutoRegisterHandler;
-    property Answer: TModalResult read FAnswer write FAnswer;
-    property Buttons: TMsgDlgButtons read FButtons write FButtons;
-    property HelpContext: Integer read FHelpContext write FHelpContext;
-    property MessageText: string read GetMessageText;
-    property MsgDlgType: TMsgDlgType read FMsgDlgType write FMsgDlgType;
-    property Title: string read FTitle write FTitle;
+    constructor Create; virtual;
+    class function CreateInterface(AInstance: TCommonMessageHandler = nil): IMessageHandler;
+  end;
+
+  THandleMessageEvent<T:TCommonMessage> = procedure(const Sender: TObject; const Msg: T) of object;
+  THandleMessageProc<T:TCommonMessage> = reference to procedure(const Sender: TObject; const Msg: T);
+
+  TCommonMessageHandler<TMsg: TCommonMessage> = class(TCommonMessageHandler)
+  private
+    FMessageID: Integer;
+    FMethod: THandleMessageEvent<TMsg>;
+    FProc: THandleMessageProc<TMsg>;
+    procedure MessageHandler(const Sender: TObject; const M: TMessage);
+  strict protected
+    procedure DoHandleMethod(const Sender: TObject; const Msg: TMsg);
+    procedure DoHandleProc(const Sender: TObject; const Msg: TMsg);
+    procedure HandleMessage(const Sender: TObject; const Msg: TMsg); virtual;
+    procedure Subscribe; virtual;
+    procedure Unsubscribe; virtual;
+  public
+    constructor Create; overload; override;
+    constructor Create(AMethod: THandleMessageEvent<TMsg>); reintroduce; overload;
+    constructor Create(AProc: THandleMessageProc<TMsg>); reintroduce; overload;
+    destructor Destroy; override;
   end;
 
 implementation
+
+type
+  TMessageHandlerImpl = class(TInterfacedObject, IMessageHandler)
+  private
+    FInstance: TCommonMessageHandler;
+  public
+    constructor Create(AInstance: TCommonMessageHandler);
+    destructor Destroy; override;
+    property Instance: TCommonMessageHandler read FInstance implements IMessageHandler;
+  end;
+
+constructor TMessageHandlerImpl.Create(AInstance: TCommonMessageHandler);
+begin
+  inherited Create;
+  FInstance := AInstance;
+end;
+
+destructor TMessageHandlerImpl.Destroy;
+begin
+  FInstance.Free;
+  inherited;
+end;
 
 constructor TCommonMessage<T>.Create(const AValue: T);
 begin
@@ -124,40 +142,6 @@ begin
   end;
 end;
 
-function TLogMessage.GetMessageText: string;
-begin
-  Result := Value;
-end;
-
-class procedure TLogMessage.SendMessage(Sender: TObject; const AMessageText: string);
-begin
-  inherited SendMessage(Sender, AMessageText);
-end;
-
-class function TDlgMessage.Execute(Sender: TObject; const ATitle, AMessageText: string; AMsgDlgType: TMsgDlgType; AButtons:
-    TMsgDlgButtons; ADefault: TModalResult; AHelpContext: Integer): TModalResult;
-var
-  instance: TDlgMessage;
-begin
-  instance := Self.Create(AMessageText);
-  try
-    instance.Title := ATitle;
-    instance.MsgDlgType := AMsgDlgType;
-    instance.Buttons := AButtons;
-    instance.Answer := ADefault;
-    Instance.HelpContext := AHelpContext;
-    Manager.SendMessage(Sender, instance, False);
-    Result := instance.Answer;
-  finally
-    instance.Free;
-  end;
-end;
-
-function TDlgMessage.GetMessageText: string;
-begin
-  Result := Value;
-end;
-
 class function TCommonMessage.Manager: TMessageManager;
 begin
   Result := TMessageManager.DefaultManager;
@@ -193,7 +177,71 @@ begin
   Manager.Unsubscribe(Self, AListenerMethod, Immediate);
 end;
 
-initialization
-  TDlgMessage.AutoRegisterHandler := True;
-  TLogMessage.AutoRegisterHandler := True;
+constructor TCommonMessageHandler.Create;
+begin
+  inherited;
+end;
+
+class function TCommonMessageHandler.CreateInterface(AInstance: TCommonMessageHandler = nil): IMessageHandler;
+begin
+  if AInstance = nil then
+    AInstance := Self.Create;
+  Result := TMessageHandlerImpl.Create(AInstance);
+end;
+
+constructor TCommonMessageHandler<TMsg>.Create;
+begin
+  inherited;
+  Subscribe;
+end;
+
+constructor TCommonMessageHandler<TMsg>.Create(AMethod: THandleMessageEvent<TMsg>);
+begin
+  Create;
+  FMethod := AMethod;
+end;
+
+constructor TCommonMessageHandler<TMsg>.Create(AProc: THandleMessageProc<TMsg>);
+begin
+  Create;
+  FProc := AProc;
+end;
+
+destructor TCommonMessageHandler<TMsg>.Destroy;
+begin
+  Unsubscribe;
+  inherited;
+end;
+
+procedure TCommonMessageHandler<TMsg>.DoHandleMethod(const Sender: TObject; const Msg: TMsg);
+begin
+  if Assigned(FMethod) then FMethod(Sender, Msg);
+end;
+
+procedure TCommonMessageHandler<TMsg>.DoHandleProc(const Sender: TObject; const Msg: TMsg);
+begin
+  if Assigned(FProc) then FProc(Sender, Msg);
+end;
+
+procedure TCommonMessageHandler<TMsg>.HandleMessage(const Sender: TObject; const Msg: TMsg);
+begin
+  DoHandleMethod(Sender, Msg);
+  DoHandleProc(Sender, Msg);
+end;
+
+procedure TCommonMessageHandler<TMsg>.MessageHandler(const Sender: TObject; const M: TMessage);
+begin
+  HandleMessage(Sender, M as TMsg);
+end;
+
+procedure TCommonMessageHandler<TMsg>.Subscribe;
+begin
+  FMessageID := TMsg.Subscribe(MessageHandler);
+end;
+
+procedure TCommonMessageHandler<TMsg>.Unsubscribe;
+begin
+  TMsg.Unsubscribe(FMessageID);
+end;
+
 end.

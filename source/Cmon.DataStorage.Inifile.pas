@@ -3,7 +3,7 @@ unit Cmon.DataStorage.Inifile;
 interface
 
 uses
-  System.IniFiles, System.Messaging, System.Classes, System.SysUtils,
+  System.IniFiles, System.Classes, System.SysUtils,
   Cmon.DataStorage, Cmon.DataStorage.Target;
 
 type
@@ -186,18 +186,16 @@ begin
 end;
 
 var
-  Instance: TIniStorageTargetHandler = nil;
+  Instance: IMessageHandler;
 
 { will be called in Application.Initialize after all other initialization code has been executed }
 procedure InitHandler;
 begin
   if TDataStorage.AutoRegisterHandler and TIniStorageTargetHandler.AutoRegisterHandler then
-    Instance := TIniStorageTargetHandler.Create;
+    Instance := TIniStorageTargetHandler.CreateInterface;
 end;
 
 initialization
   TIniStorageTargetHandler.AutoRegisterHandler := True;
   TInitialize.AddInitProc(InitHandler);
-finalization
-  Instance.Free;
 end.

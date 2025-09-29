@@ -3,8 +3,7 @@ unit Cmon.DataStorage.Target;
 interface
 
 uses
-  System.Messaging,
-  Cmon.DataStorage.Types;
+  Cmon.Messaging, Cmon.DataStorage.Types;
 
 type
   TCustomStorageTarget = class(TAbstractStorageTarget)
@@ -30,19 +29,16 @@ type
   end;
 
 type
-  TStorageTargetHandler<T: TCustomStorageTarget> = class
+  TStorageTargetHandler<T: TCustomStorageTarget> = class(TCommonMessageHandler<TStorageTargetMessage>)
   private
-    FMessageID: Integer;
-    FListMessageID: Integer;
+    FListHandler: TCommonMessageHandler;
   strict protected
-    procedure StorageTargetMessage(const Sender: TObject; const M: TMessage);
-    procedure StorageTargetListMessage(const Sender: TObject; const M: TMessage);
-    procedure Subscribe; virtual;
-    procedure Unsubscribe; virtual;
+    procedure HandleMessage(const Sender: TObject; const Msg: TStorageTargetMessage); override;
+    procedure HandleListMessage(const Sender: TObject; const Msg: TStorageTargetListMessage);
   protected
     function CheckFileName(var AFileName: string): Boolean; virtual;
   public
-    constructor Create;
+    constructor Create; override;
     destructor Destroy; override;
   end;
 
@@ -94,12 +90,12 @@ end;
 constructor TStorageTargetHandler<T>.Create;
 begin
   inherited;
-  Subscribe;
+  FListHandler := TCommonMessageHandler<TStorageTargetListMessage>.Create(HandleListMessage);
 end;
 
 destructor TStorageTargetHandler<T>.Destroy;
 begin
-  Unsubscribe;
+  FListHandler.Free;
   inherited;
 end;
 
@@ -109,42 +105,27 @@ begin
   Result := TFile.Exists(AFileName);
 end;
 
-procedure TStorageTargetHandler<T>.StorageTargetMessage(const Sender: TObject; const M: TMessage);
+procedure TStorageTargetHandler<T>.HandleMessage(const Sender: TObject; const Msg: TStorageTargetMessage);
 begin
-  var msg := M as TStorageTargetMessage;
-
   { if we already have a result skip this handler }
-  if msg.StorageTarget <> nil then Exit;
+  if Msg.StorageTarget <> nil then Exit;
 
   { get the extension to check if this handler is suitable }
-  var ext := TPath.GetExtension(msg.FileName);
+  var ext := TPath.GetExtension(Msg.FileName);
   if ext.IsEmpty then
     ext := TCustomStorageTarget.DefaultFileExtension;
   if ext.IsEmpty or SameText(ext, T.FileExtension) then begin
-    var fileName := msg.Value;
+    var fileName := Msg.Value;
     if not CheckFileName(fileName) then
       TStorageTargetMissingMessage.SendMessage(Sender, fileName);
 
-    msg.StorageTarget := T.Create(fileName);
+    Msg.StorageTarget := T.Create(fileName);
   end;
 end;
 
-procedure TStorageTargetHandler<T>.StorageTargetListMessage(const Sender: TObject; const M: TMessage);
+procedure TStorageTargetHandler<T>.HandleListMessage(const Sender: TObject; const Msg: TStorageTargetListMessage);
 begin
-  var msg := M as TStorageTargetListMessage;
-  msg.Value.Add(TStorageTargetDescriptor.Create(T.Description, T.FileExtension));
-end;
-
-procedure TStorageTargetHandler<T>.Subscribe;
-begin
-  FMessageID := TStorageTargetMessage.Subscribe(StorageTargetMessage);
-  FListMessageID := TStorageTargetListMessage.Subscribe(StorageTargetListMessage);
-end;
-
-procedure TStorageTargetHandler<T>.Unsubscribe;
-begin
-  TStorageTargetMessage.Unsubscribe(FListMessageID);
-  TStorageTargetMessage.Unsubscribe(FMessageID);
+  Msg.Value.Add(TStorageTargetDescriptor.Create(T.Description, T.FileExtension));
 end;
 
 end.

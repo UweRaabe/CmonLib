@@ -5,6 +5,7 @@ interface
 uses
   System.Classes, System.Messaging,
   Vcl.Controls, Vcl.Forms, Vcl.StdCtrls,
+  Cmon.Messaging,
   DataTypes;
 
 type
@@ -16,7 +17,7 @@ type
     MyListItemListBox: TListBox;
   private
     FData: TData;
-    FLogHandlerId: Integer;
+    FLogHandler: IMessageHandler;
     procedure DoLogMessage(const AMessage: string);
     procedure SetData(const Value: TData);
   strict protected
@@ -48,7 +49,7 @@ begin
 
   { register to receive log messages }
   LogMemo.Clear;
-  FLogHandlerId := TLog.Subscribe(DoLogMessage);
+  FLogHandler := TLog.Subscribe(DoLogMessage);
 
 //  FData := CreateData;
   Data := GlobalData;
@@ -67,7 +68,6 @@ end;
 
 destructor TDemoMainForm.Destroy;
 begin
-  TLog.Unsubscribe(FLogHandlerId);
   FData.Free;
   inherited Destroy;
 end;

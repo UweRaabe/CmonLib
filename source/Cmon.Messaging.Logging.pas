@@ -3,46 +3,34 @@ unit Cmon.Messaging.Logging;
 interface
 
 uses
-  System.Messaging;
+  Cmon.Messaging;
 
 type
-  TLogMessageHandler = class
+  TLogMessage = class(TCommonMessage<string>)
+  strict private
+  class var
+    FAutoRegisterHandler: Boolean;
   private
-    FMessageID: Integer;
-  strict protected
-    procedure LogMessage(const Sender: TObject; const M: TMessage); virtual; abstract;
-    procedure Subscribe; virtual;
-    procedure Unsubscribe; virtual;
+    function GetMessageText: string;
   public
-    constructor Create;
-    destructor Destroy; override;
+    class procedure SendMessage(Sender: TObject; const AMessageText: string);
+    class property AutoRegisterHandler: Boolean read FAutoRegisterHandler write FAutoRegisterHandler;
+    property MessageText: string read GetMessageText;
   end;
+  TLogMessageHandler = class(TCommonMessageHandler<TLogMessage>);
 
 implementation
 
-uses
-  Cmon.Messaging;
-
-constructor TLogMessageHandler.Create;
+function TLogMessage.GetMessageText: string;
 begin
-  inherited;
-  Subscribe;
+  Result := Value;
 end;
 
-destructor TLogMessageHandler.Destroy;
+class procedure TLogMessage.SendMessage(Sender: TObject; const AMessageText: string);
 begin
-  Unsubscribe;
-  inherited;
+  inherited SendMessage(Sender, AMessageText);
 end;
 
-procedure TLogMessageHandler.Subscribe;
-begin
-  FMessageID := TLogMessage.Subscribe(LogMessage);
-end;
-
-procedure TLogMessageHandler.Unsubscribe;
-begin
-  TLogMessage.Unsubscribe(FMessageID);
-end;
-
+initialization
+  TLogMessage.AutoRegisterHandler := True;
 end.

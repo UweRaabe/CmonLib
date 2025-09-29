@@ -3,7 +3,6 @@ unit Cmon.Messaging.Dialogs.Fmx;
 interface
 
 uses
-  System.Messaging,
   Cmon.Messaging.Dialogs;
 
 type
@@ -12,7 +11,7 @@ type
   class var
     FAutoRegisterHandler: Boolean;
   strict protected
-    procedure DlgMessage(const Sender: TObject; const M: TMessage); override;
+    procedure HandleMessage(const Sender: TObject; const Msg: TDlgMessage); override;
   public
     class property AutoRegisterHandler: Boolean read FAutoRegisterHandler write FAutoRegisterHandler;
   end;
@@ -22,29 +21,26 @@ implementation
 uses
   System.UITypes, System.SysUtils, System.Classes,
   FMX.Dialogs,
-  Cmon.Messaging, Cmon.Initializing;
+  Cmon.Initializing, Cmon.Messaging;
 
-procedure TDlgMessageHandlerVcl.DlgMessage(const Sender: TObject; const M: TMessage);
+procedure TDlgMessageHandlerVcl.HandleMessage(const Sender: TObject; const Msg: TDlgMessage);
 begin
-  var msg := M as TDlgMessage;
 {$WARN SYMBOL_DEPRECATED OFF}
-  msg.Answer := MessageDlg(msg.MessageText, msg.MsgDlgType, msg.Buttons, msg.HelpContext);
+  Msg.Answer := MessageDlg(Msg.MessageText, Msg.MsgDlgType, Msg.Buttons, Msg.HelpContext);
 {$WARN SYMBOL_DEPRECATED DEFAULT}
 end;
 
 var
-  Instance: TDlgMessageHandlerVcl = nil;
+  Instance: IMessageHandler;
 
 { will be called in Application.Initialize after all other initialization code has been executed }
 procedure InitHandler;
 begin
   if TDlgMessage.AutoRegisterHandler and TDlgMessageHandlerVcl.AutoRegisterHandler then
-    Instance := TDlgMessageHandlerVcl.Create;
+    Instance := TDlgMessageHandlerVcl.CreateInterface;
 end;
 
 initialization
   TDlgMessageHandlerVcl.AutoRegisterHandler := True;
   TInitialize.AddInitProc(InitHandler);
-finalization
-  Instance.Free;
 end.

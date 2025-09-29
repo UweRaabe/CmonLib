@@ -3,7 +3,6 @@ unit Cmon.Messaging.Logging.TextFile;
 interface
 
 uses
-  System.Messaging,
   Cmon.Messaging.Logging;
 
 type
@@ -15,9 +14,9 @@ type
   private
     FLogFileName: string;
   strict protected
-    procedure LogMessage(const Sender: TObject; const M: TMessage); override;
+    procedure HandleMessage(const Sender: TObject; const Msg: TLogMessage); override;
   public
-    constructor Create;
+    constructor Create; override;
     class property AutoRegisterHandler: Boolean read FAutoRegisterHandler write FAutoRegisterHandler;
     class property DefaultLogFileName: string read FDefaultLogFileName write FDefaultLogFileName;
     property LogFileName: string read FLogFileName write FLogFileName;
@@ -27,7 +26,7 @@ implementation
 
 uses
   System.IOUtils, System.SysUtils,
-  Cmon.Utilities, Cmon.Messaging, Cmon.Initializing;
+  Cmon.Utilities, Cmon.Initializing, Cmon.Messaging;
 
 const
   cLogExtension = '.log';
@@ -45,25 +44,22 @@ begin
   FLogFileName := TPath.Combine(TUtilities.UserAppDataPath, fileName);
 end;
 
-procedure TLogMessageTextFile.LogMessage(const Sender: TObject; const M: TMessage);
+procedure TLogMessageTextFile.HandleMessage(const Sender: TObject; const Msg: TLogMessage);
 begin
-  var msg := M as TLogMessage;
-  TFile.AppendAllText(LogFileName, msg.MessageText);
+  TFile.AppendAllText(LogFileName, Msg.MessageText);
 end;
 
 var
-  Instance: TLogMessageTextFile = nil;
+  Instance: IMessageHandler;
 
 { will be called in Application.Initialize after all other initialization code has been executed }
 procedure InitHandler;
 begin
   if TLogMessage.AutoRegisterHandler and TLogMessageTextFile.AutoRegisterHandler then
-    Instance := TLogMessageTextFile.Create;
+    Instance := TLogMessageTextFile.CreateInterface;
 end;
 
 initialization
   TLogMessageTextFile.AutoRegisterHandler := True;
   TInitialize.AddInitProc(InitHandler);
-finalization
-  Instance.Free;
 end.
