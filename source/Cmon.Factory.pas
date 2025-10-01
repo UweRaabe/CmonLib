@@ -110,7 +110,15 @@ end;
 
 class procedure TFactory<T>.Register<TImpl>;
 begin
+{$IF CompilerVersion < 32.0 Delphi 10.2 Tokyo }
+  FCreatorRec.FTypeInfo := TypeInfo(TImpl);
+  FCreatorRec.FCreator := function: T
+    begin
+      Result := TImpl.Create;
+    end;
+{$ELSE}
   FCreatorRec := MakeCreatorRec<TImpl>;
+{$ENDIF}
 end;
 
 class procedure TFactory<T>.Unregister<TImpl>;
@@ -148,8 +156,20 @@ begin
 end;
 
 class procedure TFactory<T, TContext>.Register<TImpl>(const Key: TContext);
+{$IF CompilerVersion < 32.0 Delphi 10.2 Tokyo }
+var
+  rec: TCreatorRec;
+begin
+  rec.FTypeInfo := TypeInfo(TImpl);
+  rec.FCreator := function: T
+    begin
+      Result := TImpl.Create;
+    end;
+  Creators.AddOrSetValue(Key, rec);
+{$ELSE}
 begin
   Creators.AddOrSetValue(Key, MakeCreatorRec<TImpl>);
+{$ENDIF}
 end;
 
 class procedure TFactory<T, TContext>.Unregister<TImpl>(const Key: TContext);
