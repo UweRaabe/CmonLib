@@ -3,7 +3,7 @@ unit Cmon.AsyncGuard;
 interface
 
 uses
-  System.SyncObjs;
+  System.SyncObjs, System.SysUtils;
 
 type
   ICancel = interface
@@ -27,6 +27,10 @@ type
 
 type
   TAsyncTask<T: IInterface> = class(TAsyncTask)
+{$IF CompilerVersion < 34.0 Delphi 10.4 Sydney }
+  strict private type
+    TLightweightMREW = IReadWriteSync;
+{$ENDIF}
   strict private
     FMRSW: TLightweightMREW;
     FTarget: T;
@@ -70,7 +74,7 @@ type
 implementation
 
 uses
-  System.Classes, System.Threading, System.SysUtils;
+  System.Classes, System.Threading;
 
 constructor TAsyncGuard.Create(ATask: TAsyncTask);
 begin
@@ -92,8 +96,10 @@ begin
 end;
 
 class procedure TAsyncGuard.ExecuteSync(ATask: TAsyncTask; out ACancel: ICancel);
+var
+  instance: TAsyncGuard;
 begin
-  var instance := Self.Create(ATask);
+  instance := Self.Create(ATask);
   { TCancel is responsible for destroing instance }
   ACancel := TCancel.Create(instance);
   instance.ExecuteSync(ACancel);
@@ -116,8 +122,10 @@ begin
 end;
 
 class procedure TAsyncGuard.ExecuteAsync(ATask: TAsyncTask; out ACancel: ICancel);
+var
+  instance: TAsyncGuard;
 begin
-  var instance := Self.Create(ATask);
+  instance := Self.Create(ATask);
   { TCancel is responsible for destroing instance }
   ACancel := TCancel.Create(instance);
   instance.ExecuteAsync(ACancel);
@@ -166,6 +174,9 @@ end;
 constructor TAsyncTask<T>.Create(ATarget: T);
 begin
   inherited Create;
+{$IF CompilerVersion < 34.0 Delphi 10.4 Sydney }
+  FMRSW := TSimpleRWSync.Create;
+{$ENDIF}
   FTarget := ATarget;
 end;
 
