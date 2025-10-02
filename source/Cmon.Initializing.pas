@@ -95,9 +95,11 @@ begin
 end;
 
 destructor TInitProcHandler.Destroy;
+var
+  prio: TInitPriority;
 begin
   { This should never be necessary when Execute was called before }
-  for var prio := Low(FInitProcs) to High(FInitProcs) do
+  for prio := Low(FInitProcs) to High(FInitProcs) do
     FInitProcs[prio].Free;
   inherited;
 end;
@@ -111,11 +113,15 @@ begin
 end;
 
 procedure TInitProcHandler.Execute;
+var
+  list: TProcList;
+  prio: TInitPriority;
+  proc: TProc;
 begin
-  for var prio := Low(FInitProcs) to High(FInitProcs) do begin
-    var list := FInitProcs[prio];
+  for prio := Low(FInitProcs) to High(FInitProcs) do begin
+    list := FInitProcs[prio];
     if list = nil then Continue;
-    for var proc in list do
+    for proc in list do
       proc();
     FInitProcs[prio].Free;
     FInitProcs[prio] := nil;

@@ -130,8 +130,10 @@ begin
 end;
 
 class function TCommonMessage<T, TResult>.Query(Sender: TObject; var AValue: T; const ADefault: TResult): TResult;
+var
+  msg: TCommonMessage<T, TResult>;
 begin
-  var msg := Self.Create(AValue);
+  msg := Self.Create(AValue);
   try
     msg.ResultValue := ADefault;
     Manager.SendMessage(Sender, msg, False);

@@ -32,9 +32,11 @@ const
   cLogExtension = '.log';
 
 constructor TLogMessageTextFile.Create;
+var
+  fileName: string;
 begin
   inherited Create;
-  var fileName := TLogMessageTextFile.DefaultLogFileName;
+  fileName := TLogMessageTextFile.DefaultLogFileName;
   if fileName.IsEmpty then begin
     if not TUtilities.AppName.IsEmpty then
       fileName := TUtilities.AppName + cLogExtension

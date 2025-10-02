@@ -85,22 +85,26 @@ uses
   Vcl.Graphics;
 
 function PathEllipsis(const Path: string; MaxWidth: Integer): string;
+var
+  BM: TBitmap;
+  buf: PWideChar;
+  NCM: TNonClientMetrics;
+  R: TRect;
 begin
   if MaxWidth = 0 then
     Exit(Path);
 
-  var BM := TBitmap.Create;
+  BM := TBitmap.Create;
   try
     { select menu font }
-    var NCM: TNonClientMetrics;
     NCM.cbSize := SizeOf(NCM);
     SystemParametersInfo(SPI_GETNONCLIENTMETRICS, NCM.cbSize, @NCM, 0);
     BM.Canvas.Font.Handle := CreateFontIndirect(NCM.lfMenuFont);
 
-    var buf := StrAlloc(Length(Path) + 4); // because of DT_MODIFYSTRING
+    buf := StrAlloc(Length(Path) + 4); // because of DT_MODIFYSTRING
     try
       StrPCopy(buf, Path);
-      var R := Rect(0, 0, MaxWidth, 255);
+      R := Rect(0, 0, MaxWidth, 255);
       DrawText(BM.Canvas.Handle, buf, -1, R, DT_SINGLELINE or DT_PATH_ELLIPSIS or DT_MODIFYSTRING or DT_CALCRECT);
       Result := StrPas(buf);
     finally
@@ -128,12 +132,14 @@ begin
 end;
 
 procedure TCustomMRUFiles.AddItem(FileName: string);
+var
+  I: Integer;
 begin
   FileName := Trim(FileName);
   if FileName <> '' then begin
     Items.BeginUpdate;
     try
-      var I := Items.IndexOf(FileName);
+      I := Items.IndexOf(FileName);
       if I < 0 then begin
         Items.Insert(0, FileName);
         BoundToMaxItems;
@@ -158,11 +164,13 @@ begin
 end;
 
 procedure TCustomMRUFiles.ClearParentMenu(AParentItem: TMenuItem);
+var
+  I: Integer;
 begin
   if AParentItem = nil then Exit;
 
   { backwards because of Delete }
-  for var I := AParentItem.Count-1 downto 0 do begin
+  for I := AParentItem.Count-1 downto 0 do begin
     if AParentItem.Items[I] is TMRUMenuItem then
       AParentItem.Delete(I);
   end;
@@ -193,6 +201,8 @@ begin
 end;
 
 function TCustomMRUFiles.FixupDisplayString(const AFileName: string; N: Integer): string;
+var
+  Ch: Char;
 begin
   Result := AFileName;
   if not ShowFullPath then
@@ -206,7 +216,7 @@ begin
       Result := Format('&%d %s', [N, Result])
     end
     else begin
-      var Ch := Chr(Ord('A') + N - 10);
+      Ch := Chr(Ord('A') + N - 10);
       { Can't go beyond Z }
       if Ch <= 'Z' then begin // should already be covered, but...
         { Add an alphabetic hotkey identifier. }
@@ -217,15 +227,19 @@ begin
 end;
 
 procedure TCustomMRUFiles.GenerateMenuItems;
+var
+  I: Integer;
+  NewMenuItem: TMRUMenuItem;
+  parentItem: TMenuItem;
 begin
   if csLoading in ComponentState then Exit;
 
-  var parentItem := CurrentParentMenuItem;
+  parentItem := CurrentParentMenuItem;
   if parentItem = nil then Exit;
 
   ClearParentMenu(parentItem);
-  for var I := 0 to Items.Count - 1 do begin
-    var NewMenuItem := GetMenuItemClass.Create(Self);
+  for I := 0 to Items.Count - 1 do begin
+    NewMenuItem := GetMenuItemClass.Create(Self);
     NewMenuItem.Caption := FixupDisplayString(Items[I], I+1);
     NewMenuItem.Tag := I;
     NewMenuItem.OnClick := DoClick;

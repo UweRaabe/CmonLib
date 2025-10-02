@@ -272,14 +272,18 @@ begin
 end;
 
 function TValueObservers<T>.MakeGetValue<V>(const APropName: string): TFunc<T, V>;
+var
+  context: TRttiContext;
+  rttiProp: TRttiProperty;
+  rttiType: TRttiType;
 begin
   Result :=
     function(Source: T):V
     begin
-      var context := TRttiContext.Create;
+      context := TRttiContext.Create;
       try
-        var rttiType := context.GetType(T);
-        var rttiProp := rttiType.GetProperty(APropName);
+        rttiType := context.GetType(T);
+        rttiProp := rttiType.GetProperty(APropName);
         Result := rttiProp.GetValue(Pointer(Source)).AsType<V>;
       finally
         context.Free;
@@ -298,11 +302,14 @@ begin
 end;
 
 procedure TValueObservers<T>.ValueChanged(ID: Integer);
+var
+  I: Integer;
+  list: IInterfaceList;
 begin
   if not IsObserving(ID) then Exit;
 
-  var list := GetMultiCastObserver(ID);
-  for var I := 0 to list.Count - 1 do
+  list := GetMultiCastObserver(ID);
+  for I := 0 to list.Count - 1 do
     ValueChanged(list[I]);
 end;
 
@@ -373,23 +380,27 @@ procedure TObserversHelper.SortObservers(AID: Integer);
   end;
 
 var
+  I: Integer;
   lastPrio: TObserverPriority;
   list: IInterfaceList;
   needsSort: Boolean;
+  prio: TObserverPriority;
+  prioList: IInterfaceList;
   prioLists: array[TObserverPriority] of IInterfaceList;
+  saveEvent: TObserverAddedEvent;
 begin
   if not IsObserving(AID) then Exit;
 
   needsSort := False;
   lastPrio := Low(TObserverPriority);
   list := GetMultiCastObserver(AID);
-  for var I := 0 to list.Count - 1 do begin
-    var prio := GetPriority(list[I]);
+  for I := 0 to list.Count - 1 do begin
+    prio := GetPriority(list[I]);
     if prio < lastPrio then
       needsSort := True
     else
       lastPrio := prio;
-    var prioList := prioLists[prio];
+    prioList := prioLists[prio];
     if prioList = nil then begin
       prioList := TInterfaceList.Create;
       prioLists[prio] := prioList;
@@ -397,14 +408,14 @@ begin
     prioList.Add(list[I]);
   end;
   if needsSort then begin
-    var saveEvent := OnObserverAdded;
+    saveEvent := OnObserverAdded;
     try
-      for var I := 0 to list.Count - 1 do
+      for I := 0 to list.Count - 1 do
         RemoveObserver(AID, list[I]);
-      for var prio := Low(prioLists) to High(prioLists) do begin
-        var prioList := prioLists[prio];
+      for prio := Low(prioLists) to High(prioLists) do begin
+        prioList := prioLists[prio];
         if Assigned(prioList) then begin
-          for var I := 0 to prioList.Count - 1 do
+          for I := 0 to prioList.Count - 1 do
             AddObserver(AID, prioList[I]);
         end;
       end;
