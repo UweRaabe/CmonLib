@@ -7,19 +7,23 @@ A collection of several units with different purpose.
 
 **Cmon.CmdLineHandler** and **Cmon.CmdLineFileHandler** contain classes for handling command line applications. Derived classes concentrate on the actual task to do.
 
-**Cmon.DataSense** adds data sensitivity to controls that don't support that itself. Place a _TDataSense_ component onto a form and all supported controls get a _DataSource_ and _DataField_ property in the object inspector.
+**Cmon.DataSense** adds data sensitivity to controls that don't support that itself. Place a `TDataSense` component onto a form and all supported controls get a `DataSource` and `DataField` property in the object inspector.
 
-**Cmon.DataSetHelper** offers a class helper for TDataSet with enumerator support as well as loading and storing classes and records.
+**Cmon.DataSetHelper** offers a class helper for `TDataSet` with enumerator support as well as loading and storing classes and records.
 
 **Cmon.DataStorage** allows persistance of fields and properties of class instances, especially forms and frames, by applying attributes.
 
 **Cmon.Dialogs** abstracts standard dialogs from any framework. Built upon **Cmon.Messaging**.
 
-**Cmon.Initializing** establishes a way to control initialize code for other units into the call to _Application.Initialize_. This allows to make adjustments before, which would be near to impossible if the initialize code would execute in the units initialization section.
+**Cmon.Factory** provides generic factories for classes and interfaces.
+
+**Cmon.Initializing** establishes a way to control initialize code for other units into the call to `Application.Initialize`. This allows to make adjustments before, which would be near to impossible if the initialize code would execute in the units initialization section.
 
 **Cmon.Logging** adds a simple, abstract logging mechanism. Built upon **Cmon.Messaging**.
 
-**Cmon.Messaging** provides some bases for using _System.Messaging_.
+**Cmon.Messaging** provides some bases for using `System.Messaging`.
+
+**Cmon.MRU.Vcl** provides `TMRUFiles`, a component to be linked to a PopupMenu or single menu item doing the bookkeeping for most recently yused files.
 
 **Cmon.Observers** introduces some helper classes for leveraging the observer support of several VCL controls as well as implement observer support for other classes.
 
@@ -27,7 +31,7 @@ A collection of several units with different purpose.
 
 Most of the units are self-contained or form small clusters. This is to avoid when using one unit of the library having a bunch of others used indirectly. There are just a handful of units providing functionality used by several others.
 
-- The helpers for _TComponent_ and _TCollection_ as well as some methods from _TUtilities_ in _Cmon.Utilities_ are used in several places.
+- The helpers for `TComponent` and `TCollection` as well as some methods from `TUtilities` in _Cmon.Utilities_ are used in several places.
 - Auto-registering of messaging handlers makes use of _Cmon.Initializing_ to allow some fine control without touching the initialization sections.
 - The classes of _Cmon.Messaging_ come in too handy as that they were not preferred by those messaging handlers just mentioned.
 
