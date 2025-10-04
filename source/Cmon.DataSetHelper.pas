@@ -11,6 +11,11 @@ uses
   System.Rtti, System.Generics.Collections,
   Data.DB;
 
+{$IF not Declared(tkMRecord) }
+const
+  tkMRecord = Succ(tkProcedure);
+{$ENDIF}
+
 type
   TDBFieldsMapping = (mapAuto, mapManual);
 
@@ -523,6 +528,8 @@ begin
 end;
 
 function TDataSetHelper.TDataSetRecord<T>.TMapping.GetFieldValue: TValue;
+var
+  S: string;
 begin
   Result := TValue.Empty;
   if not FField.IsNull then begin
@@ -531,7 +538,7 @@ begin
       tkInteger: Result := FField.AsInteger;
       tkChar,
       tkWChar: begin
-        var S := FField.AsString;
+        S := FField.AsString;
         if not S.IsEmpty then
           Result := S[1];
       end;
@@ -757,6 +764,7 @@ end;
 
 procedure TRecordFields.LinkFields;
 var
+  def: string;
   field: TRttiField;
   fld: TField;
   prop: TRttiProperty;
@@ -768,7 +776,7 @@ begin
   rttyType := FRTTIContext.GetType(ClassType);
   FMapMode := GetMapMode(rttyType);
   for field in rttyType.GetFields do begin
-    var def := field.Name;
+    def := field.Name;
     if def.StartsWith('F', True) then
       def := def.Remove(0, 1);
     fld := DataSet.FindField(CheckAttributes(field, def));
