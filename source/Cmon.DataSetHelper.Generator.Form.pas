@@ -1,4 +1,7 @@
 unit Cmon.DataSetHelper.Generator.Form;
+{$IF CompilerVersion < 34.0 Delphi 10.4 Sydney }
+  I'm sorry, but this unit is currently not compatible with your Delphi version
+{$ENDIF}
 
 interface
 

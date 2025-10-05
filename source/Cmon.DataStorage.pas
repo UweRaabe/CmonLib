@@ -1,4 +1,7 @@
 unit Cmon.DataStorage;
+{$IF CompilerVersion < 35.0 Delphi 11 Alexandria }
+  I'm sorry, but this unit is currently not compatible with your Delphi version
+{$ENDIF}
 
 interface
 
