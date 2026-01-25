@@ -257,6 +257,9 @@ begin
       for var I := instance.ComponentCount - 1 downto 0 do
       begin
         cmp := instance.Components[I];
+        Assert(cmp is TVirtualImageList,
+            Format('%s should only contain %s components, but contains %s',
+                [AClass.ClassName, TVirtualImageList.ClassName, cmp.ClassName]));
         if cmp is TVirtualImageList then
         begin
           { Moving the component to Self will keep all references intact.
