@@ -49,7 +49,7 @@ implementation
 
 uses
   System.SysUtils, System.IOUtils,
-  Cmon.Utilities;
+  Cmon.Utilities, Cmon.Logging;
 
 procedure TCustomStorageTarget.AfterConstruction;
 begin
@@ -59,8 +59,14 @@ end;
 
 procedure TCustomStorageTarget.BeforeDestruction;
 begin
-  if not ReadOnly then
-    SaveToFile(FileName);
+  if not ReadOnly then begin
+    try
+      SaveToFile(FileName);
+    except
+      on E: Exception do
+        TLog.Send('Failed to save storage: %s', [E.Message]);
+    end;
+  end;
   inherited;
 end;
 
