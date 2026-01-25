@@ -342,15 +342,24 @@ destructor TDataSetHelper.TDataSetEnumerator<T>.Destroy;
 { Restore the DataSet to its previous state. }
 begin
   if FWasActive then begin
-    { if we have a valid bookmark, use it }
-    if FDataSet.BookmarkValid(FBookmark) then
-      FDataSet.GotoBookmark(FBookmark);
-    { I'm not sure, if FreeBokmark can handle nil pointers - so to be safe }
+    try
+      { if we have a valid bookmark, use it }
+      if FDataSet.BookmarkValid(FBookmark) then
+        FDataSet.GotoBookmark(FBookmark);
+    except
+      { Ignore bookmark restore errors }
+    end;
     if FBookmark <> nil then
-      FDataSet.FreeBookmark(FBookmark);
+      try
+        FDataSet.FreeBookmark(FBookmark);
+      except
+        { Ignore bookmark free errors }
+      end;
+    FBookmark := nil;
   end
   else
     FDataSet.Active := false;
+
   { don't forget this one! }
   FDataSet.EnableControls;
   inherited;
