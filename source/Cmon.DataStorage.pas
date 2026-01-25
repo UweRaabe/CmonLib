@@ -108,6 +108,11 @@ type
     procedure SaveToStorage<A: TCustomStorageAttribute>(Instance: TObject); overload;
     procedure SaveToStorage<T: record>(var Instance: T); overload;
     procedure SaveToStorage<T: record; A: TCustomStorageAttribute>(var Instance: T); overload;
+    { CloneViaStorage }
+    procedure CloneViaStorage(Source, Target: TObject); overload;
+    procedure CloneViaStorage<A: TCustomStorageAttribute>(Source, Target: TObject); overload;
+    procedure CloneViaStorage<T: record>(var Source, Target: T); overload;
+    procedure CloneViaStorage<T: record; A: TCustomStorageAttribute>(var Source, Target: T); overload;
     { StorageKey handling }
     class function GetStorageKeyFromAttribute(AInstance: TObject; const ADefault: string = ''): string; overload;
     class function GetStorageKeyFromAttribute<T>(const ADefault: string = ''): string; overload;
@@ -417,6 +422,31 @@ end;
 class destructor TDataStorage.Destruct;
 begin
   FDefaultInstance.Free;
+end;
+
+procedure TDataStorage.CloneViaStorage(Source, Target: TObject);
+begin
+  CloneViaStorage<StorageAttribute>(Source, Target);
+end;
+
+procedure TDataStorage.CloneViaStorage<A>(Source, Target: TObject);
+begin
+  if (Source = nil) or (Target = nil) then Exit;
+
+  var key := RetrieveStorageKey(Source);
+  ExecuteStorageAction(TStorageAction.save, Source, Source.ClassInfo, key, A);
+  ExecuteStorageAction(TStorageAction.load, Target, Target.ClassInfo, key, A);
+end;
+
+procedure TDataStorage.CloneViaStorage<T, A>(var Source, Target: T);
+begin
+  ExecuteStorageAction(TStorageAction.save, @Source, TypeInfo(T), RetrieveStorageKey<T>, A);
+  ExecuteStorageAction(TStorageAction.load, @Target, TypeInfo(T), RetrieveStorageKey<T>, A);
+end;
+
+procedure TDataStorage.CloneViaStorage<T>(var Source, Target: T);
+begin
+  CloneViaStorage<T, StorageAttribute>(Source, Target);
 end;
 
 class function TDataStorage.CombineStorageKey(const Key, SubKey: string): string;

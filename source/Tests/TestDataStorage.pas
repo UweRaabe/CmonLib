@@ -153,8 +153,7 @@ begin
     try
       var instance := TDataStorage.Create;
       try
-        instance.SaveToStorage(source);
-        instance.LoadFromStorage(target);
+        instance.CloneViaStorage(source, target);
       finally
         instance.Free;
       end;
