@@ -186,14 +186,26 @@ begin
 end;
 
 procedure TAsyncTask<T>.ClearTarget;
+var
+  TempTarget: T;
 begin
   FMRSW.BeginWrite;
   try
-    { TODO : This can execute destructor code inside the current thread! }
+    { Just setting FTarget to nil can execute destructor code inside the current thread! }
+    TempTarget := FTarget;
     FTarget := nil;
   finally
     FMRSW.EndWrite;
   end;
+
+  if IsMainThread then
+    TempTarget := nil  // Direct cleanup
+  else
+    TThread.Queue(nil,
+      procedure
+      begin
+        TempTarget := nil;
+      end);
 end;
 
 function TAsyncTask<T>.GetTarget: T;
