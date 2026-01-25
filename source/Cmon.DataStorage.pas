@@ -55,6 +55,7 @@ type
     callOutside);
 {$SCOPEDENUMS OFF}
 
+{ CAUTION: TDataStorage instances are NOT thread-safe. Use separate instances per thread. }
   TDataStorage = class
   strict private
   const
