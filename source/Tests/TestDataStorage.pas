@@ -37,6 +37,8 @@ type
   public
     [Test]
     procedure TestString;
+    [Test]
+    procedure TestNoTarget;
   end;
 
 implementation
@@ -44,6 +46,17 @@ implementation
 uses
   System.Rtti, System.IOUtils, System.SysUtils,
   Cmon.DataStorage.Inifile;
+
+type
+  [StorageKey('MyTestObject'), AutoStorageFields([vcPrivate]), SkipFieldNameF([vcPrivate])]
+  TMyTestObject = class
+  private
+    FData1: Integer;
+    FData2: string;
+  public
+    property Data1: Integer read FData1 write FData1;
+    property Data2: string read FData2 write FData2;
+  end;
 
 procedure TValueConverterTest.Setup;
 begin
@@ -128,6 +141,31 @@ begin
   var target: TEnumSet := [enum1, enum3];
   var res := FConverter.StringToValue(source, TValue.From<TEnumSet>([])).AsType<TEnumSet>;
   Assert.AreEqual(target, res);
+end;
+
+procedure TDataStorageTest.TestNoTarget;
+begin
+  var source := TMyTestObject.Create;
+  try
+    source.Data1 := 42;
+    source.Data2 := 'Hello World';
+    var target := TMyTestObject.Create;
+    try
+      var instance := TDataStorage.Create;
+      try
+        instance.SaveToStorage(source);
+        instance.LoadFromStorage(target);
+      finally
+        instance.Free;
+      end;
+      Assert.AreEqual(source.Data1, target.Data1, 'Data1');
+      Assert.AreEqual(source.Data2, target.Data2, 'Data2');
+    finally
+      target.Free;
+    end;
+  finally
+    source.Free;
+  end;
 end;
 
 procedure TDataStorageTest.TestString;

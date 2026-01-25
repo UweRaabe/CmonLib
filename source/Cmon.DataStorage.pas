@@ -229,10 +229,14 @@ function GetStorageKeyFromAttribute(AInstance: TObject; const ADefault: string =
 
 implementation
 
+uses
+  System.IniFiles;
+
 type
   TDefaultStorageTarget = class(TAbstractStorageTarget)
   private
     FStorageTarget: IStorageTarget;
+    FIniFile: TMemIniFile;
   strict protected
     procedure DeleteKey(const Key, Ident: string); override;
     procedure EraseStorageKey(const Key: string); override;
@@ -243,50 +247,77 @@ type
     function ValueExists(const Key, Ident: string): Boolean; override;
   public
     constructor Create(AStorageTarget: IStorageTarget = nil);
+    destructor Destroy; override;
   end;
 
 constructor TDefaultStorageTarget.Create(AStorageTarget: IStorageTarget = nil);
 begin
   inherited Create;
   FStorageTarget := AStorageTarget;
+  if FStorageTarget = nil then
+    FIniFile := TMemIniFile.Create('');
+end;
+
+destructor TDefaultStorageTarget.Destroy;
+begin
+  FIniFile.Free;
+  inherited;
 end;
 
 procedure TDefaultStorageTarget.DeleteKey(const Key, Ident: string);
 begin
   if FStorageTarget <> nil then
-    FStorageTarget.DeleteKey(Key, Ident);
+    FStorageTarget.DeleteKey(Key, Ident)
+  else
+    FIniFile.DeleteKey(Key, Ident);
 end;
 
 procedure TDefaultStorageTarget.EraseStorageKey(const Key: string);
 begin
   if FStorageTarget <> nil then
-    FStorageTarget.EraseStorageKey(Key);
+    FStorageTarget.EraseStorageKey(Key)
+  else begin
+    var lst := TStringList.Create;
+    try
+      FIniFile.ReadSections(Key, lst);
+      for var S in lst do
+        FIniFile.EraseSection(S);
+    finally
+      lst.Free;
+    end;
+  end;
 end;
 
 procedure TDefaultStorageTarget.ReadKey(const Key: string; Target: TStrings);
 begin
   if FStorageTarget <> nil then
-    FStorageTarget.ReadKey(Key, Target);
+    FStorageTarget.ReadKey(Key, Target)
+  else
+    FIniFile.ReadSectionValues(Key, Target);
 end;
 
 function TDefaultStorageTarget.ReadString(const Key, Ident, Default: string): string;
 begin
-  Result := Default;
   if FStorageTarget <> nil then
-    Result := FStorageTarget.ReadString(Key, Ident, Default);
+    Result := FStorageTarget.ReadString(Key, Ident, Default)
+  else
+    Result := FIniFile.ReadString(Key, Ident, Default);
 end;
 
 function TDefaultStorageTarget.ValueExists(const Key, Ident: string): Boolean;
 begin
-  Result := False;
   if FStorageTarget <> nil then
-    Result := FStorageTarget.ValueExists(Key, Ident);
+    Result := FStorageTarget.ValueExists(Key, Ident)
+  else
+    Result := FIniFile.ValueExists(Key, Ident);
 end;
 
 procedure TDefaultStorageTarget.WriteString(const Key, Ident, Value: string);
 begin
   if FStorageTarget <> nil then
-    FStorageTarget.WriteString(Key, Ident, Value);
+    FStorageTarget.WriteString(Key, Ident, Value)
+  else
+    FIniFile.WriteString(Key, Ident, Value);
 end;
 
 function GetStorageKeyFromAttribute(AInstance: TObject; const ADefault: string = ''): string;

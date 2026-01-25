@@ -12,8 +12,7 @@ uses
   DUnitX.Loggers.Console,
   {$ENDIF }
   DUnitX.TestFramework,
-  TestDataStorage in 'Tests\TestDataStorage.pas',
-  MockStorageTarget in 'Tests\MockStorageTarget.pas';
+  TestDataStorage in 'Tests\TestDataStorage.pas';
 
 { some comment }
 {$IFNDEF TESTINSIGHT}
