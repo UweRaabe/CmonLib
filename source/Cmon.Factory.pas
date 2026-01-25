@@ -69,7 +69,7 @@ type
 
 type
   /// <summary>
-  ///   base class for a class instance wrapper to add reference counting when the class cannot itself.
+  ///   base class for a class instance wrapper to add reference counting when the instance cannot do itself.
   /// </summary>
   /// <remarks>
   ///   Must be overriden with supporting the supported interface and a property with an implements clause.
@@ -83,7 +83,6 @@ type
   ///
   /// </remarks>
   TImplementorWrapper<T: class, constructor> = class(TInterfacedObject)
-  strict private
   private
     FInstance: T;
     FOwnsInstance: Boolean;
@@ -100,6 +99,7 @@ implementation
 uses
   System.TypInfo;
 
+{$IF CompilerVersion < 37.0 Delphi 13 Florence }
 type
   Check = record
   public
@@ -108,10 +108,9 @@ type
 
 class procedure Check.ForInterface<T>;
 begin
-{$IFDEF _}
   Assert(PTypeInfo(TypeInfo(T)).Kind = tkInterface, 'only interface types are allowed');
-{$ENDIF}
 end;
+{$ENDIF}
 
 class function TFactory<T>.CreateInstance: T;
 begin
