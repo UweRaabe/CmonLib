@@ -3,14 +3,29 @@ unit MyInterface.Impl;
 interface
 
 uses
+  Cmon.Factory,
   MyInterface.Types;
 
+{$DEFINE USEWRAPPER}
+
 type
-  TMyInterface = class(TInterfacedObject, IMyInterface)
-  strict private
-  strict protected
+  { Using the wrapper allows the implementing class not to support reference counting.
+    That may be helpful if it has to be derived from some other class. }
+  TMyImplementor = class{$IFNDEF UseWrapper}(TInterfacedObject, IMyInterface){$ENDIF}
+  public
     function ConvertNumber(Number: Integer): string;
   end;
+
+{$IFDEF UseWrapper}
+type
+  TMyImplementorWrapper = class(TImplementorWrapper<TMyImplementor>, IMyInterface)
+  strict protected
+    property Implementor: TMyImplementor read GetInstance implements IMyInterface;
+  end;
+  TMyInterfaceImpl = TMyImplementorWrapper;
+{$ELSE}
+  TMyInterfaceImpl = TMyImplementor;
+{$ENDIF}
 
 type
   TMyContextClass = class(TInterfacedObject, IMyContextInterface)
@@ -39,11 +54,6 @@ uses
   System.SysUtils, System.Rtti,
   MyInterface.Factory;
 
-function TMyInterface.ConvertNumber(Number: Integer): string;
-begin
-  Result := Number.ToString;
-end;
-
 constructor TMyContextClass.Create(AContext: TMyContext);
 begin
   inherited Create;
@@ -65,12 +75,17 @@ begin
   inherited Create(TMyContext.complex);
 end;
 
+function TMyImplementor.ConvertNumber(Number: Integer): string;
+begin
+  Result := Number.ToString;
+end;
+
 initialization
-  TMyInterfaceFactory.Register<TMyInterface>;
+  TMyInterfaceFactory.Register<TMyInterfaceImpl>;
   TMyContextInterfaceFactory.Register<TMySimpleContext>(TMyContext.simple);
   TMyContextInterfaceFactory.Register<TMyComplexContext>(TMyContext.complex);
 finalization
   TMyContextInterfaceFactory.Unregister<TMyComplexContext>(TMyContext.complex);
   TMyContextInterfaceFactory.Unregister<TMySimpleContext>(TMyContext.simple);
-  TMyInterfaceFactory.Unregister<TMyInterface>;
+  TMyInterfaceFactory.Unregister<TMyInterfaceImpl>;
 end.

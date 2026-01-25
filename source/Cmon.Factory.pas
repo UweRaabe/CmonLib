@@ -67,6 +67,34 @@ type
   TInterfaceFactory<I:interface; TContext> = class(TFactory<I, TContext>);
 {$ENDIF}
 
+type
+  /// <summary>
+  ///   base class for a class instance wrapper to add reference counting when the class cannot itself.
+  /// </summary>
+  /// <remarks>
+  ///   Must be overriden with supporting the supported interface and a property with an implements clause.
+  ///   The property has type T and the getter should be GetInstance.
+  ///
+  ///   Example:
+  ///    TMyImplementorWrapper = class(TImplementorWrapper<TMyImplementor>, IMyInterface)
+  ///    strict protected
+  ///      property Implementor: TMyImplementor read GetInstance implements IMyInterface;
+  ///    end;
+  ///
+  /// </remarks>
+  TImplementorWrapper<T: class, constructor> = class(TInterfacedObject)
+  strict private
+  private
+    FInstance: T;
+    FOwnsInstance: Boolean;
+  strict protected
+    function GetInstance: T;
+  public
+    constructor Create(AInstance: T; AOwnsInstance: Boolean = True); overload;
+    constructor Create; overload; virtual;
+    destructor Destroy; override;
+  end;
+
 implementation
 
 uses
@@ -142,7 +170,7 @@ begin
   if Creators.TryGetValue(Key, rec) then
     Result := rec.FCreator()
   else if UseDefaultOnNoContext then
-    Result := CreateInstance
+    Result := CreateInstance()
   else
     HandleNoImplementor;
 end;
@@ -196,5 +224,35 @@ begin
   Check.ForInterface<I>;
 end;
 {$ENDIF}
+
+constructor TImplementorWrapper<T>.Create(AInstance: T; AOwnsInstance: Boolean = True);
+begin
+  { As Create is virtual we need to set FInstance first,
+    so that any reference to Instance in a derived Create can gain access to it. }
+  FInstance := AInstance;
+  FOwnsInstance := AOwnsInstance;
+  Create;
+end;
+
+constructor TImplementorWrapper<T>.Create;
+begin
+  inherited;
+end;
+
+destructor TImplementorWrapper<T>.Destroy;
+begin
+  if FOwnsInstance then
+    FInstance.Free;
+  inherited;
+end;
+
+function TImplementorWrapper<T>.GetInstance: T;
+begin
+  if FInstance = nil then begin
+    FInstance := T.Create;
+    FOwnsInstance := True;
+  end;
+  Result := FInstance;
+end;
 
 end.
