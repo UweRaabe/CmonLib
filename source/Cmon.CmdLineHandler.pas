@@ -77,9 +77,12 @@ type
 implementation
 
 uses
+{$IFDEF MSWINDOWS}
   Winapi.Windows,
+{$ENDIF}
   System.IOUtils, System.Diagnostics;
 
+{$IFDEF MSWINDOWS}
 function GetFileVersion(const AFileName: string; var AMajor, AMinor, ARelease, ABuild: Cardinal): Boolean;
 var
   FileName: string;
@@ -112,6 +115,7 @@ begin
     end;
   end;
 end;
+{$ENDIF}
 
 constructor TCmdLineHandler.Create;
 begin
@@ -310,16 +314,19 @@ begin
 end;
 
 function TCmdLineHandler.VersionString: string;
+{$IFDEF MSWINDOWS}
 var
   build: Cardinal;
   major: Cardinal;
   minor: Cardinal;
   release: Cardinal;
+{$ENDIF}
 begin
+  Result := '<no version info>';
+{$IFDEF MSWINDOWS}
   if GetFileVersion(ParamStr(0), major, minor, release, build) then
-    Result := Format('Version %d.%d.%d.%d', [major, minor, release, build])
-  else
-    Result := '<no version info>';
+    Result := Format('Version %d.%d.%d.%d', [major, minor, release, build]);
+{$ENDIF}
 end;
 
 procedure TProgressHandler.DoProgress;
