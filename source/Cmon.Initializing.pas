@@ -121,8 +121,12 @@ begin
   for prio := Low(FInitProcs) to High(FInitProcs) do begin
     list := FInitProcs[prio];
     if list = nil then Continue;
-    for proc in list do
+    for proc in list do begin
       proc();
+      { Neither TLog.Send nor TMessageDlg can be used here reliably, because the handlers may not even be registered yet.
+        Fortunately this method runs inside Application.Initialize, so we just let the exception be handled by Application.
+        It is the developers task to make the initialization procs run properly and handle any exceptions itself. }
+    end;
     FInitProcs[prio].Free;
     FInitProcs[prio] := nil;
   end;
