@@ -327,7 +327,7 @@ begin
   if (Value <> nil) and (FDataLink = nil) then begin
     FDataLink := TDataSense.CreateDataLink(Value);
     if FDataLink = nil then
-      raise Exception.CreateFmt('Cannot creare DataLink for component of type %s', [Value.ClassName]);
+      raise Exception.CreateFmt('Cannot create DataLink for component of type %s', [Value.ClassName]);
     FDataLink.DataSource := FDataSource;
     FDataLink.FieldName := FDataField;
   end;
