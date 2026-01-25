@@ -102,6 +102,10 @@ end;
 
 class function TUtilities.GetCompanyAppSubPath: string;
 begin
+  if CompanyName.IsEmpty then
+    raise Exception.Create('CompanyName not initialized');
+  if AppName.IsEmpty then
+    raise Exception.Create('AppName not initialized');
   Result := TPath.Combine(CompanyName, AppName);
 end;
 
