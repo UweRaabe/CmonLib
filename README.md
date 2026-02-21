@@ -23,7 +23,7 @@ A collection of several units with different purpose.
 
 **Cmon.Messaging** provides some bases for using `System.Messaging`.
 
-**Cmon.MRU.Vcl** provides `TMRUFiles`, a component to be linked to a PopupMenu or single menu item doing the bookkeeping for most recently yused files.
+**Cmon.MRU.Vcl** provides `TMRUFiles`, a component to be linked to a PopupMenu or single menu item doing the bookkeeping for most recently used files.
 
 **Cmon.Observers** introduces some helper classes for leveraging the observer support of several VCL controls as well as implement observer support for other classes.
 
